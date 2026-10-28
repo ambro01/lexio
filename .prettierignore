@@ -1,0 +1,3 @@
+# Agent skills are managed by an external CLI; keep them byte-identical to upstream.
+.claude/
+.agents/
