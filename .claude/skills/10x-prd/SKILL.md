@@ -17,13 +17,11 @@ allowed-tools:
   - TaskCreate
   - TaskUpdate
 ---
-
 # PRD: Wygeneruj context/foundation/prd.md z shape-notes
 
 Ta umiejętność jest drugim ogniwem w łańcuchu bootstrapowania. Dla greenfield: `/10x-shape → /10x-prd → 10x-tech-stack-selector → bootstrapper`. Dla brownfield: `/10x-shape → /10x-prd → 10x-stack-assess → 10x-health-check`. Jej jedyne zadanie: pobrać plik ukształtowanych notatek i wygenerować `context/foundation/prd.md`, który jest zgodny z zablokowanym schematem PRD, kierując każdą lukę do `## Open Questions` zamiast wymyślać treść.
 
 Umiejętność automatycznie kieruje do właściwego szablonu na podstawie `context_type` w danych wejściowych:
-
 - **greenfield** → 10-sekcyjny szablon PRD (produkt budowany od podstaw)
 - **brownfield** → 11-sekcyjny szablon PRD (zmiana delta w istniejącym systemie)
 
@@ -35,7 +33,7 @@ Zablokowany schemat, z którym ta umiejętność jest zgodna, znajduje się w `.
 
 **Użyj, gdy**: użytkownik uruchomił `/10x-shape` (a `context/foundation/shape-notes.md` istnieje z blokiem checkpoint), LUB użytkownik ma surowy plik notatek, który chce przekształcić w szkic PRD, LUB użytkownik wyraźnie prosi o (ponowne) wygenerowanie `context/foundation/prd.md`.
 
-**Pomiń, gdy**: użytkownik wciąż generuje pomysły i nie ma notatek — najpierw wskaż `/10x-shape`. Pomiń również, gdy użytkownik chce ręcznie _edytować_ istniejące PRD — ta umiejętność zapisuje całe pliki; precyzyjne edycje są poza zakresem.
+**Pomiń, gdy**: użytkownik wciąż generuje pomysły i nie ma notatek — najpierw wskaż `/10x-shape`. Pomiń również, gdy użytkownik chce ręcznie *edytować* istniejące PRD — ta umiejętność zapisuje całe pliki; precyzyjne edycje są poza zakresem.
 
 ## Relacja z innymi umiejętnościami
 
@@ -71,7 +69,6 @@ Jeśli plik istnieje, przeczytaj go W CAŁOŚCI (bez `limit`/`offset`) i przejd�
 Jeśli plik nie istnieje, zapytaj:
 
 AskUserQuestion:
-
 - question: "Nie znaleziono pliku wejściowego pod `<resolved-path>`. Jak chcesz kontynuować?"
   header: "Dane wejściowe?"
   options:
@@ -81,7 +78,7 @@ AskUserQuestion:
     description: "Poczekam, aż wkleisz posiadane notatki. Kontrola thin-input ostrzeże o brakujących sygnałach."
   - label: "Anuluj"
     description: "Zakończ bez zmian."
-    multiSelect: false
+  multiSelect: false
 
 Dla „Najpierw uruchom /10x-shape”: wypisz „Zatrzymywanie. Uruchom `/10x-shape`, aby utworzyć shape-notes.md, a następnie ponownie wywołaj `/10x-prd`.” i ZATRZYMAJ SIĘ.
 
@@ -108,7 +105,7 @@ Określ, czy wygenerować PRD greenfield czy brownfield:
        description: "Wygeneruj PRD [greenfield|brownfield]."
      - label: "[Inny tryb] — nadpisz"
        description: "Wygeneruj zamiast tego PRD [other]."
-       multiSelect: false
+     multiSelect: false
 
 Zapisz rozwiązaną wartość `context_type` do użycia w Krokach 2 i 3. Przejdź do Kroku 2.
 
@@ -126,7 +123,7 @@ Oceń dane wejściowe za pomocą heurystyki 0–4 shaped-vs-thin. Każdy sygnał
 **Sygnały brownfield** (zastępują sygnał 1, gdy `context_type: brownfield`):
 
 1. **Obecny blok frontmatter `checkpoint:` ORAZ `context_type: brownfield`** — najsilniejszy sygnał, że pochodzi to z `/10x-shape` w trybie brownfield. Sprawdź również obecność sekcji `## Current System` w treści.
-   2–4. Tak samo jak dla greenfield.
+2–4. Tak samo jak dla greenfield.
 
 Oblicz sumę. Udokumentuj heurystykę jawnie w rozmowie, aby przyszły maintainer mógł ją dostroić:
 
@@ -158,7 +155,6 @@ czas, aby najpierw uruchomić /10x-shape, wynikowe PRD będzie znacząco lepsze.
 Następnie zapytaj:
 
 AskUserQuestion:
-
 - question: "Jak chcesz kontynuować?"
   header: "Ubogie dane wejściowe"
   options:
@@ -168,7 +164,7 @@ AskUserQuestion:
     description: "Wygeneruj PRD z tego, co jest. Brakujące elementy trafiają dosłownie do ## Open Questions."
   - label: "Anuluj"
     description: "Zakończ bez zmian."
-    multiSelect: false
+  multiSelect: false
 
 Dla „Najpierw uruchom /10x-shape”: wypisz komunikat przekierowania i ZATRZYMAJ SIĘ. Dla „Mimo wszystko kontynuuj”: przejdź do Kroku 3 z zapisanym `score < 2`, aby późniejsze kroki wiedziały, że należy oczekiwać TODOs. Dla „Anuluj”: ZATRZYMAJ SIĘ.
 
@@ -317,7 +313,6 @@ Jeśli plik nie istnieje, zapisz do `context/foundation/prd.md` i przejdź do Kr
 Jeśli plik istnieje, zapytaj:
 
 AskUserQuestion:
-
 - question: "context/foundation/prd.md już istnieje. Jak chcesz kontynuować?"
   header: "Kolizja"
   options:
@@ -327,7 +322,7 @@ AskUserQuestion:
     description: "Zastąp istniejący prd.md. Poprzednia wersja zostanie utracona (chyba że została zatwierdzona)."
   - label: "Przerwij"
     description: "Zakończ bez zapisów. Nie rozwiązuj kolizji."
-    multiSelect: false
+  multiSelect: false
 
 Dla „Zapisz jako prd-vN.md”: wybierz `N`, skanując `context/foundation/` pod kątem plików pasujących do `prd-v*.md`. Traktuj niewersjonowany `prd.md` jako v1. Następne miejsce to `N = (max existing N or 1) + 1`. Zapisz zatwierdzoną zawartość do `context/foundation/prd-v<N>.md` i zwiększ w treści pole frontmatter `version:` do `<N>`. Przejdź do Kroku 5.
 

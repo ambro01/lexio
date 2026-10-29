@@ -16,14 +16,13 @@ allowed-tools:
   - TaskCreate
   - TaskUpdate
 ---
-
 # Kontrola stanu: audyt istniejącego projektu pod kątem gotowości dla agentów
 
 Ta umiejętność jest odpowiednikiem `/10x-bootstrapper` dla istniejących projektów. Tam, gdzie bootstrapper tworzy szkielet nowego projektu i go weryfikuje, health-check uruchamia te same trzy bramki wykonania (pre/in/post) jako strukturę oceny istniejącej bazy kodu. Wykorzystuje wzorzec dyspozycji audytu dla poszczególnych języków z weryfikacji po utworzeniu szkieletu przez bootstrapper, ale stosuje go jako pierwszy krok, a nie końcową kontrolę.
 
 Umiejętność znajduje się w łańcuchu dla istniejących projektów: `/10x-shape → /10x-prd → /10x-stack-assess → /10x-health-check`. Jej jedynym zadaniem jest audyt stanu zależności projektu, infrastruktury testowej, konfiguracji CI/CD oraz kompletności konfiguracji, a następnie utworzenie ustrukturyzowanego raportu z priorytetowymi poprawkami i werdyktem gotowości dla agentów.
 
-Gdy istnieje `context/foundation/stack-assessment.md` (z `/10x-stack-assess`), health-check łączy swoje ustalenia z lukami w bramkach jakości zidentyfikowanymi tam. Oba raporty się uzupełniają: stack-assess ocenia _wybór stosu_ względem bramek jakości; health-check ocenia _stan projektu_ względem kryteriów zdrowia operacyjnego.
+Gdy istnieje `context/foundation/stack-assessment.md` (z `/10x-stack-assess`), health-check łączy swoje ustalenia z lukami w bramkach jakości zidentyfikowanymi tam. Oba raporty się uzupełniają: stack-assess ocenia *wybór stosu* względem bramek jakości; health-check ocenia *stan projektu* względem kryteriów zdrowia operacyjnego.
 
 ## Kiedy używać, kiedy pominąć
 
@@ -82,16 +81,16 @@ Jeśli znaleziono znaczniki, wykryj rodzinę języka na podstawie znacznika (ta 
 
 Sprawdź lockfile pasujący do wykrytej rodziny języka:
 
-| Rodzina języka | Oczekiwane lockfile                                                                                 |
-| -------------- | --------------------------------------------------------------------------------------------------- |
-| JS/TS          | `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`                                     |
-| Python         | `poetry.lock`, `uv.lock`, `Pipfile.lock`, `requirements.txt` (słaby — nie jest prawdziwym lockfile) |
-| Rust           | `Cargo.lock`                                                                                        |
-| Go             | `go.sum`                                                                                            |
-| Ruby           | `Gemfile.lock`                                                                                      |
-| PHP            | `composer.lock`                                                                                     |
-| .NET           | `packages.lock.json` (NuGet)                                                                        |
-| Dart           | `pubspec.lock`                                                                                      |
+| Rodzina języka | Oczekiwane lockfile |
+|---|---|
+| JS/TS | `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `bun.lockb` |
+| Python | `poetry.lock`, `uv.lock`, `Pipfile.lock`, `requirements.txt` (słaby — nie jest prawdziwym lockfile) |
+| Rust | `Cargo.lock` |
+| Go | `go.sum` |
+| Ruby | `Gemfile.lock` |
+| PHP | `composer.lock` |
+| .NET | `packages.lock.json` (NuGet) |
+| Dart | `pubspec.lock` |
 
 Jeśli nie znaleziono lockfile, oznacz to jako ustalenie:
 
@@ -105,16 +104,16 @@ Jeśli nie znaleziono lockfile, oznacz to jako ustalenie:
 
 Wybierz narzędzie audytowe ekosystemu według rodziny języka. Tabela dyspozycji odpowiada wzorcowi `audit_commands` bootstrapper:
 
-| Rodzina języka | Polecenie audytu                                        | Uwagi                                                                                    |
-| -------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| JS/TS          | `npm audit --json`                                      | Kończy się kodem niezerowym, gdy istnieją podatności — nie jest to warunek zatrzymania   |
-| Python         | `pip-audit --format json`                               | W razie braku pip-audit przechodzi do pominięcia                                         |
-| Rust           | `cargo audit --json`                                    | W razie braku cargo-audit przechodzi do pominięcia                                       |
-| Go             | `govulncheck -json ./...`                               | W razie braku govulncheck przechodzi do pominięcia                                       |
-| Ruby           | `bundle audit check --update`                           | Wynik czytelny dla człowieka, analizuj linia po linii                                    |
-| PHP            | `composer audit --format json`                          | Wymaga Composer 2.4+                                                                     |
-| .NET           | `dotnet list package --vulnerable --include-transitive` | Czytelne dla człowieka, analizuj znaczniki poziomu ważności                              |
-| Java, Dart     | (pomiń)                                                 | Brak wbudowanego narzędzia audytowego; odnotuj pominięcie i zalecaj narzędzia zewnętrzne |
+| Rodzina języka | Polecenie audytu | Uwagi |
+|---|---|---|
+| JS/TS | `npm audit --json` | Kończy się kodem niezerowym, gdy istnieją podatności — nie jest to warunek zatrzymania |
+| Python | `pip-audit --format json` | W razie braku pip-audit przechodzi do pominięcia |
+| Rust | `cargo audit --json` | W razie braku cargo-audit przechodzi do pominięcia |
+| Go | `govulncheck -json ./...` | W razie braku govulncheck przechodzi do pominięcia |
+| Ruby | `bundle audit check --update` | Wynik czytelny dla człowieka, analizuj linia po linii |
+| PHP | `composer audit --format json` | Wymaga Composer 2.4+ |
+| .NET | `dotnet list package --vulnerable --include-transitive` | Czytelne dla człowieka, analizuj znaczniki poziomu ważności |
+| Java, Dart | (pomiń) | Brak wbudowanego narzędzia audytowego; odnotuj pominięcie i zalecaj narzędzia zewnętrzne |
 
 Uruchom wybrane polecenie z cwd. Przechwyć stdout, stderr i kod wyjścia. Kod wyjścia narzędzia audytowego ma charakter informacyjny — health-check NIE zatrzymuje się po niezerowym kodzie wyjścia audytu.
 
@@ -133,12 +132,12 @@ Gdy narzędzie rozróżnia zależności bezpośrednie i przechodnie, pokaż podz
 
 Jeśli rodzina języka to obsługuje, uruchom szybkie sprawdzenie aktualności:
 
-| Rodzina języka | Polecenie                                               | Co pokazuje                                     |
-| -------------- | ------------------------------------------------------- | ----------------------------------------------- |
-| JS/TS          | `npm outdated --json`                                   | Current vs wanted vs latest dla każdego pakietu |
-| Python         | `pip list --outdated --format json`                     | Current vs latest                               |
-| Rust           | `cargo outdated --root-deps-only` (jeśli zainstalowano) | Nieaktualne bezpośrednie zależności             |
-| Ruby           | `bundle outdated --only-explicit`                       | Nieaktualne bezpośrednie gemy                   |
+| Rodzina języka | Polecenie | Co pokazuje |
+|---|---|---|
+| JS/TS | `npm outdated --json` | Current vs wanted vs latest dla każdego pakietu |
+| Python | `pip list --outdated --format json` | Current vs latest |
+| Rust | `cargo outdated --root-deps-only` (jeśli zainstalowano) | Nieaktualne bezpośrednie zależności |
+| Ruby | `bundle outdated --only-explicit` | Nieaktualne bezpośrednie gemy |
 
 To sprawdzenie ma charakter informacyjny — pokaż luki w wersjach głównych oraz pakiety opóźnione o więcej niż 2 wersje główne. Nie zgłaszaj każdej aktualizacji wersji podrzędnej.
 
@@ -159,15 +158,15 @@ Outdated: <N> packages with major version gaps.
 
 Wykryj runner testów na podstawie plików konfiguracji:
 
-| Rodzina języka | Źródła wykrywania                                                                                               | Runnery testów                           |
-| -------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| JS/TS          | skrypty/devDeps w `package.json`, `vitest.config.*`, `jest.config.*`, `playwright.config.*`, `cypress.config.*` | Vitest, Jest, Playwright, Cypress, Mocha |
-| Python         | `pyproject.toml [tool.pytest]`, `setup.cfg [tool:pytest]`, `tox.ini`, `pytest.ini`                              | pytest, unittest, tox                    |
-| Rust           | `Cargo.toml` (wbudowany `cargo test`)                                                                           | cargo test                               |
-| Go             | (wbudowany `go test`)                                                                                           | go test                                  |
-| Ruby           | zależności w `Gemfile`, `.rspec`, `Rakefile`                                                                    | RSpec, Minitest                          |
-| PHP            | `phpunit.xml*`, zależności w `composer.json`                                                                    | PHPUnit, Pest                            |
-| .NET           | referencje w `*.csproj`                                                                                         | xUnit, NUnit, MSTest                     |
+| Rodzina języka | Źródła wykrywania | Runnery testów |
+|---|---|---|
+| JS/TS | skrypty/devDeps w `package.json`, `vitest.config.*`, `jest.config.*`, `playwright.config.*`, `cypress.config.*` | Vitest, Jest, Playwright, Cypress, Mocha |
+| Python | `pyproject.toml [tool.pytest]`, `setup.cfg [tool:pytest]`, `tox.ini`, `pytest.ini` | pytest, unittest, tox |
+| Rust | `Cargo.toml` (wbudowany `cargo test`) | cargo test |
+| Go | (wbudowany `go test`) | go test |
+| Ruby | zależności w `Gemfile`, `.rspec`, `Rakefile` | RSpec, Minitest |
+| PHP | `phpunit.xml*`, zależności w `composer.json` | PHPUnit, Pest |
+| .NET | referencje w `*.csproj` | xUnit, NUnit, MSTest |
 
 Jeśli wykryto runner testów, spróbuj uruchomienia próbnego, aby zweryfikować, czy testy mogą się wykonać:
 
@@ -202,13 +201,13 @@ find . -maxdepth 2 \( -name ".github" -o -name ".gitlab-ci.yml" -o -name "Jenkin
 
 Jeśli znaleziono konfigurację CI, odczytaj ją i oceń pokrycie:
 
-| Etap       | Co sprawdzić                                                                            |
-| ---------- | --------------------------------------------------------------------------------------- |
-| Lint       | Czy istnieje krok lint? (eslint, ruff, clippy, rubocop, phpstan itd.)                   |
-| Test       | Czy istnieje krok testów? Czy odpowiada wykrytemu runnerowi testów?                     |
-| Build      | Czy istnieje krok build/compile?                                                        |
-| Type check | Czy istnieje krok type-check? (tsc, mypy, pyright itd.)                                 |
-| Security   | Czy istnieje krok skanowania bezpieczeństwa? (npm audit, Snyk, CodeQL, Dependabot itd.) |
+| Etap | Co sprawdzić |
+|---|---|
+| Lint | Czy istnieje krok lint? (eslint, ruff, clippy, rubocop, phpstan itd.) |
+| Test | Czy istnieje krok testów? Czy odpowiada wykrytemu runnerowi testów? |
+| Build | Czy istnieje krok build/compile? |
+| Type check | Czy istnieje krok type-check? (tsc, mypy, pyright itd.) |
+| Security | Czy istnieje krok skanowania bezpieczeństwa? (npm audit, Snyk, CodeQL, Dependabot itd.) |
 
 Pokaż podsumowanie pokrycia:
 
@@ -223,15 +222,15 @@ Jeśli nie znaleziono konfiguracji CI, odnotuj to jako element kategorii B — o
 
 Sprawdź typową konfigurację deweloperską:
 
-| Plik                                     | Cel                                     | Ważność w przypadku braku                    |
-| ---------------------------------------- | --------------------------------------- | -------------------------------------------- |
-| `.editorconfig`                          | Spójne formatowanie w różnych edytorach | low                                          |
-| `.prettierrc*` / `biome.json` (JS/TS)    | Formatowanie kodu                       | medium (jeśli nie skonfigurowano formatera)  |
-| `.eslintrc*` / `eslint.config.*` (JS/TS) | Linting                                 | medium                                       |
-| `tsconfig.json` z `strict: true` (TS)    | Rygor typów                             | high (jeśli projekt TS nie używa strict)     |
-| `.gitignore`                             | Wykluczenia śledzonych plików           | high                                         |
-| `.env.example` / `.env.template`         | Dokumentacja zmiennych środowiskowych   | low                                          |
-| `CLAUDE.md` / `AGENTS.md`                | Pliki instrukcji dla agentów            | Kategoria B — omawiane w onboardingu agentów |
+| Plik | Cel | Ważność w przypadku braku |
+|---|---|---|
+| `.editorconfig` | Spójne formatowanie w różnych edytorach | low |
+| `.prettierrc*` / `biome.json` (JS/TS) | Formatowanie kodu | medium (jeśli nie skonfigurowano formatera) |
+| `.eslintrc*` / `eslint.config.*` (JS/TS) | Linting | medium |
+| `tsconfig.json` z `strict: true` (TS) | Rygor typów | high (jeśli projekt TS nie używa strict) |
+| `.gitignore` | Wykluczenia śledzonych plików | high |
+| `.env.example` / `.env.template` | Dokumentacja zmiennych środowiskowych | low |
+| `CLAUDE.md` / `AGENTS.md` | Pliki instrukcji dla agentów | Kategoria B — omawiane w onboardingu agentów |
 
 Pokaż brakujące pliki pogrupowane według ważności.
 
@@ -292,7 +291,6 @@ Te ustalenia są rzeczywiste, ale osoba ucząca się skonfiguruje je w nadchodz�
 - **Brak konfiguracji wdrożeniowej** → omawiany w lekcji infrastruktury. Potwierdź, nie nadawaj priorytetu.
 
 Gdy health-check jest uruchamiany samodzielnie (poza łańcuchem kursu), wszystkie ustalenia trafiają na pojedynczą listę rankingową bez podziału A/B — struktura kontekstu kursu obowiązuje wyłącznie, gdy użytkownik przechodzi przez łańcuch dla istniejących projektów. Przy uruchamianiu w ramach łańcucha kursu 10xDevs wzbogacaj odniesienia do przyszłych kroków tytułami lekcji i linkami:
-
 - onboarding agentów = [Agent Onboarding: Agents.md, AI Rules i feedback loops (M1L4)](https://platforma.przeprogramowani.pl/external/10xdevs-3/m1-l4)
 - infrastructure & CI/CD = [Sprint Zero z Agentem: infrastruktura, walking skeleton i pierwszy deploy (M1L5)](https://platforma.przeprogramowani.pl/external/10xdevs-3/m1-l5)
 
@@ -314,7 +312,6 @@ test -f context/foundation/health-check.md
 Jeśli plik istnieje, zapytaj:
 
 AskUserQuestion:
-
 - question: "context/foundation/health-check.md already exists. How would you like to proceed?"
   header: "Collision"
   options:
@@ -324,7 +321,7 @@ AskUserQuestion:
     description: "Preserve history. New report lands at the next available version slot."
   - label: "Abort"
     description: "Exit without writing. The conversation findings are preserved in chat only."
-    multiSelect: false
+  multiSelect: false
 
 Zbuduj plik wyjściowy zgodnie z `references/health-check-schema.md`.
 

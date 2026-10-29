@@ -16,7 +16,6 @@ allowed-tools:
   - TaskCreate
   - TaskUpdate
 ---
-
 # Selektor stosu technologicznego: od PRD do startera
 
 Ta umiejętność jest trzecim ogniwem w łańcuchu bootstrap (`/10x-shape → /10x-prd → 10x-tech-stack-selector → /10x-bootstrapper`). Jej jedyne zadanie: przekształcić napisany PRD w rekomendowany starter oraz małe, odczytywalne maszynowo przekazanie, które `/10x-bootstrapper` może odczytać, aby stworzyć szkielet projektu.
@@ -117,7 +116,6 @@ PRD priors:
 Zadaj jedno pytanie potwierdzające:
 
 AskUserQuestion:
-
 - question: "Czy te przesłanki są poprawne, czy chcesz coś skorygować, zanim przejdziemy dalej?"
   header: "Przesłanki"
   options:
@@ -127,7 +125,7 @@ AskUserQuestion:
     description: "Zapytam, które pole skorygować, a następnie zaktualizuję nadpisanie w pamięci (PRD na dysku pozostanie niezmieniony)."
   - label: "Zatrzymaj — najpierw popraw PRD"
     description: "Zakończ. Uruchom ponownie /10x-prd, aby poprawić przesłanki, a następnie ponownie wywołaj /10x-tech-stack-selector."
-    multiSelect: false
+  multiSelect: false
 
 Jeśli wybrano „Skoryguj wartość”: zapytaj, które pole, zapisz nadpisanie i kontynuuj z zastosowanym nadpisaniem tylko dla tej sesji.
 
@@ -199,7 +197,6 @@ Jeśli plik nie istnieje, zapisz `context/foundation/tech-stack.md` ze zwalidowa
 Jeśli plik istnieje, zapytaj:
 
 AskUserQuestion:
-
 - question: "context/foundation/tech-stack.md już istnieje. Jak chcesz postąpić?"
   header: "Kolizja"
   options:
@@ -209,7 +206,7 @@ AskUserQuestion:
     description: "Zachowaj historię. Nowy wybór trafi do następnego dostępnego miejsca tech-stack-vN.md."
   - label: "Przerwij"
     description: "Zakończ bez zapisywania. Uzasadnienie rozmowy zostanie zachowane wyłącznie na czacie."
-    multiSelect: false
+  multiSelect: false
 
 Rekomendowaną opcją domyślną jest tutaj „Nadpisz”, ponieważ tech-stack-selector jest jednorazową decyzją dla projektu; wiele wersji zwykle oznacza, że użytkownik ponownie rozważa wybór, w którym to przypadku utrata poprzedniego wyboru jest zamierzona. Wersjonowany zapis jest rozwiązaniem awaryjnym.
 
@@ -251,7 +248,7 @@ Frontmatter zgodny ze schematem w `references/handoff-schema.md`:
 ```yaml
 ---
 starter_id: <key from registry | custom>
-custom_starter: # only when starter_id is custom
+custom_starter:            # only when starter_id is custom
   name: <framework name>
   docs_url: <official docs URL>
 package_manager: <card-prescribed string; may be omitted for some ecosystems>
@@ -272,6 +269,7 @@ hints:
   has_ai: <bool>
   has_background_jobs: <bool>
 ---
+
 ## Why this stack
 
 <one paragraph, ≤ 200 words>

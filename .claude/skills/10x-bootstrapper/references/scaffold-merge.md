@@ -61,15 +61,15 @@ Sequence:
 
 Applied during the move-up step for `subdir-then-move` and `git-clone`. Compares each path under `.bootstrap-scaffold/` against the same relative path under cwd.
 
-| Path pattern in scaffold                                                 | Path exists in cwd? | Resolution                                                                                                                                                   |
-| ------------------------------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `context/**` (any path under `context/`)                                 | yes or no           | scaffold copy is dropped; cwd `context/` is the source of truth and never overwritten                                                                        |
-| `.gitignore`                                                             | yes                 | append-merged: cwd lines kept in order, then scaffold lines de-duped against the cwd set, appended at the end with a `# from <starter_id>` separator comment |
-| `.gitignore`                                                             | no                  | move silently                                                                                                                                                |
-| `package.json`, `README.md`, `CLAUDE.md`, `AGENTS.md`, root-level `*.md` | yes                 | existing wins; scaffold copy lands as `<filename>.scaffold` sibling                                                                                          |
-| `package.json`, `README.md`, `CLAUDE.md`, `AGENTS.md`, root-level `*.md` | no                  | move silently                                                                                                                                                |
-| anything else                                                            | yes                 | existing wins; scaffold copy lands as `<filename>.scaffold` sibling                                                                                          |
-| anything else                                                            | no                  | move silently                                                                                                                                                |
+| Path pattern in scaffold                                                       | Path exists in cwd? | Resolution                                                                          |
+| ------------------------------------------------------------------------------ | ------------------- | ----------------------------------------------------------------------------------- |
+| `context/**` (any path under `context/`)                                       | yes or no           | scaffold copy is dropped; cwd `context/` is the source of truth and never overwritten |
+| `.gitignore`                                                                   | yes                 | append-merged: cwd lines kept in order, then scaffold lines de-duped against the cwd set, appended at the end with a `# from <starter_id>` separator comment |
+| `.gitignore`                                                                   | no                  | move silently                                                                       |
+| `package.json`, `README.md`, `CLAUDE.md`, `AGENTS.md`, root-level `*.md`       | yes                 | existing wins; scaffold copy lands as `<filename>.scaffold` sibling                  |
+| `package.json`, `README.md`, `CLAUDE.md`, `AGENTS.md`, root-level `*.md`       | no                  | move silently                                                                       |
+| anything else                                                                  | yes                 | existing wins; scaffold copy lands as `<filename>.scaffold` sibling                  |
+| anything else                                                                  | no                  | move silently                                                                       |
 
 Notes on the matrix:
 
@@ -104,7 +104,7 @@ Applies when the hand-off has `starter_id: custom`. There is no registry card, s
        description: "Paste the command you want; I'll run it the same way."
      - label: "I'll scaffold it myself"
        description: "Skip the scaffold step. I'll wait while you generate the project into this directory, then run the audit and write the log."
-       multiSelect: false
+     multiSelect: false
 
 4. **No generator found, or "I'll scaffold it myself".** Print the docs link and a one-line instruction ("Generate the project into this directory, keeping `context/` intact, then tell me when it's done"). Wait for the user. Record `cwd_strategy: manual` in the verification log and skip the conflict matrix — the user's own files are the scaffold. Continue to Step 3.
 5. **Run.** On approval, the command goes through the normal `subdir-then-move` path below. A non-zero exit takes the normal CLI failure path.

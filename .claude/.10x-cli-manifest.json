@@ -2,8 +2,8 @@
   "package": "@przeprogramowani/10x-cli",
   "version": "1.31.0",
   "manifestVersion": 3,
-  "lastApplied": "2026-10-28T21:00:18.315Z",
-  "lessonId": "m1l3",
+  "lastApplied": "2026-10-29T19:57:53.644Z",
+  "lessonId": "m1l4",
   "course": "10xdevs4",
   "tool": "claude-code",
   "files": {
@@ -25,20 +25,27 @@
         }
       },
       "10x-init": {
-        "files": ["SKILL.md"],
+        "files": [
+          "SKILL.md"
+        ],
         "contentHashes": {
           "SKILL.md": "b043810ed499dd72ba2da5acaa9ae506ccfc483aa4553f596863b4051b6bc46a"
         }
       },
       "10x-shape": {
-        "files": ["SKILL.md", "references/prd-schema.md"],
+        "files": [
+          "SKILL.md",
+          "references/prd-schema.md"
+        ],
         "contentHashes": {
           "SKILL.md": "82ec5146a94f403a1e0e4fd22abc8649c78e8d2c913963d5335320e8a7e5cee0",
           "references/prd-schema.md": "69e487a419e06fedd9d7761a6be1f375b5290839bdc58eaca1c1f64fe5f3516e"
         }
       },
       "10x-prd": {
-        "files": ["SKILL.md"],
+        "files": [
+          "SKILL.md"
+        ],
         "contentHashes": {
           "SKILL.md": "9c31c0911497b76964685dda4bbf6efaa5c1e8335efe7da00f02d7c2ad2743a3"
         }
@@ -106,14 +113,43 @@
         }
       },
       "10x-health-check": {
-        "files": ["SKILL.md", "references/health-check-schema.md"],
+        "files": [
+          "SKILL.md",
+          "references/health-check-schema.md"
+        ],
         "contentHashes": {
           "SKILL.md": "65398d44f05d373fb82cb270ca1e200dcf922da7afa9533ec32698fc3c656c33",
           "references/health-check-schema.md": "6c7115da83ef2a4a396a9b703d94395a0904748bb586a6e182f2018fcbfedfe6"
         }
+      },
+      "10x-agents-md": {
+        "files": [
+          "SKILL.md"
+        ],
+        "contentHashes": {
+          "SKILL.md": "743462d6d5da30121756aa2c5ef003e454ba9c414bfc07b05bed2438327afd4f"
+        }
+      },
+      "10x-rule-review": {
+        "files": [
+          "SKILL.md"
+        ],
+        "contentHashes": {
+          "SKILL.md": "9243236dfd6cf2bafd052f6affc01a63083c3481ee078f3678a3988047a434df"
+        }
+      },
+      "10x-lesson": {
+        "files": [
+          "SKILL.md"
+        ],
+        "contentHashes": {
+          "SKILL.md": "55b51f0b8aaaa1ff6b6789ca2f7d7f1210dd05e4e1590a8b5930a547c99d95c3"
+        }
       }
     },
-    "prompts": ["skill-explainer.md"],
+    "prompts": [
+      "skill-explainer.md"
+    ],
     "configs": [],
     "promptHashes": {
       "skill-explainer.md": "dcd173047eb4a5fcd071fa7db7ec0133bcb033e1c8f0a6fdb64d1b122225c2e5"
@@ -134,13 +170,20 @@
           ]
         },
         "10x-init": {
-          "files": ["SKILL.md"]
+          "files": [
+            "SKILL.md"
+          ]
         },
         "10x-shape": {
-          "files": ["SKILL.md", "references/prd-schema.md"]
+          "files": [
+            "SKILL.md",
+            "references/prd-schema.md"
+          ]
         },
         "10x-prd": {
-          "files": ["SKILL.md"]
+          "files": [
+            "SKILL.md"
+          ]
         }
       },
       "prompts": [],
@@ -167,13 +210,20 @@
           ]
         },
         "10x-init": {
-          "files": ["SKILL.md"]
+          "files": [
+            "SKILL.md"
+          ]
         },
         "10x-shape": {
-          "files": ["SKILL.md", "references/prd-schema.md"]
+          "files": [
+            "SKILL.md",
+            "references/prd-schema.md"
+          ]
         },
         "10x-prd": {
-          "files": ["SKILL.md"]
+          "files": [
+            "SKILL.md"
+          ]
         },
         "10x-tech-stack-selector": {
           "files": [
@@ -198,7 +248,9 @@
           ]
         }
       },
-      "prompts": ["skill-explainer.md"],
+      "prompts": [
+        "skill-explainer.md"
+      ],
       "configs": [],
       "representation": {
         "lang": "pl",
@@ -222,13 +274,20 @@
           ]
         },
         "10x-init": {
-          "files": ["SKILL.md"]
+          "files": [
+            "SKILL.md"
+          ]
         },
         "10x-shape": {
-          "files": ["SKILL.md", "references/prd-schema.md"]
+          "files": [
+            "SKILL.md",
+            "references/prd-schema.md"
+          ]
         },
         "10x-prd": {
-          "files": ["SKILL.md"]
+          "files": [
+            "SKILL.md"
+          ]
         },
         "10x-tech-stack-selector": {
           "files": [
@@ -265,10 +324,112 @@
           ]
         },
         "10x-health-check": {
-          "files": ["SKILL.md", "references/health-check-schema.md"]
+          "files": [
+            "SKILL.md",
+            "references/health-check-schema.md"
+          ]
         }
       },
-      "prompts": ["skill-explainer.md"],
+      "prompts": [
+        "skill-explainer.md"
+      ],
+      "configs": [],
+      "representation": {
+        "lang": "pl",
+        "tool": "claude-code",
+        "courseRules": true,
+        "rules": true
+      },
+      "installedReleaseId": "r-5a881691e49bc76caa8246859885fd0f6213df0a3841d25e221fa9294a2b4673",
+      "installedManifestHash": "11d85eaf9ca2fe01249cc24a43f5b6aca196b16fb79576a3d3a29bc08ba9863d"
+    },
+    "m1l4": {
+      "appliedAt": "2026-10-29T19:57:53.644Z",
+      "skills": {
+        "10x-idea-check": {
+          "files": [
+            "SKILL.md",
+            "references/10xdevs-4-certification.md",
+            "references/10xdevs-4-dates.md",
+            "references/assessment-guide.md",
+            "references/examples.md"
+          ]
+        },
+        "10x-init": {
+          "files": [
+            "SKILL.md"
+          ]
+        },
+        "10x-shape": {
+          "files": [
+            "SKILL.md",
+            "references/prd-schema.md"
+          ]
+        },
+        "10x-prd": {
+          "files": [
+            "SKILL.md"
+          ]
+        },
+        "10x-tech-stack-selector": {
+          "files": [
+            "SKILL.md",
+            "references/agent-friendly-criteria.md",
+            "references/decision-flow.md",
+            "references/eval-cases.md",
+            "references/handoff-schema.md",
+            "references/residual-interview.md",
+            "references/starter-registry.yaml"
+          ]
+        },
+        "10x-stack-assess": {
+          "files": [
+            "SKILL.md",
+            "references/agent-friendly-criteria.md",
+            "references/decision-flow.md",
+            "references/eval-cases.md",
+            "references/handoff-schema.md",
+            "references/residual-interview.md",
+            "references/starter-registry.yaml"
+          ]
+        },
+        "10x-bootstrapper": {
+          "files": [
+            "SKILL.md",
+            "references/bootstrapper-config.yaml",
+            "references/handoff-consumer.md",
+            "references/post-scaffold-verification.md",
+            "references/pre-scaffold-verification.md",
+            "references/refusal-protocol.md",
+            "references/scaffold-merge.md",
+            "references/verification-log-schema.md"
+          ]
+        },
+        "10x-health-check": {
+          "files": [
+            "SKILL.md",
+            "references/health-check-schema.md"
+          ]
+        },
+        "10x-agents-md": {
+          "files": [
+            "SKILL.md"
+          ]
+        },
+        "10x-rule-review": {
+          "files": [
+            "SKILL.md"
+          ]
+        },
+        "10x-lesson": {
+          "files": [
+            "SKILL.md"
+          ]
+        }
+      },
+      "prompts": [
+        "skill-explainer.md"
+      ],
       "configs": [],
       "representation": {
         "lang": "pl",
@@ -284,10 +445,10 @@
     "path": "CLAUDE.md",
     "begin": "<!-- BEGIN @przeprogramowani/10x-cli -->",
     "end": "<!-- END @przeprogramowani/10x-cli -->",
-    "upstreamHash": "613fa21b67eec4e5c3840b3adb9f66fd3e73986423f56c21ac29a4f0ad3b5b67"
+    "upstreamHash": "2b57a5cda11e85fc1a87390ff8f1f32a226949ac96d5f0403ec3a0f7620be3b3"
   },
   "toolkit": {
     "version": "v2.60.4",
-    "recordedAt": "2026-10-28T21:00:18.405Z"
+    "recordedAt": "2026-10-29T19:57:53.833Z"
   }
 }

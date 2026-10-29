@@ -81,6 +81,7 @@ Wysoki próg zero-to-one — tydzień pracy, a nadal nie da się wykonać jednej
 
 Użyj tej tabeli do pierwszej oceny swojego pomysłu:
 
+
 Masz dwa pomysły? Wybierz ten, który ma krótszą drogę do pierwszego przepływu i bardziej oczywistą logikę biznesową. Efektowność pojawia się później.
 
 Warto wiedzieć

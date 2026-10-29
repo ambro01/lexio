@@ -11,7 +11,6 @@ description: >
   submission audit, PRD generation, or an explicit request to start shaping.
 argument-hint: "[rough idea or change to an existing project]"
 ---
-
 # Ocena pomysłu 10x
 
 Pomóż uczestnikowi wybrać kolejne działanie: przejść do sesji planistycznej dla tego pomysłu, przygotować dopasowaną

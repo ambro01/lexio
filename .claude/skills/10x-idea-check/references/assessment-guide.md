@@ -47,12 +47,12 @@ Do not require access to real customers or commercial traction for a course proj
 
 Use demonstrated development and agent-delivery experience as separate signals:
 
-| Context                                             | Guidance                                                                                                                                         |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| New to development and agents                       | Prefer visible progress, few dependencies, and outcomes they can verify.                                                                         |
-| Experienced developer, new to agents                | Encourage a meaningful problem in a familiar domain, with room to learn supervision and recovery.                                                |
-| Confident prompting, limited engineering experience | Check how they recognize correctness; do not infer delivery ability from prompting fluency.                                                      |
-| Has shipped substantial agent-assisted work         | Support ambitious MVPs when integration, verification, and time constraints are credible. Suggest one valuable stretch if they want a challenge. |
+| Context | Guidance |
+| --- | --- |
+| New to development and agents | Prefer visible progress, few dependencies, and outcomes they can verify. |
+| Experienced developer, new to agents | Encourage a meaningful problem in a familiar domain, with room to learn supervision and recovery. |
+| Confident prompting, limited engineering experience | Check how they recognize correctness; do not infer delivery ability from prompting fluency. |
+| Has shipped substantial agent-assisted work | Support ambitious MVPs when integration, verification, and time constraints are credible. Suggest one valuable stretch if they want a challenge. |
 
 Use these examples to guide the conversation. A small project can suit an expert. A beginner can explore an ambitious direction through a
 manageable first milestone. For existing projects, assess what changes, what already works, and what must

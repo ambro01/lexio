@@ -5,7 +5,6 @@ Przeanalizuj skill, aby zrozumieć jego mechanikę, uzasadnienie projektowe oraz
 ## Dane wejściowe
 
 Użytkownik podaje nazwę skilla (np. `10x-plan`, `10x-shape`, `10x-new`). Akceptuj ją jako:
-
 - Samą nazwę: `10x-plan`
 - Nazwę z prefiksem ukośnika: `/10x-plan`
 - Ścieżkę do pliku SKILL.md: `~/.claude/skills/10x-plan/SKILL.md`
@@ -30,11 +29,9 @@ Znajdź pliki źródłowe skilla:
    - Ścieżka podana przez użytkownika (jeśli podano pełną ścieżkę)
 
    Jeśli żadnej nie znaleziono, powiedz użytkownikowi:
-
    ```
    Nie udało mi się znaleźć pliku SKILL.md dla "<name>". Podaj pełną ścieżkę do pliku skilla.
    ```
-
    Następnie poczekaj.
 
 2. **Przeczytaj cały plik SKILL.md** — bez obcinania, bez limitu/offsetu.
@@ -45,11 +42,11 @@ Znajdź pliki źródłowe skilla:
 
 Po przeczytaniu wszystkich plików źródłowych przygotuj poniższy raport. Dostosuj poziom szczegółowości do złożoności skilla:
 
-| Rozmiar skilla                           | Szczegółowość                                                                                                                                                |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Poniżej 150 linii (prosty)               | Zwięzła — każda sekcja ma 3–5 zdań. Pomiń sekcje, które nie mają zastosowania (np. proste skille rzadko mają orkiestrację sub-agentów lub bramki samooceny). |
-| 150–400 linii (średni)                   | Standardowa — każda sekcja to krótki akapit. Omów wszystkie 7 sekcji.                                                                                        |
-| Powyżej 400 linii (złożony/orkiestrator) | Szczegółowa — tabela anatomii, konkretne odwołania do linii, rozszerzona analiza mechaniki. Wszystkie 7 sekcji w pełni.                                      |
+| Rozmiar skilla | Szczegółowość |
+|-----------|-------|
+| Poniżej 150 linii (prosty) | Zwięzła — każda sekcja ma 3–5 zdań. Pomiń sekcje, które nie mają zastosowania (np. proste skille rzadko mają orkiestrację sub-agentów lub bramki samooceny). |
+| 150–400 linii (średni) | Standardowa — każda sekcja to krótki akapit. Omów wszystkie 7 sekcji. |
+| Powyżej 400 linii (złożony/orkiestrator) | Szczegółowa — tabela anatomii, konkretne odwołania do linii, rozszerzona analiza mechaniki. Wszystkie 7 sekcji w pełni. |
 
 Nie wypełniaj prostych skilli ogólnikowymi zapychaczami. Skill mający 95 linii powinien otrzymać zwarty, skoncentrowany raport. Orkiestrator mający 831 linii powinien otrzymać dogłębne omówienie.
 
@@ -76,7 +73,6 @@ Następnie przejdź do każdej sekcji w pełni:
 Odpowiedz na pytanie: **„Dlaczego ten skill istnieje?”**
 
 Wyciągnij z deklaracji roli oraz sekcji „Kiedy używać / kiedy pomijać”:
-
 - Jaki problem rozwiązuje ten skill? Co działo się przed jego powstaniem?
 - Kiedy użytkownik powinien po niego sięgnąć? Jakie są sygnały wyzwalające?
 - Kiedy użytkownik NIE powinien go używać? Jaki jest niewłaściwy kontekst?
@@ -89,13 +85,11 @@ Nie opisuj jedynie, co skill robi — wyjaśnij, jaki problem eliminuje.
 Odpowiedz na pytanie: **„Gdzie ten skill znajduje się w workflow?”**
 
 Wyciągnij z sekcji „Relacja z innymi skillami”:
-
 - **Upstream**: Jakich plików lub artefaktów ten skill oczekuje jako danych wejściowych? Który skill je tworzy? (np. `/10x-shape` tworzy `shape-notes.md`, który wykorzystuje `/10x-prd`)
 - **Downstream**: Co ten skill generuje? Który skill wykorzystuje to dalej? Do jakiego pliku zapisuje dane na dysku?
 - **Model przekazania**: Skille komunikują się przez pliki na dysku, a nie przez pamięć. Każdy skill zapisuje artefakt, zatrzymuje się i przekazuje kontrolę człowiekowi, zanim uruchomiony zostanie kolejny skill. Wyjaśnij, jak ten skill wpisuje się w ten łańcuch.
 
 Gdy jest to przydatne, pokaż wizualnie pozycję w łańcuchu:
-
 ```
 [skill upstream] → artefakt wejściowy → TEN SKILL → artefakt wyjściowy → [skill downstream]
 ```
@@ -105,18 +99,17 @@ Gdy jest to przydatne, pokaż wizualnie pozycję w łańcuchu:
 Odpowiedz na pytanie: **„Jakie są sekcje tego pliku SKILL.md i co robi każda z nich?”**
 
 Podziel SKILL.md na sekcje i dla każdej przedstaw:
-
 - **Nazwę sekcji** oraz przybliżony zakres linii
 - **Co robi** — jedno zdanie
 - **Dlaczego tam jest** — co by się zepsuło lub pogorszyło, gdyby tę sekcję usunąć
 
 Dla średnich i złożonych skilli przedstaw to jako tabelę:
 
-| Sekcja           | Linie | Cel                        | Dlaczego ma znaczenie                                                                                  |
-| ---------------- | ----- | -------------------------- | ------------------------------------------------------------------------------------------------------ |
-| YAML frontmatter | 1-8   | Nazwa, opis, allowed-tools | `description` kontroluje, kiedy skill się aktywuje; `allowed-tools` jest twardą granicą bezpieczeństwa |
-| Deklaracja roli  | 10-15 | Jednozdaniowa filozofia    | Ustala osobowość zachowania skilla                                                                     |
-| ...              | ...   | ...                        | ...                                                                                                    |
+| Sekcja | Linie | Cel | Dlaczego ma znaczenie |
+|---------|-------|---------|----------------|
+| YAML frontmatter | 1-8 | Nazwa, opis, allowed-tools | `description` kontroluje, kiedy skill się aktywuje; `allowed-tools` jest twardą granicą bezpieczeństwa |
+| Deklaracja roli | 10-15 | Jednozdaniowa filozofia | Ustala osobowość zachowania skilla |
+| ... | ... | ... | ... |
 
 Cel: wyjaśnić „tysiące linii”. Pokaż uczącej się osobie, że długi skill to w rzeczywistości N sekcji, z których każda ma jasno określone zadanie. Całość jest mniej onieśmielająca niż poszczególne części.
 
@@ -171,19 +164,16 @@ Odpowiedz na pytanie: **„Co mogę zmienić i jakie ryzyko wiąże się z każd
 Uporządkuj według poziomu trudności, z 1–2 konkretnymi przykładami na poziom, specyficznymi dla analizowanego skilla:
 
 **Łatwe (niskie ryzyko, natychmiastowy efekt):**
-
 - Co zmienić: np. frazy wyzwalające w `description`, nagłówki sekcji szablonu, etykiety opcji pytań, formatowanie raportu
 - Przykład: „Aby dodać polskie frazy wyzwalające, edytuj pole `description` i dodaj „stwórz plan” obok „create plan””
 - Co się zepsuje przy błędzie: nic krytycznego — w najgorszym przypadku skill będzie aktywować się w niewłaściwych momentach lub formatowanie wyjścia będzie wyglądać inaczej
 
 **Średnie (wymaga zrozumienia łańcucha):**
-
 - Co zmienić: np. kryteria bramki samooceny, wymiary punktacji, kategorie pytań, liczba sub-agentów
 - Przykład: „Aby dodać wymiar „Security” do karty oceny, dodaj go do listy wymiarów w krokach procesu i zaktualizuj szablon raportu”
 - Co się zepsuje przy błędzie: skill może generować niepełne lub niespójne wyjście, ale nie zepsuje innych skilli w łańcuchu
 
 **Trudne (strukturalne, ryzyko złamania kontraktów łańcucha):**
-
 - Co zmienić: np. lista `allowed-tools`, format pliku wyjściowego, nazewnictwo artefaktów, wartości cyklu życia statusu
 - Przykład: „Zmiana nazwy pliku wyjściowego z `plan.md` na `implementation-plan.md` zepsułaby `/10x-implement`, który wyszukuje `plan.md`”
 - Co się zepsuje przy błędzie: skille downstream zależne od dokładnych nazw plików, nagłówków sekcji lub wartości statusu zawiodą po cichu albo wygenerują nieprawidłowe wyjście
@@ -195,7 +185,6 @@ Odpowiedz na pytanie: **„Gdybym chciał zbudować własną wersję tego skilla
 Przedstaw praktyczną ścieżkę budowy krok po kroku. Zacznij prosto i stopniowo rozbudowuj — to progresywna droga od „pustego pliku” do „działającego skilla”.
 
 Zanim przejdziesz do ręcznych kroków, wspomnij o dwóch skrótach:
-
 - **Podejście konwersacyjne**: Po prostu powiedz agentowi „let's build a skill that does X” i wspólnie iterujcie nad SKILL.md przez 3–4 rundy. To najszybsza ścieżka dla osobistych skilli.
 - **`/skill-creator`**: Meta-skill Anthropic do budowania skilli z ustrukturyzowanymi ewaluacjami. Dostępny pod adresem `github.com/anthropics/skills/tree/main/skills/skill-creator`. Lepszy dla współdzielonych skilli lub skilli zintegrowanych z łańcuchem, w których potrzebujesz automatycznej weryfikacji.
 
@@ -204,7 +193,6 @@ Oba skróty tworzą ten sam SKILL.md — poniższe kroki wyjaśniają, co generu
 **Krok 1: Zacznij od promptu.** Przed utworzeniem pliku skilla zapisz główną instrukcję jako zwykły prompt. Przetestuj go w rozmowie. Czy generuje w przybliżeniu właściwy wynik? Iteruj, aż podstawowe zachowanie zacznie działać.
 
 **Krok 2: Utwórz plik skilla.** Utwórz `<skill-name>/SKILL.md` w swoim katalogu skilli. Dodaj minimalny frontmatter:
-
 ```yaml
 ---
 name: <skill-name>
@@ -226,7 +214,6 @@ allowed-tools:
 **Krok 7: (W razie potrzeby) Dodaj integrację z łańcuchem.** Jeśli ten skill jest częścią łańcucha, zdefiniuj wejście upstream (jaki plik odczytuje) oraz wyjście downstream (jaki plik zapisuje). Dodaj sekcję „Relacja z innymi skillami”. Dodaj „STOP, do not chain” do zabezpieczeń.
 
 **Krok 8: (W razie potrzeby) Dodaj zaawansowane wzorce.** Na podstawie tego, co demonstruje ten skill, wskaż, które zaawansowane wzorce osoba ucząca się może dodać:
-
 - Orkiestrację sub-agentów (jeśli skill uruchamia agentów)
 - Skalowanie złożoności (jeśli skill dostosowuje się do rozmiaru wejścia)
 - Bramki samooceny (jeśli skill waliduje własne wyjście)
@@ -236,7 +223,6 @@ allowed-tools:
 Dla każdego kroku zaznacz, co analizowany skill robi na tym poziomie, aby osoba ucząca się mogła zobaczyć zależność między krokami budowy a gotowym produktem.
 
 **Typowe błędy, których należy unikać:**
-
 - Zaczynanie od zaawansowanych wzorców, zanim podstawowe zachowanie zacznie działać
 - Pisanie zbyt ogólnikowych zabezpieczeń („be careful”) zamiast konkretnych („NEVER auto-chain to the next skill”)
 - Pomijanie sekcji „Czego ten skill NIE robi” — rozszerzanie zakresu to główny tryb awarii skilli

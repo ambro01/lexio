@@ -6,7 +6,6 @@ allowed-tools:
   - Write
   - Bash
 ---
-
 # /10x-init — Zainicjuj katalog /context
 
 Utwórz szkielet katalogu `/context` (`changes/`, `archive/`, `foundation/`) oraz uniwersalny `README.md` w każdym z nich, aby konwencje śledzenia zmian i dokumentów bazowych miały swoje miejsce. Idempotentne: każdy z sześciu artefaktów (3 katalogi + 3 README) jest niezależnie tworzony, jeśli nie istnieje; ponowne uruchomienie w projekcie, gdzie wszystko już istnieje, nie wykonuje żadnych zmian.

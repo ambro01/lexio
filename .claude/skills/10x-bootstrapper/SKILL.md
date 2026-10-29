@@ -17,7 +17,6 @@ allowed-tools:
   - TaskCreate
   - TaskUpdate
 ---
-
 # Bootstrapper: Od stosu technologicznego do projektu ze szkieletem
 
 Ta umiejętność jest końcowym ogniwem sekwencji bootstrap (`/10x-shape → /10x-prd → /10x-tech-stack-selector → 10x-bootstrapper`). Jej jedyne zadanie: przekształcić pisemne przekazanie stosu technologicznego w projekt ze szkieletem w bieżącym katalogu roboczym, z ustaleniami weryfikacyjnymi zapisanymi do przeglądu przez użytkownika.
@@ -109,7 +108,6 @@ Hand-off received:
 Zadaj jedno pytanie potwierdzające:
 
 AskUserQuestion:
-
 - question: "Kontynuować z tym przekazaniem czy najpierw coś poprawić?"
   header: "Przekazanie"
   options:
@@ -119,7 +117,7 @@ AskUserQuestion:
     description: "Zapytam, które pole nadpisać dla tego uruchomienia; plik na dysku pozostanie bez zmian."
   - label: "Zatrzymaj — najpierw popraw przekazanie"
     description: "Zakończ. Uruchom ponownie /10x-tech-stack-selector, aby zaktualizować tech-stack.md, a następnie wywołaj ponownie."
-    multiSelect: false
+  multiSelect: false
 
 Jeśli „Popraw wartość”: zapytaj, które pole, przechwyć nadpisanie i kontynuuj z nadpisaniem zastosowanym wyłącznie dla tej sesji. Następnie uruchom ochronę zapełnionego cwd z `references/refusal-protocol.md` (ostrzeżenie i potwierdzenie, jeśli cwd już zawiera charakterystyczny dla szkieletu ślad, taki jak `package.json`, `Cargo.toml`, `Gemfile`, `pyproject.toml` itd.).
 
@@ -133,7 +131,7 @@ Sekwencja:
 2. Jeśli wyprowadzono nazwę pakietu, uruchom `npm view <package> version` oraz `npm view <package> time.modified`.
 3. Na podstawie wybranej karty przeanalizuj `docs_url`. Jeśli wskazuje na `github.com/<owner>/<repo>`, uruchom `gh api repos/<owner>/<repo> --jq '.pushed_at'`.
 4. Oblicz wagę zgodnie z progami w `pre-scaffold-verification.md` (fresh / aged / stale).
-   Dla `starter_id: custom`: pomiń krok npm i uruchom sprawdzenie GitHub względem `custom_starter.docs_url` tylko wtedy, gdy jest to adres URL GitHub; w przeciwnym razie zapisz „no recency signal available”.
+Dla `starter_id: custom`: pomiń krok npm i uruchom sprawdzenie GitHub względem `custom_starter.docs_url` tylko wtedy, gdy jest to adres URL GitHub; w przeciwnym razie zapisz „no recency signal available”.
 
 5. Wypisz jedną linię podsumowania w rozmowie. Poprzedź ją jednoliniowym ostrzeżeniem „Heads-up”, jeśli którykolwiek sygnał jest stale. Nigdy nie blokuj — niezależnie od tego przejdź do Kroku 2.
 6. Przygotuj w rekordzie weryfikacji w pamięci rozwiązaną nazwę pakietu (jeśli występuje), adres URL repozytorium GitHub (jeśli występuje), oba znaczniki czasu oraz obie wagi. Krok 4 zapisuje ten rekord na dysku.

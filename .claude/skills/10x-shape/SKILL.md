@@ -17,7 +17,6 @@ allowed-tools:
   - TaskUpdate
   - Skill
 ---
-
 # Shape: Ułatw odkrywanie (Greenfield i Brownfield) przed /10x-prd
 
 Ta umiejętność jest początkiem łańcucha bootstrapowania. Dla greenfield: `/10x-shape → /10x-prd → 10x-tech-stack-selector → bootstrapper`. Dla brownfield: `/10x-shape → /10x-prd → 10x-stack-assess → 10x-health-check`. Jej jedyne zadanie: przeprowadzić użytkownika od „Mam pomysł” (greenfield) lub „Chcę zmienić ten system” (brownfield) do ustrukturyzowanego `context/foundation/shape-notes.md`, które `/10x-prd` może przekształcić w PRD zgodne z zablokowanym schematem.
@@ -36,7 +35,7 @@ Zablokowany schemat, z którym zgodne są zarówno ta umiejętność, jak i `/10
 
 - `/10x-init` — tworzy szkielet `/context` (`changes/`, `archive/`, `foundation/`) wraz z uniwersalnymi README w każdym z nich. `/10x-shape` wymaga istnienia `context/foundation/`; jeśli go brakuje, deleguje do `/10x-init` przez narzędzie `Skill` (Krok 0 poniżej).
 - `/10x-prd` — wykorzystuje `shape-notes.md`. Przekazanie odbywa się przez zapis do schowka w `## Step 8`.
-- `/10x-frame` — do _przeramowania_ problemów o małym zakresie w istniejących systemach, gdzie pełne PRD byłoby przesadą. `/10x-shape` służy większym zmianom brownfield (nowe moduły, znaczące funkcje), które potrzebują ustrukturyzowanego odkrywania i PRD.
+- `/10x-frame` — do *przeramowania* problemów o małym zakresie w istniejących systemach, gdzie pełne PRD byłoby przesadą. `/10x-shape` służy większym zmianom brownfield (nowe moduły, znaczące funkcje), które potrzebują ustrukturyzowanego odkrywania i PRD.
 - `/10x-stack-assess` — dalszy krok po `/10x-prd` dla projektów brownfield. Ocenia istniejący stack względem bramek jakości.
 - `/10x-health-check` — dalszy krok po `/10x-stack-assess` dla brownfield. Audytuje stan istniejącego projektu.
 - `/10x-plan` — dalszy krok po `/10x-prd`, nigdy nie jest wywoływany stąd bezpośrednio.
@@ -79,7 +78,6 @@ Jeśli istnieje, przejdź do Kroku 0.5.
 Jeśli go brakuje, projekt nie został zainicjalizowany dla 10xWorkflow. Zapytaj:
 
 AskUserQuestion:
-
 - question: "Ten katalog nie jest zainicjalizowany dla 10xWorkflow (brakuje context/foundation/). Uruchomić teraz /10x-init?"
   header: "Init?"
   options:
@@ -87,7 +85,7 @@ AskUserQuestion:
     description: "Tworzy szkielet /context (changes/, archive/, foundation/) z README, a następnie kontynuuje kształtowanie."
   - label: "Nie — zakończ tutaj"
     description: "Wyjdź bez zmian. Musisz zainicjalizować projekt, zanim shape będzie mogło działać."
-    multiSelect: false
+  multiSelect: false
 
 Przy „Tak”: wywołaj `/10x-init` przez narzędzie **Skill** (NIE przez Bash). Gdy `/10x-init` zakończy działanie, ponownie sprawdź warunek wstępny; jeśli jest teraz spełniony, przejdź do Kroku 0.5. Przy „Nie”: wypisz „Zatrzymywanie. Uruchom `/10x-init`, gdy będziesz gotowy, a następnie ponownie wywołaj `/10x-shape`.” i ZATRZYMAJ SIĘ.
 
@@ -120,7 +118,6 @@ Found a prior shape session at context/foundation/shape-notes.md:
 Następnie zapytaj:
 
 AskUserQuestion:
-
 - question: "Jak chcesz kontynuować?"
   header: "Wznowić?"
   options:
@@ -130,7 +127,7 @@ AskUserQuestion:
     description: "Zarchiwizuj istniejące shape-notes.md do context/foundation/archive/ i rozpocznij nową sesję."
   - label: "Anuluj"
     description: "Wyjdź bez zmian."
-    multiSelect: false
+  multiSelect: false
 
 Przy „Wznów”: przejdź bezpośrednio do następnej nieukończonej fazy (Krok `current_phase` + (1, jeśli bieżąca faza znajduje się w `phases_completed`, w przeciwnym razie 0)). NIE uruchamiaj ponownie ukończonych faz — jedynie podsumuj każdą użytkownikowi w 1–2 zdaniach („Faza 1 uchwyciła: <jednowierszowy problem>; Faza 2 uchwyciła: <jednowierszowa persona>; …”), aby miał kontekst wcześniej podjętych decyzji.
 
@@ -185,7 +182,6 @@ Get-ChildItem -Path . -Filter 'vite.config.*' -File -ErrorAction SilentlyContinu
 ```
 
 Punktacja:
-
 - **Trafienie Tier 1** (istnieje historia git) → silny sygnał brownfield
 - **Trafienie Tier 2** (istnieje lockfile) → silny sygnał brownfield
 - **Tier 1 + Tier 2** → brownfield z wysoką pewnością
@@ -193,7 +189,6 @@ Punktacja:
 - **Brak sygnałów** → greenfield
 
 Logika decyzji:
-
 - **Dowolne trafienie Tier 1 lub Tier 2** → zaproponuj `context_type: brownfield`
 - **Tylko Tier 3** → zaproponuj brownfield, ale zaznacz niejednoznaczność: „Znalazłem plik manifestu, ale bez lockfile lub historii git — może to być świeżo zainicjalizowany projekt, a nie rzeczywisty brownfield.”
 - **Brak sygnałów** → zaproponuj `context_type: greenfield`
@@ -201,7 +196,6 @@ Logika decyzji:
 Wypisz, co wykryto:
 
 - **Brownfield z wysoką pewnością** (T1 lub T2):
-
   ```
   This looks like an existing project:
     [list detected signals, e.g. "git history (47 commits)", "package-lock.json", "src/ directory"]
@@ -210,7 +204,6 @@ Wypisz, co wykryto:
   ```
 
 - **Niejednoznaczne** (tylko T3):
-
   ```
   I found [manifest file] but no lockfile or git history — this could be a
   freshly initialized project or a real brownfield. I'll propose brownfield
@@ -226,7 +219,6 @@ Wypisz, co wykryto:
 Następnie potwierdź z użytkownikiem:
 
 AskUserQuestion:
-
 - question: "Wykryty kontekst: [greenfield|brownfield]. Czy to poprawne?"
   header: "Kontekst"
   options:
@@ -234,7 +226,7 @@ AskUserQuestion:
     description: "[Opis trybu wykrytego automatycznie]"
   - label: "[Inny tryb] — nadpisz"
     description: "Przełącz na [inny tryb]."
-    multiSelect: false
+  multiSelect: false
 
 Zapisz potwierdzone `context_type` we frontmatter `shape-notes.md` (obok `checkpoint:`) natychmiast. Ta wartość jest kluczowa dla automatycznego routingu `/10x-prd`.
 
@@ -428,7 +420,7 @@ Ta faza tworzy sekcje `## Functional Requirements` oraz `## User Stories`.
 
 #### Tryb Greenfield
 
-Rozpocznij od: „Teraz przejdźmy do konkretów. Na podstawie naszkicowanego przepływu MVP, co aktor musi _móc_ zrobić? Wymień możliwości — sformatuję je jako FR.”
+Rozpocznij od: „Teraz przejdźmy do konkretów. Na podstawie naszkicowanego przepływu MVP, co aktor musi *móc* zrobić? Wymień możliwości — sformatuję je jako FR.”
 
 Uchwyć każdą możliwość jako pojedynczy wiersz FR zgodny z formatem schematu:
 
@@ -597,7 +589,7 @@ Po ramowaniu dodaj: „Jakie ograniczenia nakłada istniejący system na tę zmi
 
 #### Oba tryby
 
-Po zablokowaniu ramowania produktu uruchom **jedną** wielokrotnego wyboru rundę Non-Goals. Forma to lista rzeczy do unikania — ale dotycząca unikania _zakresu_ (możliwości, których MVP nie zbuduje / zmiana nie dotknie, wymiarów jakości, do których nie będzie dążyć), a nie unikania technologii. Zapytaj:
+Po zablokowaniu ramowania produktu uruchom **jedną** wielokrotnego wyboru rundę Non-Goals. Forma to lista rzeczy do unikania — ale dotycząca unikania *zakresu* (możliwości, których MVP nie zbuduje / zmiana nie dotknie, wymiarów jakości, do których nie będzie dążyć), a nie unikania technologii. Zapytaj:
 
 ```
 What is this [MVP/change] explicitly NOT doing? Pick anything that should be
@@ -632,7 +624,7 @@ Przeczytaj bieżące `shape-notes.md` i sprawdź każdy z poniższych elementów
 3. **Project artifacts** — samo `shape-notes.md` istnieje z prawidłowym checkpointem frontmatter. (W tym momencie zawsze występuje.)
 4. **Timeline-cost acknowledged** — albo `timeline_budget.mvp_weeks` / `delivery_weeks` ≤ 3, ALBO w shape-notes istnieje blok `## Timeline acknowledgment`, który zapisuje, że użytkownik zaakceptował koszt stałego wysiłku w Kroku 3. Dłuższe terminy są prawidłowe; bramką jest ujawnienie i akceptacja kosztu, nie krótki termin.
 5. **Non-Goals** — blok `## Non-Goals` istnieje z co najmniej jednym wpisem.
-6. **Preserved behavior** _(tylko brownfield)_ — blok `## Constraints & Preserved Behavior` istnieje i wyraźnie nazywa to, co nie może się zepsuć. Pomiń tę kontrolę dla sesji greenfield.
+6. **Preserved behavior** *(tylko brownfield)* — blok `## Constraints & Preserved Behavior` istnieje i wyraźnie nazywa to, co nie może się zepsuć. Pomiń tę kontrolę dla sesji greenfield.
 
 NIE sprawdzaj `## Testing Strategy`, `## Deployment & CI/CD` ani `## Implementation Decisions` — nie są częścią schematu PRD. Znajdują się po wyborze / ocenie stacku, nie w PRD.
 
@@ -658,7 +650,6 @@ Dla każdego `missing/weak` **wymień go z nazwy** z jednolinijkową konsekwencj
 Następnie zapytaj:
 
 AskUserQuestion:
-
 - question: "Jak chcesz kontynuować?"
   header: "Kontrola krzyżowa"
   options:
@@ -668,7 +659,7 @@ AskUserQuestion:
     description: "Kontynuuj mimo braków. Zostaną zapisane jako ostrzeżenia w checkpoincie i ujawnione w Open Questions /10x-prd."
   - label: "Uruchom ponownie fazę [N]"
     description: "Wróć do konkretnej fazy i odbuduj ją od tego miejsca."
-    multiSelect: false
+  multiSelect: false
 
 Przy „Uzupełnij braki teraz”: zapytaj, który brak; przejdź z powrotem do fazy, do której należy (Krok 1–6); uruchom ponownie tylko tę fazę; następnie wróć do Kroku 7.
 
