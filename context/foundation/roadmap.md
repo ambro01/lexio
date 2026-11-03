@@ -87,7 +87,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Prerequisites:** —
 - **Parallel with:** F-02, S-08
 - **Blockers:** —
-- **Unknowns:** — (resolved 2026-11-03: five models in app config; default chosen from production measurements in this change.)
+- **Unknowns:** — (resolved 2026-11-03: three models in app config — two of the planned five failed the production measurement and were dropped; default `anthropic/claude-haiku-5.5` chosen from the measurements in this change.)
 - **Risk:** Sequenced first because a 60 s generation on the edge runtime is the riskiest technical assumption; must stay a thin proven path, not the full proposal flow (that lives in S-01).
 - **Status:** in-progress
 
@@ -132,7 +132,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ### S-03: CEFR level and "too easy" grouping
 
-- **Outcome:** user can set their CEFR level and their AI model (one of the five configured in F-01) in their profile and see proposals below that level in a separate collapsed "too easy" group that they can reject in one action — bulk-rejected proposals are recorded automatically with the reason "Za łatwe".
+- **Outcome:** user can set their CEFR level and their AI model (one of the three configured in F-01) in their profile and see proposals below that level in a separate collapsed "too easy" group that they can reject in one action — bulk-rejected proposals are recorded automatically with the reason "Za łatwe".
 - **Change ID:** cefr-too-easy-grouping
 - **PRD refs:** US-01, FR-014, FR-016
 - **Prerequisites:** S-01

@@ -329,25 +329,25 @@ No database changes. Rollback is `npx wrangler rollback <version-id>`; the secre
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npx astro check`
-- [x] 3.2 Build succeeds: `npm run build`
-- [x] 3.3 Smoke test still passes: `npm run smoke` (against `npm run preview`)
+- [x] 3.1 Type checking passes: `npx astro check` — 0cbcc86
+- [x] 3.2 Build succeeds: `npm run build` — 0cbcc86
+- [x] 3.3 Smoke test still passes: `npm run smoke` (against `npm run preview`) — 0cbcc86
 
 #### Manual
 
-- [x] 3.4 Signed out, `/generate` redirects to `/auth/signin`
-- [x] 3.5 Signed in locally, pasting a short lesson text and pressing "Generuj" shows the spinner with a running seconds counter and then the proposals table
-- [x] 3.6 Pasting more than 2,000 words disables "Generuj" and shows the counter over the limit
-- [x] 3.7 An upstream error (e.g. an invalid key in `.dev.vars`) shows the error message and "Spróbuj ponownie"
+- [x] 3.4 Signed out, `/generate` redirects to `/auth/signin` — 0cbcc86
+- [x] 3.5 Signed in locally, pasting a short lesson text and pressing "Generuj" shows the spinner with a running seconds counter and then the proposals table — 0cbcc86
+- [x] 3.6 Pasting more than 2,000 words disables "Generuj" and shows the counter over the limit — 0cbcc86
+- [x] 3.7 An upstream error (e.g. an invalid key in `.dev.vars`) shows the error message and "Spróbuj ponownie" — 0cbcc86
 
 ### Phase 4: Production measurement
 
 #### Automated
 
-- [ ] 4.1 Measurement script passes against production for all five models (each < 60 s, no errors): `npm run measure:generation`
-- [ ] 4.2 Unit tests still pass after the default-model change: `npm test`
+- [x] 4.1 Measurement script passes against production for all five models (each < 60 s, no errors): `npm run measure:generation`
+- [x] 4.2 Unit tests still pass after the default-model change: `npm test`
 
 #### Manual
 
-- [ ] 4.3 `/generate` on production works on a phone browser with the screen kept on (spinner, then proposals)
-- [ ] 4.4 `measurements.md` contains results and quality notes for all five models, and the chosen default is set in `src/lib/ai/models.ts`
+- [x] 4.3 `/generate` on production works on a phone browser with the screen kept on (spinner, then proposals)
+- [x] 4.4 `measurements.md` contains results and quality notes for all five models, and the chosen default is set in `src/lib/ai/models.ts`

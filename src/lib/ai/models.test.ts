@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { AI_MODELS, DEFAULT_AI_MODEL_ID, isAiModelId } from "./models";
 
 describe("AI_MODELS", () => {
-  it("holds exactly five unique ids", () => {
+  it("holds exactly three unique ids", () => {
     const ids = AI_MODELS.map((model) => model.id);
-    expect(ids).toHaveLength(5);
-    expect(new Set(ids).size).toBe(5);
+    expect(ids).toHaveLength(3);
+    expect(new Set(ids).size).toBe(3);
   });
 
   it("includes the default model", () => {

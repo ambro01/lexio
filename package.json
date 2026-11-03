@@ -11,7 +11,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test": "vitest run",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "measure:generation": "node scripts/measure-generation.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

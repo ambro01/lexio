@@ -69,4 +69,5 @@ Source of truth for "what is already deployed and which secrets are wired". Page
 - History: `npx wrangler deployments list`, `npx wrangler versions list`.
 - Rollback (human approval): `npx wrangler rollback <version-id>`. Supabase migrations do not roll back with the Worker.
 - Secret rotation (human): `npx wrangler secret put <NAME>`, then revoke the old key in Supabase.
-- Wired secrets: `SUPABASE_URL`, `SUPABASE_KEY`. LLM API key not yet added (first feature slice).
+- Wired secrets: `SUPABASE_URL`, `SUPABASE_KEY`, `OPENROUTER_API_KEY` (added 2026-11-03 for F-01 `openrouter-generation-spike`; without it `POST /api/ai/proposals` returns 503).
+- Gotcha: a leftover `astro preview` / `workerd` process locks `dist/` on Windows and `astro build` then fails with "The property 'options.recursive' is no longer supported" — stop it before building. Never chain `wrangler deploy` after a build whose exit code you did not check: it uploads the stale `dist/`.
