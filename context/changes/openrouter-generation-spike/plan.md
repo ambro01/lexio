@@ -315,30 +315,30 @@ No database changes. Rollback is `npx wrangler rollback <version-id>`; the secre
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm test`
-- [x] 2.2 Type checking passes: `npx astro check`
-- [x] 2.3 Build succeeds: `npm run build`
-- [x] 2.4 Smoke test still passes: `npm run smoke` (against `npm run preview`)
+- [x] 2.1 Unit tests pass: `npm test` — e8cd592
+- [x] 2.2 Type checking passes: `npx astro check` — e8cd592
+- [x] 2.3 Build succeeds: `npm run build` — e8cd592
+- [x] 2.4 Smoke test still passes: `npm run smoke` (against `npm run preview`) — e8cd592
 
 #### Manual
 
-- [x] 2.5 Locally with a key in `.dev.vars`, signed in: `POST /api/ai/proposals` with a short text returns 200 with proposals
-- [x] 2.6 Signed out, the same request returns 401; with 2,001 words it returns 400 `too_long`; with model `foo/bar` it returns 400 `unknown_model`
+- [x] 2.5 Locally with a key in `.dev.vars`, signed in: `POST /api/ai/proposals` with a short text returns 200 with proposals — e8cd592
+- [x] 2.6 Signed out, the same request returns 401; with 2,001 words it returns 400 `too_long`; with model `foo/bar` it returns 400 `unknown_model` — e8cd592
 
 ### Phase 3: Test page
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npx astro check`
-- [ ] 3.2 Build succeeds: `npm run build`
-- [ ] 3.3 Smoke test still passes: `npm run smoke` (against `npm run preview`)
+- [x] 3.1 Type checking passes: `npx astro check`
+- [x] 3.2 Build succeeds: `npm run build`
+- [x] 3.3 Smoke test still passes: `npm run smoke` (against `npm run preview`)
 
 #### Manual
 
-- [ ] 3.4 Signed out, `/generate` redirects to `/auth/signin`
-- [ ] 3.5 Signed in locally, pasting a short lesson text and pressing "Generuj" shows the spinner with a running seconds counter and then the proposals table
-- [ ] 3.6 Pasting more than 2,000 words disables "Generuj" and shows the counter over the limit
-- [ ] 3.7 An upstream error (e.g. an invalid key in `.dev.vars`) shows the error message and "Spróbuj ponownie"
+- [x] 3.4 Signed out, `/generate` redirects to `/auth/signin`
+- [x] 3.5 Signed in locally, pasting a short lesson text and pressing "Generuj" shows the spinner with a running seconds counter and then the proposals table
+- [x] 3.6 Pasting more than 2,000 words disables "Generuj" and shows the counter over the limit
+- [x] 3.7 An upstream error (e.g. an invalid key in `.dev.vars`) shows the error message and "Spróbuj ponownie"
 
 ### Phase 4: Production measurement
 
