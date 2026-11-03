@@ -17,7 +17,7 @@ Standard scripts (`dev`, `build`, `preview`, `lint`, `lint:fix`, `format`) are i
 - `npm run smoke` — dependency-free auth-flow smoke test (`scripts/smoke.mjs`) against a running server, `BASE_URL` env (default `http://localhost:4321`). Run after dependency upgrades.
 - `npx astro check` — type-check `.astro`/`.ts` files. CI order: `astro sync` → lint → `astro check` → build, plus a smoke job against the production preview with a local Supabase (see `.github/workflows/ci.yml`). The CI build needs the `SUPABASE_URL` and `SUPABASE_KEY` repo secrets.
 
-There is no unit-test runner yet. `npm run smoke` is the only automated test.
+- `npm test` — Vitest unit tests (`src/**/*.test.ts`, config in `vitest.config.ts`); no network or API key needed. Import `describe`/`it`/`expect` from `vitest` explicitly (no globals). Modules under test must not import `astro:*`. CI runs it after lint.
 
 ## Architecture
 

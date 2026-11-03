@@ -4,7 +4,7 @@ version: 1
 status: draft
 created: 2026-11-03
 updated: 2026-11-03
-prd_version: 3
+prd_version: 4
 main_goal: speed
 top_blocker: time
 milestone_id: lesson-to-review-mvp
@@ -14,7 +14,7 @@ milestone_status: open
 
 # Roadmap: Lexio
 
-> Derived from `context/foundation/prd.md` (v3) + auto-researched codebase baseline.
+> Derived from `context/foundation/prd.md` (v4) + auto-researched codebase baseline.
 > Edit-in-place; the next milestone continues this file. Archive only when an independent roadmap replaces it.
 > Slices below are listed in dependency order. The "At a glance" table is the index.
 
@@ -23,9 +23,9 @@ milestone_status: open
 **M-1: Lesson-to-review MVP** — Status: open
 
 - **Intent:** A signed-in learner can turn lesson material (pasted text or PDF) into reviewed flashcards with AI help and practise them with spaced repetition — the full MVP loop from the PRD, shipped before the hard deadline.
-- **Source materials:** `context/foundation/prd.md` (v3)
+- **Source materials:** `context/foundation/prd.md` (v4)
 - **Done when:** every F-NN and S-NN below is `done`.
-- **Scope anchors:** US-01; must-have FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-010, FR-011, FR-013, FR-014, FR-015.
+- **Scope anchors:** US-01; must-have FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-010, FR-011, FR-013, FR-014, FR-015, FR-016.
 
 ## Vision recap
 
@@ -39,19 +39,19 @@ A Polish learner taking 1–2 English lessons a week copies new words from lesso
 
 ## At a glance
 
-| ID   | Change ID                   | Outcome (user can …)                                                               | Prerequisites | PRD refs                        | Status   |
-| ---- | --------------------------- | ---------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- |
-| F-01 | openrouter-generation-spike | (foundation) deployed app calls the AI model via OpenRouter within the 60 s budget | —             | NFR (< 60 s, progress)          | ready    |
-| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | ready    |
-| S-01 | paste-text-generation       | paste lesson text, review AI proposals, accept the set into the collection         | F-01, F-02    | US-01, FR-003, FR-004, FR-005   | proposed |
-| S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | proposed |
-| S-03 | cefr-too-easy-grouping      | set CEFR level and bulk-reject the collapsed "too easy" proposals                  | S-01          | US-01, FR-014                   | proposed |
-| S-04 | manual-word-ai-fill         | enter a word with optional context and get an AI-filled flashcard to review        | F-01, F-02    | FR-006                          | proposed |
-| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | proposed |
-| S-06 | spaced-review-session       | run a review by tag or general, rate cards and mark them "Opanowane"               | F-02, S-01    | FR-010, FR-011                  | proposed |
-| S-07 | acceptance-rate-stats       | see the AI content-quality rate (unchanged / corrected / rejected as "Błędne")     | S-01          | FR-013                          | proposed |
-| S-08 | password-reset              | reset a forgotten password via email                                               | —             | FR-001                          | ready    |
-| S-09 | skip-known-words            | never see again words they rejected as known or too easy                           | S-01          | US-01, FR-015                   | proposed |
+| ID   | Change ID                   | Outcome (user can …)                                                               | Prerequisites | PRD refs                        | Status      |
+| ---- | --------------------------- | ---------------------------------------------------------------------------------- | ------------- | ------------------------------- | ----------- |
+| F-01 | openrouter-generation-spike | (foundation) deployed app calls the AI model via OpenRouter within the 60 s budget | —             | NFR (< 60 s, progress)          | in-progress |
+| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | ready       |
+| S-01 | paste-text-generation       | paste lesson text, review AI proposals, accept the set into the collection         | F-01, F-02    | US-01, FR-003, FR-004, FR-005   | proposed    |
+| S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | proposed    |
+| S-03 | cefr-too-easy-grouping      | set CEFR level and AI model in profile; bulk-reject "too easy" ones                | S-01          | US-01, FR-014, FR-016           | proposed    |
+| S-04 | manual-word-ai-fill         | enter a word with optional context and get an AI-filled flashcard to review        | F-01, F-02    | FR-006                          | proposed    |
+| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | proposed    |
+| S-06 | spaced-review-session       | run a review by tag or general, rate cards and mark them "Opanowane"               | F-02, S-01    | FR-010, FR-011                  | proposed    |
+| S-07 | acceptance-rate-stats       | see the AI content-quality rate (unchanged / corrected / rejected as "Błędne")     | S-01          | FR-013                          | proposed    |
+| S-08 | password-reset              | reset a forgotten password via email                                               | —             | FR-001                          | ready       |
+| S-09 | skip-known-words            | never see again words they rejected as known or too easy                           | S-01          | US-01, FR-015                   | proposed    |
 
 ## Streams
 
@@ -87,10 +87,9 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Prerequisites:** —
 - **Parallel with:** F-02, S-08
 - **Blockers:** —
-- **Unknowns:**
-  - Which OpenRouter model gives good English–Polish proposals at acceptable cost and latency? — Owner: user. Block: no.
+- **Unknowns:** — (resolved 2026-11-03: five models in app config; default chosen from production measurements in this change.)
 - **Risk:** Sequenced first because a 60 s generation on the edge runtime is the riskiest technical assumption; must stay a thin proven path, not the full proposal flow (that lives in S-01).
-- **Status:** ready
+- **Status:** in-progress
 
 ### F-02: Minimal per-user flashcard data contract
 
@@ -133,9 +132,9 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ### S-03: CEFR level and "too easy" grouping
 
-- **Outcome:** user can set their CEFR level in their profile and see proposals below that level in a separate collapsed "too easy" group that they can reject in one action — bulk-rejected proposals are recorded automatically with the reason "Za łatwe".
+- **Outcome:** user can set their CEFR level and their AI model (one of the five configured in F-01) in their profile and see proposals below that level in a separate collapsed "too easy" group that they can reject in one action — bulk-rejected proposals are recorded automatically with the reason "Za łatwe".
 - **Change ID:** cefr-too-easy-grouping
-- **PRD refs:** US-01, FR-014
+- **PRD refs:** US-01, FR-014, FR-016
 - **Prerequisites:** S-01
 - **Parallel with:** S-02, S-04, S-05, S-06, S-07, S-08, S-09
 - **Blockers:** —
