@@ -50,9 +50,10 @@ Source of truth for "what is already deployed and which secrets are wired". Page
 
 - [x] Workers & Pages → `lexio` → Settings → Builds → Connect → GitHub repo `ambro01/lexio`, production branch `master`.
 - [x] Build command `npm run build`, deploy command `npx wrangler deploy`, root directory `/`.
-- [ ] If the build fails on Node version (`.nvmrc` = `26.13.0`), add build variable `NODE_VERSION` with a version supported by the build image (e.g. `22`).
+- [x] Node version: build passed with `.nvmrc` (`26.13.0`) — no `NODE_VERSION` override needed.
 - [x] Disable builds for non-production branches.
-- [ ] Commit + push to `master` → first Workers Builds deployment appears in `npx wrangler deployments list`.
+- [x] GitHub → Settings → Installed GitHub Apps → "Cloudflare Workers and Pages" → Configure: repo `ambro01/lexio` must be in Repository access (it was missing; the first push triggered nothing).
+- [x] Push to `master` (commit `809d7e5`) → check run "Workers Builds: lexio" success → version `35f1718c-818b-4a57-9286-923625eb18d8` deployed 2026-11-01T20:42Z, secrets preserved, production verified.
 
 ## Verification (production)
 
