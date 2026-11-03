@@ -302,28 +302,28 @@ No database changes. Rollback is `npx wrangler rollback <version-id>`; the secre
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test`
-- [x] 1.2 Type checking passes: `npx astro check`
-- [x] 1.3 Linting passes: `npm run lint` (in CI on Linux; locally CRLF noise is pre-existing)
-- [x] 1.4 Build succeeds: `npm run build`
+- [x] 1.1 Unit tests pass: `npm test` — 38df6cb
+- [x] 1.2 Type checking passes: `npx astro check` — 38df6cb
+- [x] 1.3 Linting passes: `npm run lint` (in CI on Linux; locally CRLF noise is pre-existing) — 38df6cb
+- [x] 1.4 Build succeeds: `npm run build` — 38df6cb
 
 #### Manual
 
-- [x] 1.5 The five model ids in `src/lib/ai/models.ts` match the agreed list
+- [x] 1.5 The five model ids in `src/lib/ai/models.ts` match the agreed list — 38df6cb
 
 ### Phase 2: Endpoint and secret
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm test`
-- [ ] 2.2 Type checking passes: `npx astro check`
-- [ ] 2.3 Build succeeds: `npm run build`
-- [ ] 2.4 Smoke test still passes: `npm run smoke` (against `npm run preview`)
+- [x] 2.1 Unit tests pass: `npm test`
+- [x] 2.2 Type checking passes: `npx astro check`
+- [x] 2.3 Build succeeds: `npm run build`
+- [x] 2.4 Smoke test still passes: `npm run smoke` (against `npm run preview`)
 
 #### Manual
 
-- [ ] 2.5 Locally with a key in `.dev.vars`, signed in: `POST /api/ai/proposals` with a short text returns 200 with proposals
-- [ ] 2.6 Signed out, the same request returns 401; with 2,001 words it returns 400 `too_long`; with model `foo/bar` it returns 400 `unknown_model`
+- [x] 2.5 Locally with a key in `.dev.vars`, signed in: `POST /api/ai/proposals` with a short text returns 200 with proposals
+- [x] 2.6 Signed out, the same request returns 401; with 2,001 words it returns 400 `too_long`; with model `foo/bar` it returns 400 `unknown_model`
 
 ### Phase 3: Test page
 

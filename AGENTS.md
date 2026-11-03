@@ -39,6 +39,7 @@ Standard scripts (`dev`, `build`, `preview`, `lint`, `lint:fix`, `format`) are i
 ### Environment
 
 - Env vars, local Supabase, `.dev.vars` and deploy: see `README.md` ("Getting Started", "Supabase Configuration", "Deployment").
+- `OPENROUTER_API_KEY` (optional server secret in `astro.config.mjs` `env.schema`; Worker secret in production via `npx wrangler secret put OPENROUTER_API_KEY`). Without it `POST /api/ai/proposals` returns 503 and the config banner shows OpenRouter as missing. The selectable models live in `src/lib/ai/models.ts`.
 
 <!-- The 10x CLI (`@przeprogramowani/10x-cli`) may append a managed block below on sync. Put project rules above it. -->
 
