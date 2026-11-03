@@ -344,10 +344,10 @@ No database changes. Rollback is `npx wrangler rollback <version-id>`; the secre
 
 #### Automated
 
-- [x] 4.1 Measurement script passes against production for all five models (each < 60 s, no errors): `npm run measure:generation`
-- [x] 4.2 Unit tests still pass after the default-model change: `npm test`
+- [x] 4.1 Measurement script passes against production for all five models (each < 60 s, no errors): `npm run measure:generation` — d2b1589
+- [x] 4.2 Unit tests still pass after the default-model change: `npm test` — d2b1589
 
 #### Manual
 
-- [x] 4.3 `/generate` on production works on a phone browser with the screen kept on (spinner, then proposals)
-- [x] 4.4 `measurements.md` contains results and quality notes for all five models, and the chosen default is set in `src/lib/ai/models.ts`
+- [x] 4.3 `/generate` on production works on a phone browser with the screen kept on (spinner, then proposals) — d2b1589
+- [x] 4.4 `measurements.md` contains results and quality notes for all five models, and the chosen default is set in `src/lib/ai/models.ts` — d2b1589

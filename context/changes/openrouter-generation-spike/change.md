@@ -1,7 +1,7 @@
 ---
 change_id: openrouter-generation-spike
 title: Prove OpenRouter flashcard generation on the deployed app (< 60 s)
-status: implementing
+status: implemented
 created: 2026-11-03
 updated: 2026-11-03
 archived_at: null
