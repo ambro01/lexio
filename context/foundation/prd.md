@@ -1,8 +1,9 @@
 ---
 project: "Lexio"
-version: 1
+version: 3
 status: draft
 created: 2026-10-28
+updated: 2026-11-03
 context_type: greenfield
 product_type: web-app
 target_scale:
@@ -34,11 +35,12 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 
 ### Primary
 
-- ≥ 75% of AI-generated flashcards are accepted by the user (unchanged or after correction).
+- AI content quality ≥ 75%: (accepted unchanged + accepted after correction) ÷ (all accepted + rejected as "Błędne"). Proposals rejected as "Znam / nieprzydatne" and proposals marked "Za łatwe" (bulk-rejected from the "too easy" category) are excluded — they measure word selection, not content quality.
 
 ### Secondary
 
-- The share of AI-generated flashcards accepted without correction grows over time.
+- The share of AI-generated flashcards accepted without correction grows over time (accepted unchanged ÷ all accepted).
+- Word-selection accuracy: the share of proposals rejected as "Znam / nieprzydatne" among proposals outside the "too easy" category falls over time. Recorded from day one; displaying it is not required in the MVP.
 
 ### Guardrails
 
@@ -55,8 +57,9 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 #### Acceptance Criteria
 
 - Nothing is saved to the collection before the set is accepted.
-- Rejected proposals do not enter the collection but count towards the acceptance rate.
-- Proposals below the user's CEFR level are shown in a separate collapsed "too easy" category that can be rejected as a whole in one action.
+- A proposal is rejected with one of two buttons: "Znam / nieprzydatne" (word not worth learning — a selection miss) or "Błędne" (wrong translation, meaning or example — a quality miss). Rejected proposals do not enter the collection; the rejection reason is recorded for statistics.
+- Proposals below the user's CEFR level are shown in a separate collapsed "too easy" category that can be rejected as a whole in one action; bulk-rejected proposals are recorded automatically with the rejection reason "Za łatwe" (they do not enter the collection). Every rejected proposal is therefore stored the same way — with one of three reasons: "Błędne", "Znam / nieprzydatne" or "Za łatwe".
+- A word the user has ever rejected as "Znam / nieprzydatne" or "Za łatwe" is never proposed again (FR-015).
 - A proposal for a word already in the collection adds the lesson tag to the existing flashcard instead of creating a duplicate.
 
 ## Functional Requirements
@@ -69,7 +72,7 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 ### Profile
 
 - FR-014: User can set their English level (CEFR: A1, A2, B1, B2, C1, C2) in their profile; generation flags words below that level. Priority: must-have
-  > Socrates: Counter-argument considered: "a word's CEFR level is an AI estimate with no single official list — a hard filter could hide words the user does not know." Resolution: proposals below the profile level are not removed; they are grouped in a separate collapsed "below your level / too easy" category that the user can inspect and reject as a whole with one action, without going through each card. No "I know this" known-words list.
+  > Socrates: Counter-argument considered: "a word's CEFR level is an AI estimate with no single official list — a hard filter could hide words the user does not know." Resolution: proposals below the profile level are not removed; they are grouped in a separate collapsed "below your level / too easy" category that the user can inspect and reject as a whole with one action, without going through each card. No "I know this" known-words list. Superseded 2026-11-03 by FR-015: words rejected as "Znam / nieprzydatne" or "Za łatwe" are remembered and never proposed again.
 
 ### AI generation
 
@@ -77,10 +80,12 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
   > Socrates: Counter-argument considered: "lesson PDFs are not only vocabulary (exercises, instructions, grammar) — AI may flood the review with words the user already knows and push acceptance below 75%." Resolution: kept; addressed by the user's CEFR level (FR-014).
 - FR-003: User can paste text so that AI generates flashcard proposals. Priority: must-have
   > Socrates: Counter-argument considered: "duplicates FR-002." Resolution: kept; same review flow, different input — cheap, and a workaround for PDFs without a text layer.
-- FR-004: User can review the proposals — edit, reject, and accept the set. Priority: must-have
+- FR-004: User can review the proposals — edit, reject (as "Znam / nieprzydatne" or as "Błędne"), and accept the set. Priority: must-have
   > Socrates: Counter-arguments offered (long-list fatigue, interrupted review). Resolution: no counter-argument; stands as written.
 - FR-005: Accepted flashcards are tagged with the lesson they came from; the user enters the lesson tag name at upload time. Each word exists in the collection only once — if a proposal matches a word already in the collection, the existing flashcard gets the additional lesson tag instead of a duplicate. Priority: must-have
   > Socrates: Counter-argument considered: "the same word may appear in two lessons — duplicate or extra tag?" Resolution: a word occurs only once and can carry many tags.
+- FR-015: A word the user has ever rejected as "Znam / nieprzydatne" or "Za łatwe" is never proposed again in later generations (from PDF or pasted text). Words rejected as "Błędne" may be proposed again. Adding such a word manually (FR-006) is still allowed. Priority: must-have
+  > Decision 2026-11-03: added so that proposal quality improves over time — the app learns which words the user already knows. No undo in the MVP; manual entry is the workaround for a word rejected by mistake.
 
 ### Manual flashcards
 
@@ -106,14 +111,14 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 
 - FR-012: User can see statistics: number of flashcards, mastered, difficult. Priority: nice-to-have
   > Socrates: Counter-argument considered: "'difficult' has no definition." Resolution: dropped from the MVP.
-- FR-013: User can see the acceptance rate of AI-generated flashcards (accepted unchanged vs accepted after correction vs rejected). Priority: must-have
+- FR-013: User can see the AI content-quality rate of generated flashcards (accepted unchanged vs accepted after correction vs rejected as "Błędne"); rejections as "Znam / nieprzydatne" are recorded separately as a word-selection signal and are not part of this rate. Priority: must-have
+  > Decision 2026-11-03: rejections are split by reason so that content quality (model/prompt) and word selection (CEFR filter) can be improved independently.
   > Socrates: Counter-argument considered: "this is a product metric for the author rather than a learning feature." Resolution: kept in the UI.
 
 ## Non-Functional Requirements
 
 - Flashcard proposals from a typical lesson PDF (up to ~10 pages) are ready in < 60 s, with continuous visible progress during generation.
-- Generation accepts input up to a defined size (e.g. 10 pages / 20,000 characters); larger input is rejected with a clear message.
-  # TODO: exact input size limit — see Open Questions
+- Generation accepts input up to 2,000 words (pasted text or text extracted from a PDF); larger input is rejected with a clear message.
 - An uploaded PDF is not retained after the proposals are generated; only the flashcards remain.
 - Review is comfortable in the latest two major versions of the mainstream mobile browsers.
 - A user never sees another user's flashcards, tags or statistics.
@@ -122,9 +127,9 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 
 The app selects from lesson material the words worth learning at the user's level, and then schedules their reviews so that less well remembered flashcards come back more often.
 
-Inputs: lesson material (PDF with a text layer, or pasted text) or a manually entered word with optional context; the user's CEFR level from their profile; the words already in the user's collection; and the user's ratings of each card ("Nie pamiętam", "Trudne", "Łatwe") plus the separate "Opanowane" mark.
+Inputs: lesson material (PDF with a text layer, or pasted text) or a manually entered word with optional context; the user's CEFR level from their profile; the words already in the user's collection; the words the user has rejected as "Znam / nieprzydatne" or "Za łatwe"; and the user's ratings of each card ("Nie pamiętam", "Trudne", "Łatwe") plus the separate "Opanowane" mark.
 
-Outputs: (1) a reviewable list of flashcard proposals, with words below the user's level grouped as "too easy" and words already in the collection turned into an extra tag instead of a duplicate; (2) for each review session, which cards to show and in what order — the scheduling follows an existing spaced-repetition method, not a self-invented one; "Opanowane" cards are excluded from general review.
+Outputs: (1) a reviewable list of flashcard proposals, with words below the user's level grouped as "too easy" and words already in the collection turned into an extra tag instead of a duplicate, and words previously rejected as known or too easy left out entirely; (2) for each review session, which cards to show and in what order — the scheduling follows an existing spaced-repetition method, not a self-invented one; "Opanowane" cards are excluded from general review.
 
 The user meets the rule twice: when reviewing proposals after uploading a lesson, and when starting a review (by tag, or general with a session limit).
 
@@ -154,6 +159,4 @@ The user meets the rule twice: when reviewing proposals after uploading a lesson
 
 ## Open Questions
 
-1. **Do proposals bulk-rejected from the "too easy" category count towards the AI acceptance rate (Primary success criterion ≥ 75%)?** — Owner: user. Block: no, but it changes what the Primary criterion measures.
-2. **What is the exact input size limit for generation?** The notes give an example ("e.g. 10 pages / 20,000 characters"), not a decided value. — Owner: user.
-3. **Is the 3-week MVP estimate still valid?** It was given before password reset, CEFR level filtering and word de-duplication were added to scope; the user accepted it as is. — Owner: user.
+None — all resolved. (2026-11-03: input limit set to 2,000 words; "too easy" bulk rejections recorded as "Za łatwe"; 3-week MVP estimate confirmed.)
