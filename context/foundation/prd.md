@@ -73,7 +73,7 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 
 - FR-014: User can set their English level (CEFR: A1, A2, B1, B2, C1, C2) in their profile; generation flags words below that level. Priority: must-have
   > Socrates: Counter-argument considered: "a word's CEFR level is an AI estimate with no single official list — a hard filter could hide words the user does not know." Resolution: proposals below the profile level are not removed; they are grouped in a separate collapsed "below your level / too easy" category that the user can inspect and reject as a whole with one action, without going through each card. No "I know this" known-words list. Superseded 2026-11-03 by FR-015: words rejected as "Znam / nieprzydatne" or "Za łatwe" are remembered and never proposed again.
-- FR-016: User can choose in their profile which AI model generates their flashcards, from a fixed list of five models kept in the app configuration; until a choice is made, the configured default model is used. Priority: must-have
+- FR-016: User can choose in their profile which AI model generates their flashcards, from a fixed list of three models kept in the app configuration; until a choice is made, the configured default model is used. Priority: must-have
   > Decision 2026-11-03 (while planning the AI generation change): lets the author compare models and switch when one gives better Polish translations. The list itself is changed only in the app configuration, not by users.
 
 ### AI generation

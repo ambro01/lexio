@@ -297,6 +297,8 @@ No database changes. Rollback is `npx wrangler rollback <version-id>`; the secre
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
+>
+> Deviation (Phase 4, user decision): "all five models" in 4.1 and 4.4 was met with three models — two of the five failed the production measurement and were dropped instead of replaced. See `measurements.md`.
 
 ### Phase 1: Contract and core logic
 

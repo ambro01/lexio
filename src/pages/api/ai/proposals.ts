@@ -2,11 +2,15 @@ import type { APIRoute } from "astro";
 import { OPENROUTER_API_KEY } from "astro:env/server";
 import { z } from "zod";
 import { DEFAULT_AI_MODEL_ID, isAiModelId } from "@/lib/ai/models";
-import { InvalidModelOutputError, MAX_INPUT_WORDS, validateInput } from "@/lib/ai/proposals";
+import { InvalidModelOutputError, MAX_INPUT_CHARS, MAX_INPUT_WORDS, validateInput } from "@/lib/ai/proposals";
 import { UpstreamError, UpstreamTimeoutError, generateProposals } from "@/lib/services/ai-generation.service";
 
+// Hard ceiling well above the 30,000-char input cap: keeps parsing and word counting cheap on the 10 ms CPU budget.
+const MAX_TEXT_CHARS = MAX_INPUT_CHARS * 10;
+const MAX_BODY_BYTES = MAX_TEXT_CHARS * 4;
+
 const requestSchema = z.object({
-  text: z.string(),
+  text: z.string().max(MAX_TEXT_CHARS),
   model: z.string().optional(),
 });
 
@@ -26,6 +30,15 @@ function logGeneration(fields: Record<string, unknown>): void {
 export const POST: APIRoute = async ({ request, locals }) => {
   if (!locals.user) {
     return json(401, { error: "unauthorized", message: "Zaloguj się, aby generować fiszki." });
+  }
+
+  // Explicit JSON-only contract: cross-site form/text posts never reach the parser.
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return json(415, { error: "bad_request", message: "Nieprawidłowe żądanie." });
+  }
+
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
+    return json(400, { error: "too_long", message: `Tekst jest za długi — limit to ${String(MAX_INPUT_WORDS)} słów.` });
   }
 
   let body: unknown;

@@ -84,6 +84,24 @@ describe("generateProposals", () => {
     await expect(generateProposals({ ...baseOpts, fetchImpl })).rejects.toBeInstanceOf(UpstreamError);
   });
 
+  it("includes finish_reason when truncated content is not JSON", async () => {
+    const { fetchImpl } = stubFetch(() =>
+      Promise.resolve(
+        Response.json({ choices: [{ message: { content: '{"proposals": [' }, finish_reason: "length" }] }),
+      ),
+    );
+    await expect(generateProposals({ ...baseOpts, fetchImpl })).rejects.toThrow("finish_reason: length");
+  });
+
+  it("includes the OpenRouter error message for a non-2xx response", async () => {
+    const { fetchImpl } = stubFetch(() =>
+      Promise.resolve(Response.json({ error: { message: "Provider rejected response_format" } }, { status: 400 })),
+    );
+    await expect(generateProposals({ ...baseOpts, fetchImpl })).rejects.toThrow(
+      "HTTP 400 (error: Provider rejected response_format)",
+    );
+  });
+
   it("maps missing message content to UpstreamError", async () => {
     const { fetchImpl } = stubFetch(() => Promise.resolve(Response.json({ choices: [] })));
     await expect(generateProposals({ ...baseOpts, fetchImpl })).rejects.toBeInstanceOf(UpstreamError);

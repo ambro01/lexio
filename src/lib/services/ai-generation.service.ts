@@ -1,10 +1,11 @@
 import type { AiModelId } from "@/lib/ai/models";
 import { PROPOSALS_JSON_SCHEMA, parseProposals, type Proposal } from "@/lib/ai/proposals";
+import { isRecord } from "@/lib/utils";
 
 export const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const APP_URL = "https://lexio.rafalambro.workers.dev";
 const APP_TITLE = "Lexio";
-const DEFAULT_TIMEOUT_MS = 90000;
+const DEFAULT_TIMEOUT_MS = 60000;
 const MAX_TOKENS = 8000;
 const TEMPERATURE = 0.2;
 
@@ -59,10 +60,6 @@ export class UpstreamTimeoutError extends Error {
   override name = "UpstreamTimeoutError";
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 /** `AbortSignal.timeout` rejects with a DOMException named "TimeoutError" (some runtimes report "AbortError"). */
 function isAbortError(error: unknown): boolean {
   if (typeof error !== "object" || error === null || !("name" in error)) {
@@ -100,6 +97,22 @@ function readContent(payload: Record<string, unknown>): string | null {
   return typeof content === "string" ? content : null;
 }
 
+/** Short diagnostic from an OpenRouter payload for logs: its error message and finish_reason, never the content. */
+function describeUpstream(payload: unknown): string {
+  if (!isRecord(payload)) {
+    return "";
+  }
+  const parts: string[] = [];
+  if (isRecord(payload.error) && typeof payload.error.message === "string") {
+    parts.push(`error: ${payload.error.message.slice(0, 200)}`);
+  }
+  const first: unknown = Array.isArray(payload.choices) ? payload.choices[0] : undefined;
+  if (isRecord(first) && typeof first.finish_reason === "string") {
+    parts.push(`finish_reason: ${first.finish_reason}`);
+  }
+  return parts.length ? ` (${parts.join("; ")})` : "";
+}
+
 /** Sends the lesson text to OpenRouter and returns validated flashcard proposals with measurement data. */
 export async function generateProposals(opts: GenerateProposalsOptions): Promise<GenerationResult> {
   const fetchImpl = opts.fetchImpl ?? ((input, init) => fetch(input, init));
@@ -132,7 +145,10 @@ export async function generateProposals(opts: GenerateProposalsOptions): Promise
       signal: AbortSignal.timeout(opts.timeoutMs ?? DEFAULT_TIMEOUT_MS),
     });
     if (!response.ok) {
-      throw new UpstreamError(`OpenRouter responded with HTTP ${response.status}`, { status: response.status });
+      const errorBody: unknown = await response.json().catch(() => null);
+      throw new UpstreamError(`OpenRouter responded with HTTP ${response.status}${describeUpstream(errorBody)}`, {
+        status: response.status,
+      });
     }
     payload = await response.json();
   } catch (error) {
@@ -151,13 +167,13 @@ export async function generateProposals(opts: GenerateProposalsOptions): Promise
   }
   const content = readContent(payload);
   if (content === null) {
-    throw new UpstreamError("OpenRouter response has no message content");
+    throw new UpstreamError(`OpenRouter response has no message content${describeUpstream(payload)}`);
   }
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
   } catch (error) {
-    throw new UpstreamError("Model message content is not JSON", { cause: error });
+    throw new UpstreamError(`Model message content is not JSON${describeUpstream(payload)}`, { cause: error });
   }
 
   const { proposals, dropped } = parseProposals(parsed);

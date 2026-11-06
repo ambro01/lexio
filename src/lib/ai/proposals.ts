@@ -1,3 +1,5 @@
+import { isRecord } from "@/lib/utils";
+
 export const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 export type CefrLevel = (typeof CEFR_LEVELS)[number];
@@ -72,10 +74,6 @@ export const PROPOSALS_JSON_SCHEMA = {
 /** The model's JSON does not have the `{ proposals: array }` root. */
 export class InvalidModelOutputError extends Error {
   override name = "InvalidModelOutputError";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function nonEmptyString(value: unknown): string | null {

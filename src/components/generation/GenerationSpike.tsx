@@ -3,7 +3,7 @@ import { CircleAlert, RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MAX_INPUT_WORDS, countWords, type Proposal } from "@/lib/ai/proposals";
 import type { GenerationUsage } from "@/lib/services/ai-generation.service";
-import { cn } from "@/lib/utils";
+import { cn, isRecord } from "@/lib/utils";
 
 interface ModelOption {
   id: string;
@@ -36,10 +36,6 @@ type GenerationState =
 
 const GENERIC_ERROR = "Nie udało się połączyć z serwerem. Spróbuj ponownie.";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function isGenerationSuccess(value: unknown): value is GenerationSuccess {
   return isRecord(value) && Array.isArray(value.proposals) && isRecord(value.meta);
 }
@@ -56,11 +52,12 @@ async function requestProposals(text: string, model: string): Promise<Generation
     return { status: "error", message: GENERIC_ERROR };
   }
 
+  const serverError = `Błąd serwera (HTTP ${String(response.status)}). Spróbuj ponownie.`;
   let body: unknown;
   try {
     body = await response.json();
   } catch {
-    return { status: "error", message: GENERIC_ERROR };
+    return { status: "error", message: serverError };
   }
 
   if (response.ok && isGenerationSuccess(body)) {
@@ -69,7 +66,7 @@ async function requestProposals(text: string, model: string): Promise<Generation
   if (isRecord(body) && typeof body.message === "string") {
     return { status: "error", message: body.message };
   }
-  return { status: "error", message: GENERIC_ERROR };
+  return { status: "error", message: serverError };
 }
 
 function formatMeta(meta: GenerationMeta, proposalCount: number, models: readonly ModelOption[]): string {
