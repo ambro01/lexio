@@ -294,10 +294,10 @@ First migration, purely additive, no existing data. Rollback on production would
 
 #### Automated
 
-- [x] 3.1 Unit tests pass: `npm test`
-- [x] 3.2 Build succeeds: `npm run build`
+- [x] 3.1 Unit tests pass: `npm test` — e6575f8
+- [x] 3.2 Build succeeds: `npm run build` — e6575f8
 
 #### Manual
 
-- [x] 3.3 Production Supabase dashboard shows `flashcards`, `tags` and `flashcard_tags` with RLS enabled, and `supabase migration list` shows the migration applied remotely
-- [x] 3.4 `deploy-plan.md`, `README.md`, `AGENTS.md` and `contract-surfaces.md` describe the schema and the production migration step
+- [x] 3.3 Production Supabase dashboard shows `flashcards`, `tags` and `flashcard_tags` with RLS enabled, and `supabase migration list` shows the migration applied remotely — e6575f8
+- [x] 3.4 `deploy-plan.md`, `README.md`, `AGENTS.md` and `contract-surfaces.md` describe the schema and the production migration step — e6575f8

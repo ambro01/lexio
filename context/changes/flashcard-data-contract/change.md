@@ -1,7 +1,7 @@
 ---
 change_id: flashcard-data-contract
 title: Per-user flashcard and tag storage with isolation
-status: implementing
+status: implemented
 created: 2026-11-10
 updated: 2026-11-10
 archived_at: null
