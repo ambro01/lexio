@@ -55,6 +55,11 @@ Source of truth for "what is already deployed and which secrets are wired". Page
 - [x] GitHub → Settings → Installed GitHub Apps → "Cloudflare Workers and Pages" → Configure: repo `ambro01/lexio` must be in Repository access (it was missing; the first push triggered nothing).
 - [x] Push to `master` (commit `809d7e5`) → check run "Workers Builds: lexio" success → version `35f1718c-818b-4a57-9286-923625eb18d8` deployed 2026-11-01T20:42Z, secrets preserved, production verified.
 
+### F. Database migrations (human)
+
+- [x] 2026-11-10: first migration `20261110210825_flashcard_data_contract.sql` (F-02 `flashcard-data-contract`: `flashcards`, `tags`, `flashcard_tags`, `save_flashcard`, RLS on every table) applied with `npx supabase db push`; `npx supabase migration list` shows it in Local and Remote.
+- [x] Gotcha: the project's direct database host is IPv6-only — on an IPv4-only network `link` / `db push` fail with "IPv6 is not supported on your current network". Use the **session pooler** string from Dashboard → Connect (port 5432, not the 6543 transaction pooler): `npx supabase db push --db-url "<session pooler string>"`. Run it in a separate terminal — the string contains the database password.
+
 ## Verification (production)
 
 - [x] `GET /` → 200; `GET /auth/signin`, `/auth/signup` → 200.
@@ -68,6 +73,7 @@ Source of truth for "what is already deployed and which secrets are wired". Page
 - Logs: `npx wrangler tail --format pretty` (watch for CPU-limit 1102 / 5xx).
 - History: `npx wrangler deployments list`, `npx wrangler versions list`.
 - Rollback (human approval): `npx wrangler rollback <version-id>`. Supabase migrations do not roll back with the Worker.
+- Migrations (human): additive only; apply with `npx supabase db push --db-url "<session pooler string>"` **before** pushing code that needs them (Workers Builds deploys code only, never the schema). Check with `npx supabase migration list --db-url …`. Never paste migration SQL into the SQL Editor — it skips the migration history.
 - Secret rotation (human): `npx wrangler secret put <NAME>`, then revoke the old key in Supabase.
 - Wired secrets: `SUPABASE_URL`, `SUPABASE_KEY`, `OPENROUTER_API_KEY` (added 2026-11-03 for F-01 `openrouter-generation-spike`; without it `POST /api/ai/proposals` returns 503).
 - Gotcha: a leftover `astro preview` / `workerd` process locks `dist/` on Windows and `astro build` then fails with "The property 'options.recursive' is no longer supported" — stop it before building. Never chain `wrangler deploy` after a build whose exit code you did not check: it uploads the stale `dist/`.

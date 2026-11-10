@@ -280,24 +280,24 @@ First migration, purely additive, no existing data. Rollback on production would
 
 #### Automated
 
-- [x] 2.1 Types regenerate without diff: `npm run db:types` followed by `git diff --exit-code src/db/database.types.ts`
-- [x] 2.2 Unit tests pass: `npm test`
-- [x] 2.3 Type checking passes: `npx astro check`
-- [x] 2.4 Build succeeds: `npm run build`
-- [x] 2.5 Isolation checks still pass: `npm run check:rls`
+- [x] 2.1 Types regenerate without diff: `npm run db:types` followed by `git diff --exit-code src/db/database.types.ts` — 739c6bf
+- [x] 2.2 Unit tests pass: `npm test` — 739c6bf
+- [x] 2.3 Type checking passes: `npx astro check` — 739c6bf
+- [x] 2.4 Build succeeds: `npm run build` — 739c6bf
+- [x] 2.5 Isolation checks still pass: `npm run check:rls` — 739c6bf
 
 #### Manual
 
-- [x] 2.6 `src/types.ts` and the service function list match what S-01 (save accepted proposals with a lesson tag) and S-05 (list, edit, delete, tag suggestions) need
+- [x] 2.6 `src/types.ts` and the service function list match what S-01 (save accepted proposals with a lesson tag) and S-05 (list, edit, delete, tag suggestions) need — 739c6bf
 
 ### Phase 3: Production and docs
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass: `npm test`
-- [ ] 3.2 Build succeeds: `npm run build`
+- [x] 3.1 Unit tests pass: `npm test`
+- [x] 3.2 Build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 3.3 Production Supabase dashboard shows `flashcards`, `tags` and `flashcard_tags` with RLS enabled, and `supabase migration list` shows the migration applied remotely
-- [ ] 3.4 `deploy-plan.md`, `README.md`, `AGENTS.md` and `contract-surfaces.md` describe the schema and the production migration step
+- [x] 3.3 Production Supabase dashboard shows `flashcards`, `tags` and `flashcard_tags` with RLS enabled, and `supabase migration list` shows the migration applied remotely
+- [x] 3.4 `deploy-plan.md`, `README.md`, `AGENTS.md` and `contract-surfaces.md` describe the schema and the production migration step

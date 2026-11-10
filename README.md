@@ -112,7 +112,17 @@ npx supabase stop
 
 The local Studio UI is available at `http://localhost:54323`.
 
-No database tables or migrations are required — this project uses Supabase Auth's built-in `auth.users` table only.
+### Database schema
+
+Migrations live in `supabase/migrations/` and are applied automatically by `npx supabase start` on a fresh database. The schema stores flashcards per user (`flashcards`, `tags`, `flashcard_tags`, plus the `save_flashcard` function), with row-level security on every table — see `docs/reference/contract-surfaces.md`.
+
+```bash
+npx supabase db reset   # re-create the local database and apply all migrations
+npm run db:types        # regenerate src/db/database.types.ts from the local schema
+npm run check:rls       # two-user isolation check (needs SUPABASE_URL / SUPABASE_KEY of the local stack)
+```
+
+Production: migrations are applied by hand with `npx supabase db push` (after `npx supabase link --project-ref <ref>`), **before** pushing code that needs them — see `context/deployment/deploy-plan.md`.
 
 ### Using a cloud Supabase project instead
 
