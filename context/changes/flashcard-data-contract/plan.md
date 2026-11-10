@@ -268,27 +268,27 @@ First migration, purely additive, no existing data. Rollback on production would
 
 #### Automated
 
-- [x] 1.1 Migration applies on a fresh local database: `npx supabase db reset`
-- [x] 1.2 Isolation and one-word checks pass: `npm run check:rls`
-- [x] 1.3 Smoke test still passes: `npm run smoke` (against `npm run preview` with local Supabase)
+- [x] 1.1 Migration applies on a fresh local database: `npx supabase db reset` — 2a17f1d
+- [x] 1.2 Isolation and one-word checks pass: `npm run check:rls` — 2a17f1d
+- [x] 1.3 Smoke test still passes: `npm run smoke` (against `npm run preview` with local Supabase) — 2a17f1d
 
 #### Manual
 
-- [x] 1.4 Supabase Studio (local) shows RLS enabled on `flashcards`, `tags` and `flashcard_tags`, and `save_flashcard` is executable only by `authenticated`
+- [x] 1.4 Supabase Studio (local) shows RLS enabled on `flashcards`, `tags` and `flashcard_tags`, and `save_flashcard` is executable only by `authenticated` — 2a17f1d
 
 ### Phase 2: Types and flashcards service
 
 #### Automated
 
-- [ ] 2.1 Types regenerate without diff: `npm run db:types` followed by `git diff --exit-code src/db/database.types.ts`
-- [ ] 2.2 Unit tests pass: `npm test`
-- [ ] 2.3 Type checking passes: `npx astro check`
-- [ ] 2.4 Build succeeds: `npm run build`
-- [ ] 2.5 Isolation checks still pass: `npm run check:rls`
+- [x] 2.1 Types regenerate without diff: `npm run db:types` followed by `git diff --exit-code src/db/database.types.ts`
+- [x] 2.2 Unit tests pass: `npm test`
+- [x] 2.3 Type checking passes: `npx astro check`
+- [x] 2.4 Build succeeds: `npm run build`
+- [x] 2.5 Isolation checks still pass: `npm run check:rls`
 
 #### Manual
 
-- [ ] 2.6 `src/types.ts` and the service function list match what S-01 (save accepted proposals with a lesson tag) and S-05 (list, edit, delete, tag suggestions) need
+- [x] 2.6 `src/types.ts` and the service function list match what S-01 (save accepted proposals with a lesson tag) and S-05 (list, edit, delete, tag suggestions) need
 
 ### Phase 3: Production and docs
 
