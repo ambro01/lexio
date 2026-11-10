@@ -122,6 +122,27 @@ await step("A: save 'give  up' returns the same card, content and tags merged", 
   ];
 });
 
+await step("A: save '\\tgive up\\n' (tab/newline) returns the same card", async () => {
+  const { data, error } = await save(a.client, "\tgive up\n", "inna treść", ["\tLesson 2\n"]);
+  if (error) return [false, error.message];
+  const row = firstRow(data);
+  const allTags = await a.client.from("tags").select("id");
+  if (allTags.error) return [false, allTags.error.message];
+  const ok = row?.flashcard_id === aCardId && row.created === false && allTags.data.length === 2;
+  return [ok, `${JSON.stringify(row)} tags total=${allTags.data.length}`];
+});
+
+await step("A: a word made only of whitespace is rejected", async () => {
+  const { error } = await save(a.client, "\t\n", "coś", []);
+  return [error !== null, error?.message ?? "accepted"];
+});
+
+await step("A: more than 20 tags in one save is rejected", async () => {
+  const tags = Array.from({ length: 21 }, (_, i) => `t${String(i)}`);
+  const { error } = await save(a.client, "too many tags", "za dużo", tags);
+  return [error !== null, error?.message ?? "accepted"];
+});
+
 await step("B: select on all tables returns no rows of A", async () => {
   const leaks = [];
   for (const table of TABLES) {

@@ -184,6 +184,12 @@ describe("suggestTags", () => {
     expect(calls.find((call) => call.method === "limit")?.args).toEqual([20]);
   });
 
+  it("drops '*', which PostgREST would treat as a wildcard", async () => {
+    const { client, calls } = stubClient({ data: [], error: null });
+    await suggestTags(client, "le*s");
+    expect(calls.find((call) => call.method === "like")?.args).toEqual(["name_key", "les%"]);
+  });
+
   it("does not filter when the prefix is blank", async () => {
     const { client, calls } = stubClient({ data: [], error: null });
     await suggestTags(client, "   ");

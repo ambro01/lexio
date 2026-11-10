@@ -159,7 +159,8 @@ export async function deleteFlashcard(client: FlashcardsClient, id: string): Pro
 /** The user's tags ordered by name, optionally filtered by a case-insensitive prefix. */
 export async function suggestTags(client: FlashcardsClient, prefix?: string): Promise<Tag[]> {
   let query = client.from("tags").select("id, name");
-  const key = prefix === undefined ? "" : toKey(prefix);
+  // PostgREST also treats "*" as a LIKE wildcard, so it is dropped from the prefix.
+  const key = prefix === undefined ? "" : toKey(prefix.replaceAll("*", ""));
   if (key) {
     query = query.like("name_key", `${escapeLike(key)}%`);
   }
