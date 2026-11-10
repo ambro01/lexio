@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "smoke": "node scripts/smoke.mjs",
+    "check:rls": "node scripts/check-rls.mjs",
     "measure:generation": "node scripts/measure-generation.mjs"
   },
   "dependencies": {

@@ -46,6 +46,10 @@ jobs:
           source supabase.env
           printf 'SUPABASE_URL=%s\nSUPABASE_KEY=%s\n' "$API_URL" "$ANON_KEY" > .env
           cp .env .dev.vars
+      - name: Check RLS isolation and flashcard data contract
+        run: |
+          source supabase.env
+          SUPABASE_URL="$API_URL" SUPABASE_KEY="$ANON_KEY" npm run check:rls
       - run: npm run build
       - name: Run smoke test against production preview
         run: |

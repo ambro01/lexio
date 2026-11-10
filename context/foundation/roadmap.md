@@ -3,7 +3,7 @@ project: Lexio
 version: 1
 status: draft
 created: 2026-11-03
-updated: 2026-11-03
+updated: 2026-11-10
 prd_version: 4
 main_goal: speed
 top_blocker: time
@@ -42,7 +42,7 @@ A Polish learner taking 1–2 English lessons a week copies new words from lesso
 | ID   | Change ID                   | Outcome (user can …)                                                               | Prerequisites | PRD refs                        | Status      |
 | ---- | --------------------------- | ---------------------------------------------------------------------------------- | ------------- | ------------------------------- | ----------- |
 | F-01 | openrouter-generation-spike | (foundation) deployed app calls the AI model via OpenRouter within the 60 s budget | —             | NFR (< 60 s, progress)          | in-progress |
-| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | ready       |
+| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | in-progress |
 | S-01 | paste-text-generation       | paste lesson text, review AI proposals, accept the set into the collection         | F-01, F-02    | US-01, FR-003, FR-004, FR-005   | proposed    |
 | S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | proposed    |
 | S-03 | cefr-too-easy-grouping      | set CEFR level and AI model in profile; bulk-reject "too easy" ones                | S-01          | US-01, FR-014, FR-016           | proposed    |
@@ -102,7 +102,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Isolation must exist before any user data is written; scope stays at flashcard + tag only — review scheduling state and acceptance records are added by S-06 and S-01 when they need them.
-- **Status:** ready
+- **Status:** in-progress
 
 ## Slices
 
