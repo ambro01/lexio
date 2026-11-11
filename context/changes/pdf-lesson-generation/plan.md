@@ -329,9 +329,9 @@ Bring the PRD and docs in line with the new behaviour, ship, and verify on a pho
 
 #### Automated
 
-- [ ] 3.1 CI (lint, test, astro check, build, check:client-only, check:rls, smoke) is green on `master` after the push
+- [x] 3.1 CI (lint, test, astro check, build, check:client-only, check:rls, smoke) is green on `master` after the push — 71e350c
 
 #### Manual
 
-- [ ] 3.2 A real lesson PDF on a phone in production generates proposals within 60 s and accepting saves the cards
-- [ ] 3.3 No CPU-limit (1102) errors in Cloudflare observability for those requests
+- [x] 3.2 A real lesson PDF on a phone in production generates proposals within 60 s and accepting saves the cards — 71e350c
+- [x] 3.3 No CPU-limit (1102) errors in Cloudflare observability for those requests — 71e350c
