@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { CircleAlert, Info, RotateCcw, Save, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useReviewDraft } from "@/components/hooks/useReviewDraft";
+import PdfLessonInput, { type PdfText } from "@/components/lesson/PdfLessonInput";
 import ProposalReviewItem from "@/components/lesson/ProposalReviewItem";
 import { MAX_TAG_CHARS } from "@/lib/ai/outcomes";
 import { countWords } from "@/lib/ai/proposals";
+import { tagFromFileName } from "@/lib/pdf/lesson-text";
 import {
   canAccept,
   counts,
@@ -29,6 +31,11 @@ type Stage =
   | { name: "generating" }
   | { name: "saving" }
   | { name: "done"; result: AcceptSetResult; tagName: string };
+
+type Source = "text" | "pdf";
+
+const SOURCES: Source[] = ["text", "pdf"];
+const SOURCE_LABELS: Record<Source, string> = { text: "Tekst", pdf: "PDF" };
 
 type ApiResult<T> = { ok: true; data: T } | { ok: false; message: string };
 
@@ -146,6 +153,8 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
   const { draft, ready, setDraft, clearDraft } = useReviewDraft(userId);
   const [tagName, setTagName] = useState("");
   const [text, setText] = useState("");
+  const [source, setSource] = useState<Source>("text");
+  const [pdf, setPdf] = useState<PdfText | null>(null);
   const [stage, setStage] = useState<Stage>({ name: "idle" });
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -165,15 +174,24 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
   const overLimit = words > maxWords;
   const generating = stage.name === "generating";
   const saving = stage.name === "saving";
-  const canGenerate = !generating && tagName.trim() !== "" && words > 0 && !overLimit;
+  const hasInput = source === "text" ? words > 0 && !overLimit : pdf !== null;
+  const canGenerate = !generating && tagName.trim() !== "" && hasInput;
+
+  function onPdfText(result: PdfText | null) {
+    setPdf(result);
+    if (result) {
+      setTagName((current) => (current.trim() === "" ? tagFromFileName(result.fileName) : current));
+    }
+  }
 
   async function generate() {
     const lessonTag = tagName.trim().replace(/\s+/g, " ");
+    const lessonText = source === "text" ? text : (pdf?.text ?? "");
     setGenerateError(null);
     setNotice(null);
     setStage({ name: "generating" });
     // No model is sent: the server uses its default and reports it in meta.
-    const result = await postJson("/api/ai/proposals", { text }, isGenerationResponse);
+    const result = await postJson("/api/ai/proposals", { text: lessonText }, isGenerationResponse);
     if (!mounted.current) {
       return;
     }
@@ -216,6 +234,7 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
   function startNewLesson() {
     setTagName("");
     setText("");
+    setPdf(null);
     setGenerateError(null);
     setNotice(null);
     setStage({ name: "idle" });
@@ -342,7 +361,41 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
         </datalist>
       </div>
 
-      <div className="space-y-2">
+      <div
+        role="tablist"
+        aria-label="Źródło lekcji"
+        className="grid grid-cols-2 gap-1 rounded-lg border border-white/10 bg-white/5 p-1 sm:inline-grid"
+      >
+        {SOURCES.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            role="tab"
+            id={`lesson-tab-${tab}`}
+            aria-selected={source === tab}
+            aria-controls={`lesson-panel-${tab}`}
+            disabled={generating}
+            onClick={() => {
+              setSource(tab);
+            }}
+            className={cn(
+              "rounded-md px-6 py-1.5 text-sm font-medium transition-colors disabled:opacity-50",
+              source === tab ? "bg-purple-600 text-white" : "text-blue-100/70 hover:bg-white/10 hover:text-white",
+            )}
+          >
+            {SOURCE_LABELS[tab]}
+          </button>
+        ))}
+      </div>
+
+      {/* Both panels stay mounted, so each tab keeps its state when switching. */}
+      <div
+        role="tabpanel"
+        id="lesson-panel-text"
+        aria-labelledby="lesson-tab-text"
+        hidden={source !== "text"}
+        className="space-y-2"
+      >
         <label htmlFor="lesson-text" className="block text-sm font-medium text-blue-100/80">
           Tekst lekcji
         </label>
@@ -360,6 +413,10 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
         <p className={cn("text-right text-xs", overLimit ? "text-red-300" : "text-blue-100/60")}>
           {words} / {maxWords} słów
         </p>
+      </div>
+
+      <div role="tabpanel" id="lesson-panel-pdf" aria-labelledby="lesson-tab-pdf" hidden={source !== "pdf"}>
+        <PdfLessonInput disabled={generating} result={pdf} onText={onPdfText} />
       </div>
 
       <div className="flex flex-wrap items-center gap-4">

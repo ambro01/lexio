@@ -13,6 +13,7 @@
     "test": "vitest run",
     "smoke": "node scripts/smoke.mjs",
     "check:rls": "node scripts/check-rls.mjs",
+    "check:client-only": "node scripts/check-client-only.mjs",
     "db:types": "supabase gen types typescript --local > src/db/database.types.ts",
     "measure:generation": "node scripts/measure-generation.mjs"
   },

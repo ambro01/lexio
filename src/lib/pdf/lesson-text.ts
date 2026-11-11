@@ -1,3 +1,4 @@
+import { MAX_TAG_CHARS } from "@/lib/ai/limits";
 import { MAX_INPUT_CHARS, MAX_INPUT_WORDS, countWords } from "@/lib/ai/proposals";
 
 /** A pdf.js text content item: text items have `str`, marked-content items do not. */
@@ -116,4 +117,18 @@ export function truncateToLimit(text: string, maxWords = MAX_INPUT_WORDS, maxCha
   // A first token longer than maxChars has no whitespace boundary within the limit: cut it hard instead.
   const kept = end === 0 ? trimmed.slice(0, maxChars) : trimmed.slice(0, end);
   return { text: kept.trim(), totalWords, truncated: true };
+}
+
+/**
+ * A lesson tag suggested from a PDF file name: drops the `.pdf` extension, turns `_` into spaces, collapses
+ * whitespace and cuts the result to `maxChars`.
+ */
+export function tagFromFileName(fileName: string, maxChars = MAX_TAG_CHARS): string {
+  return fileName
+    .replace(/\.pdf$/i, "")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxChars)
+    .trim();
 }

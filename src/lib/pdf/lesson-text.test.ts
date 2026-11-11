@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { countWords, validateInput } from "@/lib/ai/proposals";
-import { dropRepeatedLines, pageLines, toLessonText, truncateToLimit } from "./lesson-text";
+import { dropRepeatedLines, pageLines, tagFromFileName, toLessonText, truncateToLimit } from "./lesson-text";
 
 const words = (n: number) => Array.from({ length: n }, (_, i) => `word${i}`).join(" ");
 
@@ -143,5 +143,20 @@ describe("truncateToLimit", () => {
     for (const sample of samples) {
       expect(validateInput(truncateToLimit(sample).text).ok).toBe(true);
     }
+  });
+});
+
+describe("tagFromFileName", () => {
+  it("drops the .pdf extension, turns underscores into spaces and collapses whitespace", () => {
+    expect(tagFromFileName("Unit_12__travel  plans.PDF")).toBe("Unit 12 travel plans");
+  });
+
+  it("keeps names without a .pdf extension", () => {
+    expect(tagFromFileName("lesson.pdf.txt")).toBe("lesson.pdf.txt");
+  });
+
+  it("cuts the tag to the maximum length without a trailing space", () => {
+    expect(tagFromFileName(`${"a".repeat(49)}_b_c.pdf`)).toBe("a".repeat(49));
+    expect(tagFromFileName(`${"a".repeat(60)}.pdf`)).toHaveLength(50);
   });
 });

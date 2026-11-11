@@ -300,30 +300,30 @@ Bring the PRD and docs in line with the new behaviour, ship, and verify on a pho
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including text-rule and extraction tests on generated PDFs: `npm test`
-- [x] 1.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 1.3 Build passes: `npm run build`
+- [x] 1.1 Unit tests pass, including text-rule and extraction tests on generated PDFs: `npm test` — dd4307f
+- [x] 1.2 Lint and type check pass: `npm run lint` and `npx astro check` — dd4307f
+- [x] 1.3 Build passes: `npm run build` — dd4307f
 
 #### Manual
 
-- [x] 1.4 Extraction of one real lesson PDF gives readable text without repeated headers/footers
+- [x] 1.4 Extraction of one real lesson PDF gives readable text without repeated headers/footers — dd4307f
 
 ### Phase 2: PDF tab in the lesson form
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm test`
-- [ ] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 2.3 Build passes and pdf.js is absent from the server bundle: `npm run build` and `npm run check:client-only`
-- [ ] 2.4 Smoke still passes: `npm run smoke`
+- [x] 2.1 Unit tests pass: `npm test`
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 2.3 Build passes and pdf.js is absent from the server bundle: `npm run build` and `npm run check:client-only`
+- [x] 2.4 Smoke still passes: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.5 Local PDF run: progress, file name and word count, tag prefill, generation and review work
-- [ ] 2.6 A PDF over 2,000 words shows the truncation notice and generates
-- [ ] 2.7 Scanned, password-protected and non-PDF files show their messages and do not generate
-- [ ] 2.8 pdf.js downloads only after picking a file; the Tekst tab works as before
-- [ ] 2.9 The PDF tab is usable at 390 px width
+- [x] 2.5 Local PDF run: progress, file name and word count, tag prefill, generation and review work
+- [x] 2.6 A PDF over 2,000 words shows the truncation notice and generates
+- [x] 2.7 Scanned, password-protected and non-PDF files show their messages and do not generate
+- [x] 2.8 pdf.js downloads only after picking a file; the Tekst tab works as before
+- [x] 2.9 The PDF tab is usable at 390 px width
 
 ### Phase 3: Docs and production check
 
