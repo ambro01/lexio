@@ -393,4 +393,75 @@ await step("A: an unknown outcome after a valid item rolls the whole set back", 
   ]),
 );
 
+// ---------------------------------------------------------------------------
+// profiles: one settings row per user, written the way profiles.service.ts does (upsert on user_id,
+// which defaults to auth.uid()).
+// ---------------------------------------------------------------------------
+
+const PROFILE_MODEL = "openai/gpt-6-luna";
+
+async function upsertProfile(client, profile) {
+  return client
+    .from("profiles")
+    .upsert({ ...profile, updated_at: new Date().toISOString() }, { onConflict: "user_id" })
+    .select("user_id, cefr_level, ai_model");
+}
+
+await step("A: has no profile row at first", async () => {
+  const { data, error } = await a.client.from("profiles").select("user_id");
+  if (error) return [false, error.message];
+  return [data.length === 0, `${data.length} row(s)`];
+});
+
+await step("A: upsert a profile twice (insert, then update) and read it back", async () => {
+  const first = await upsertProfile(a.client, { cefr_level: "A2", ai_model: null });
+  if (first.error) return [false, first.error.message];
+  const second = await upsertProfile(a.client, { cefr_level: "B1", ai_model: PROFILE_MODEL });
+  if (second.error) return [false, second.error.message];
+  const { data, error } = await a.client.from("profiles").select("user_id, cefr_level, ai_model");
+  if (error) return [false, error.message];
+  const ok =
+    data.length === 1 &&
+    data[0].user_id === a.userId &&
+    data[0].cefr_level === "B1" &&
+    data[0].ai_model === PROFILE_MODEL;
+  return [ok, JSON.stringify(data)];
+});
+
+await step("B: select on profiles returns no rows of A", async () => {
+  const all = await b.client.from("profiles").select("user_id");
+  if (all.error) return [false, all.error.message];
+  const byId = await b.client.from("profiles").select("user_id").eq("user_id", a.userId);
+  if (byId.error) return [false, byId.error.message];
+  const leaked = all.data.filter((r) => r.user_id === a.userId).length + byId.data.length;
+  return [leaked === 0, `${leaked} row(s) of A visible`];
+});
+
+await step("B: update of A's profile affects 0 rows", async () => {
+  const { data, error } = await b.client.from("profiles").update({ cefr_level: "C2" }).eq("user_id", a.userId).select();
+  if (error) return [false, error.message];
+  return [data.length === 0, `${data.length} row(s)`];
+});
+
+await step("B: insert of a profile with A's user_id is rejected", async () => {
+  const { error } = await b.client.from("profiles").insert({ user_id: a.userId, cefr_level: "C2" });
+  return [Boolean(error), error ? error.message : "insert succeeded"];
+});
+
+await step("A: profile still intact after B's attempts", async () => {
+  const { data, error } = await a.client.from("profiles").select("cefr_level, ai_model");
+  if (error) return [false, error.message];
+  return [data.length === 1 && data[0].cefr_level === "B1" && data[0].ai_model === PROFILE_MODEL, JSON.stringify(data)];
+});
+
+await step("A: an invalid cefr_level ('D1') is rejected", async () => {
+  const { error } = await upsertProfile(a.client, { cefr_level: "D1", ai_model: null });
+  return [Boolean(error), error ? error.message : "upsert succeeded"];
+});
+
+await step("anon: select on profiles returns no rows", async () => {
+  const { data } = await anon.from("profiles").select("*");
+  return [!data?.length, data?.length ? `${data.length} row(s)` : ""];
+});
+
 finish();

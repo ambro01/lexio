@@ -1,0 +1,36 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import ProfileForm from "@/components/profile/ProfileForm";
+import { AI_MODELS, DEFAULT_AI_MODEL_ID } from "@/lib/ai/models";
+import { getProfile } from "@/lib/services/profiles.service";
+import { createClient } from "@/lib/supabase";
+import type { Profile } from "@/types";
+
+// The middleware redirects anonymous users. Without a client, or when the read fails, the form starts
+// from "not set"; saving then reports the server's message.
+let profile: Profile = { cefrLevel: null, aiModel: null };
+const client = createClient(Astro.request.headers, Astro.cookies);
+if (client) {
+  try {
+    profile = await getProfile(client);
+  } catch {
+    profile = { cefrLevel: null, aiModel: null };
+  }
+}
+---
+
+<Layout title="Profil">
+  <div class="bg-cosmic min-h-screen p-4">
+    <div class="mx-auto my-8 w-full max-w-xl rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-8">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+          Profil
+        </h1>
+        <a href="/dashboard" class="text-sm text-purple-300 hover:underline">
+          ← Dashboard
+        </a>
+      </div>
+      <ProfileForm profile={profile} models={AI_MODELS} defaultModelId={DEFAULT_AI_MODEL_ID} client:load />
+    </div>
+  </div>
+</Layout>

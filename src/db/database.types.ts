@@ -109,6 +109,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          ai_model: string | null
+          cefr_level: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_model?: string | null
+          cefr_level?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          ai_model?: string | null
+          cefr_level?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       proposal_outcomes: {
         Row: {
           created_at: string

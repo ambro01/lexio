@@ -1,8 +1,9 @@
 // Shared entity and input types for flashcards (service, API routes and UI).
 // Type-only imports keep this module loadable by plain Node scripts.
+import type { AiModelId } from "@/lib/ai/models";
 import type { CefrLevel, Proposal } from "@/lib/ai/proposals";
 
-export type { CefrLevel, Proposal };
+export type { AiModelId, CefrLevel, Proposal };
 
 export interface Tag {
   id: string;
@@ -62,4 +63,10 @@ export interface AcceptSetResult {
   created: number;
   merged: number;
   rejected: number;
+}
+
+/** The user's settings (FR-014, FR-016); `null` means not set (no level, the default model). */
+export interface Profile {
+  cefrLevel: CefrLevel | null;
+  aiModel: AiModelId | null;
 }

@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { OPENROUTER_API_KEY } from "astro:env/server";
 import { z } from "zod";
-import { DEFAULT_AI_MODEL_ID, isAiModelId } from "@/lib/ai/models";
+import { DEFAULT_AI_MODEL_ID, isAiModelId, type AiModelId } from "@/lib/ai/models";
 import {
   InvalidModelOutputError,
   MAX_INPUT_CHARS,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/ai/proposals";
 import { UpstreamError, UpstreamTimeoutError, generateProposals } from "@/lib/services/ai-generation.service";
 import { findExistingWordKeys, toKey } from "@/lib/services/flashcards.service";
+import { getProfile } from "@/lib/services/profiles.service";
 import { createClient } from "@/lib/supabase";
 import type { ReviewProposal } from "@/types";
 
@@ -36,15 +37,36 @@ function logGeneration(fields: Record<string, unknown>): void {
   console.log(JSON.stringify({ event: "ai_generation", ...fields }));
 }
 
-type InCollectionLookup = "ok" | "unavailable" | "failed";
+type Lookup = "ok" | "unavailable" | "failed";
+type ModelSource = "request" | "profile" | "default";
+
+/**
+ * The model from the user's profile, else the default (FR-016). Never throws: a missing client or a failed
+ * read only falls back to the default, reported as `profileLookup` in the log line.
+ */
+async function profileModel(
+  client: ReturnType<typeof createClient>,
+): Promise<{ model: AiModelId; modelSource: ModelSource; profileLookup: Lookup }> {
+  if (!client) {
+    return { model: DEFAULT_AI_MODEL_ID, modelSource: "default", profileLookup: "unavailable" };
+  }
+  try {
+    const { aiModel } = await getProfile(client);
+    return aiModel
+      ? { model: aiModel, modelSource: "profile", profileLookup: "ok" }
+      : { model: DEFAULT_AI_MODEL_ID, modelSource: "default", profileLookup: "ok" };
+  } catch {
+    return { model: DEFAULT_AI_MODEL_ID, modelSource: "default", profileLookup: "failed" };
+  }
+}
 
 /** Marks proposals whose word the user already has. Never throws: a paid generation must not fail here. */
 async function markInCollection(
   proposals: Proposal[],
   client: ReturnType<typeof createClient>,
-): Promise<{ proposals: ReviewProposal[]; lookup: InCollectionLookup }> {
+): Promise<{ proposals: ReviewProposal[]; lookup: Lookup }> {
   let existing = new Set<string>();
-  let lookup: InCollectionLookup = "ok";
+  let lookup: Lookup = "ok";
   if (!client) {
     lookup = "unavailable";
   } else {
@@ -89,8 +111,9 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     return json(400, { error: "bad_request", message: "Nieprawidłowe żądanie." });
   }
 
-  const model = parsed.data.model ?? DEFAULT_AI_MODEL_ID;
-  if (!isAiModelId(model)) {
+  // An explicit model (e.g. the measurement script) wins and must be configured; otherwise the profile decides.
+  const requestedModel = parsed.data.model;
+  if (requestedModel !== undefined && !isAiModelId(requestedModel)) {
     return json(400, { error: "unknown_model", message: "Nieznany model AI." });
   }
 
@@ -108,13 +131,21 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     return json(503, { error: "not_configured", message: "Generowanie AI nie jest skonfigurowane." });
   }
 
+  // One client for the profile read and the collection lookup.
+  const client = createClient(request.headers, cookies);
+  const { model, modelSource, profileLookup } = isAiModelId(requestedModel)
+    ? { model: requestedModel, modelSource: "request" as const, profileLookup: undefined }
+    : await profileModel(client);
+
   const started = Date.now();
   try {
     const result = await generateProposals({ text: input.text, model, apiKey: OPENROUTER_API_KEY });
-    const marked = await markInCollection(result.proposals, createClient(request.headers, cookies));
+    const marked = await markInCollection(result.proposals, client);
     logGeneration({
       status: 200,
       model: result.model,
+      modelSource,
+      profileLookup,
       durationMs: result.durationMs,
       inputWords: input.words,
       proposalCount: result.proposals.length,
@@ -137,11 +168,19 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   } catch (error) {
     const durationMs = Date.now() - started;
     if (error instanceof UpstreamTimeoutError) {
-      logGeneration({ status: 504, model, durationMs, inputWords: input.words });
+      logGeneration({ status: 504, model, modelSource, profileLookup, durationMs, inputWords: input.words });
       return json(504, { error: "timeout", message: "Generowanie trwało zbyt długo. Spróbuj ponownie." });
     }
     if (error instanceof UpstreamError || error instanceof InvalidModelOutputError) {
-      logGeneration({ status: 502, model, durationMs, inputWords: input.words, reason: error.message });
+      logGeneration({
+        status: 502,
+        model,
+        modelSource,
+        profileLookup,
+        durationMs,
+        inputWords: input.words,
+        reason: error.message,
+      });
       return json(502, { error: "upstream", message: "Model AI nie odpowiedział poprawnie. Spróbuj ponownie." });
     }
     throw error;
