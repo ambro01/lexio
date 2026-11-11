@@ -392,20 +392,20 @@ Apply the migration in production before the code, ship, verify, and update the 
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including the decision, "too easy" rule and draft v2 tests: `npm test`
-- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 2.3 Build passes: `npm run build`
-- [x] 2.4 Smoke still passes: `npm run smoke`
+- [x] 2.1 Unit tests pass, including the decision, "too easy" rule and draft v2 tests: `npm test` — e664081
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check` — e664081
+- [x] 2.3 Build passes: `npm run build` — e664081
+- [x] 2.4 Smoke still passes: `npm run smoke` — e664081
 
 #### Manual
 
-- [x] 2.5 With level B1, A1/A2 words (not in the collection) are in the collapsed group; B1+ stay in the main list
-- [x] 2.6 Bulk reject + accept records `rejected_too_easy`; edited and individually rejected items keep their decision
-- [x] 2.7 Group "Cofnij" restores the bulk-rejected words; untouched group items are saved
-- [x] 2.8 A too-easy word already in the collection stays in the main list
-- [x] 2.9 Without a level: no group, hint links to `/profile`; a level change does not regroup an open draft
-- [x] 2.10 A version-1 draft from before the deploy still loads
-- [x] 2.11 The group is usable at 390 px width
+- [x] 2.5 With level B1, A1/A2 words (not in the collection) are in the collapsed group; B1+ stay in the main list — e664081
+- [x] 2.6 Bulk reject + accept records `rejected_too_easy`; edited and individually rejected items keep their decision — e664081
+- [x] 2.7 Group "Cofnij" restores the bulk-rejected words; untouched group items are saved — e664081
+- [x] 2.8 A too-easy word already in the collection stays in the main list — e664081
+- [x] 2.9 Without a level: no group, hint links to `/profile`; a level change does not regroup an open draft — e664081
+- [x] 2.10 A version-1 draft from before the deploy still loads — e664081
+- [x] 2.11 The group is usable at 390 px width — e664081
 
 ### Phase 3: Production rollout and docs
 
