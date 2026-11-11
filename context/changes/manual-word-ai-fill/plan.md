@@ -418,7 +418,7 @@ Apply the migration in production before the code, ship, verify, and update the 
 
 #### Automated
 
-- [ ] 4.1 CI (lint, test, astro check, build, check:client-only, check:rls, smoke) is green on `master` after the push
+- [x] 4.1 CI (lint, test, astro check, build, check:client-only, check:rls, smoke) is green on `master` after the push — 91f7b1b
 
 #### Manual
 
