@@ -14,6 +14,7 @@ import {
   createDraft,
   editItem,
   rejectTooEasy,
+  tooEasyEligibleCount,
   revertItem,
   setDecision,
   toAcceptRequest,
@@ -359,6 +360,7 @@ export default function LessonGenerator({ userId, tagNames, maxWords, level }: P
             items={draft.items}
             indexes={tooEasy}
             rejectedCount={tooEasyRejected}
+            eligibleCount={tooEasyEligibleCount(draft)}
             disabled={saving}
             onRejectAll={() => {
               setDraft(rejectTooEasy);

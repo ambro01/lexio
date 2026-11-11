@@ -11,6 +11,7 @@ import {
   itemProblem,
   parseDraft,
   rejectTooEasy,
+  tooEasyEligibleCount,
   revertItem,
   setDecision,
   toAcceptRequest,
@@ -266,7 +267,11 @@ describe("too easy group", () => {
 
   it("bulk rejects only accepted, unedited group items", () => {
     const prepared = setDecision(editItem(leveled, 1, content(walk, { translation: "spacer" })), 3, "reject_wrong");
+    // The button's count must equal what the action rejects (one shared rule).
+    expect(tooEasyEligibleCount(leveled)).toBe(3);
+    expect(tooEasyEligibleCount(prepared)).toBe(1);
     const next = rejectTooEasy(prepared);
+    expect(tooEasyEligibleCount(next)).toBe(0);
     expect(next.items.map((item) => item.decision)).toEqual([
       "reject_too_easy",
       "accept",

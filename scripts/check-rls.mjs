@@ -401,10 +401,7 @@ await step("A: an unknown outcome after a valid item rolls the whole set back", 
 const PROFILE_MODEL = "openai/gpt-6-luna";
 
 async function upsertProfile(client, profile) {
-  return client
-    .from("profiles")
-    .upsert({ ...profile, updated_at: new Date().toISOString() }, { onConflict: "user_id" })
-    .select("user_id, cefr_level, ai_model");
+  return client.from("profiles").upsert(profile, { onConflict: "user_id" }).select("user_id, cefr_level, ai_model");
 }
 
 await step("A: has no profile row at first", async () => {
@@ -448,10 +445,35 @@ await step("B: insert of a profile with A's user_id is rejected", async () => {
   return [Boolean(error), error ? error.message : "insert succeeded"];
 });
 
+await step("B: upsert of a profile with A's user_id is rejected (the service's write path)", async () => {
+  const { data, error } = await b.client
+    .from("profiles")
+    .upsert({ user_id: a.userId, cefr_level: "C2" }, { onConflict: "user_id" })
+    .select("user_id");
+  return [Boolean(error) || data.length === 0, error ? error.message : `${data.length} row(s)`];
+});
+
+await step("anon: insert into profiles is rejected", async () => {
+  const { error } = await anon.from("profiles").insert({ user_id: a.userId, cefr_level: "C2" });
+  return [Boolean(error), error ? error.message : "insert succeeded"];
+});
+
 await step("A: profile still intact after B's attempts", async () => {
   const { data, error } = await a.client.from("profiles").select("cefr_level, ai_model");
   if (error) return [false, error.message];
   return [data.length === 1 && data[0].cefr_level === "B1" && data[0].ai_model === PROFILE_MODEL, JSON.stringify(data)];
+});
+
+await step("A: updated_at is kept by the database (a client-sent value is overwritten on update)", async () => {
+  const sent = "2000-01-01T00:00:00Z";
+  const { data, error } = await a.client
+    .from("profiles")
+    .update({ updated_at: sent })
+    .eq("user_id", a.userId)
+    .select("updated_at");
+  if (error) return [false, error.message];
+  const stored = data[0]?.updated_at;
+  return [data.length === 1 && new Date(stored).getFullYear() > 2000, `updated_at ${String(stored)}`];
 });
 
 await step("A: an invalid cefr_level ('D1') is rejected", async () => {

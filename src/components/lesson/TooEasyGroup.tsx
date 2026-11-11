@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Ban, ChevronRight, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { isEdited, type DraftItem } from "@/lib/review-draft";
+import { itemProblem, type DraftItem } from "@/lib/review-draft";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -11,6 +11,8 @@ interface Props {
   indexes: number[];
   /** How many items are currently rejected as "too easy" by the bulk action. */
   rejectedCount: number;
+  /** How many items the bulk reject would reject now (`tooEasyEligibleCount`). */
+  eligibleCount: number;
   disabled: boolean;
   onRejectAll: () => void;
   onUndo: () => void;
@@ -25,6 +27,7 @@ export default function TooEasyGroup({
   items,
   indexes,
   rejectedCount,
+  eligibleCount,
   disabled,
   onRejectAll,
   onUndo,
@@ -32,31 +35,34 @@ export default function TooEasyGroup({
 }: Props) {
   // Open/closed is view state only; it is not stored in the draft.
   const [open, setOpen] = useState(false);
-  const eligible = indexes.filter((index) => {
+  // An item that blocks "Akceptuj zestaw" must never be hidden: the group stays open while one needs fixing.
+  const problems = indexes.filter((index) => {
     const item = items.at(index);
-    return item?.decision === "accept" && !isEdited(item);
+    return item !== undefined && itemProblem(item) !== null;
   }).length;
+  const expanded = open || problems > 0;
 
   return (
     <section className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-3 sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           type="button"
-          aria-expanded={open}
+          aria-expanded={expanded}
           aria-controls="too-easy-items"
           onClick={() => {
             setOpen((current) => !current);
           }}
           className="flex items-center gap-2 rounded-md py-1 text-left text-sm font-semibold text-white hover:text-purple-200"
         >
-          <ChevronRight className={cn("size-4 shrink-0 transition-transform", open && "rotate-90")} />
+          <ChevronRight className={cn("size-4 shrink-0 transition-transform", expanded && "rotate-90")} />
           Za łatwe dla Ciebie ({indexes.length})
+          {problems > 0 && <span className="font-normal text-red-300">· do poprawy: {problems}</span>}
         </button>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          disabled={disabled || eligible === 0}
+          disabled={disabled || eligibleCount === 0}
           onClick={onRejectAll}
           className={actionClass}
         >
@@ -83,7 +89,7 @@ export default function TooEasyGroup({
       )}
 
       {/* Kept mounted while collapsed, so an item being edited keeps its state. */}
-      <ul id="too-easy-items" hidden={!open} className="space-y-3">
+      <ul id="too-easy-items" hidden={!expanded} className="space-y-3">
         {indexes.map((index) => renderItem(index))}
       </ul>
     </section>

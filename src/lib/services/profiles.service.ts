@@ -47,14 +47,14 @@ export async function getProfile(client: ProfilesClient): Promise<Profile> {
   return toProfile(data);
 }
 
-/** Creates or replaces the signed-in user's profile (the row's user_id defaults to auth.uid()). */
+/**
+ * Creates or replaces the signed-in user's profile (the row's user_id defaults to auth.uid()). updated_at is
+ * kept by the database (column default on insert, the profiles_set_updated_at trigger on update).
+ */
 export async function saveProfile(client: ProfilesClient, profile: Profile): Promise<Profile> {
   const { data, error } = await client
     .from("profiles")
-    .upsert(
-      { cefr_level: profile.cefrLevel, ai_model: profile.aiModel, updated_at: new Date().toISOString() },
-      { onConflict: "user_id" },
-    )
+    .upsert({ cefr_level: profile.cefrLevel, ai_model: profile.aiModel }, { onConflict: "user_id" })
     .select(PROFILE_SELECT)
     .single();
   if (error) {

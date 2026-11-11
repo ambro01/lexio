@@ -109,6 +109,17 @@ describe("acceptRequestSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("rejects 'too easy' for a word already in the collection", () => {
+    const tooEasy = acceptRequestSchema.safeParse(
+      body([{ decision: "reject_too_easy", original: proposal, inCollection: true }]),
+    );
+    expect(tooEasy.success).toBe(false);
+    const known = acceptRequestSchema.safeParse(
+      body([{ decision: "reject_known", original: proposal, inCollection: true }]),
+    );
+    expect(known.success).toBe(true);
+  });
+
   it("rejects an unknown decision", () => {
     const result = acceptRequestSchema.safeParse(
       body([{ decision: "reject_maybe" as "reject_known", original: proposal, inCollection: false }]),

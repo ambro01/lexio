@@ -65,9 +65,7 @@ describe("getProfile", () => {
 });
 
 describe("saveProfile", () => {
-  it("upserts the caller's row in snake_case with updated_at and maps the saved row", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-11-11T12:00:00Z"));
+  it("upserts the caller's row in snake_case (updated_at left to the database) and maps the saved row", async () => {
     const { client, calls } = stubClient({
       data: { cefr_level: "C1", ai_model: "google/gemini-3.8-flash" },
       error: null,
@@ -77,7 +75,7 @@ describe("saveProfile", () => {
 
     expect(saved).toEqual({ cefrLevel: "C1", aiModel: "google/gemini-3.8-flash" });
     expect(calls.find((call) => call.method === "upsert")?.args).toEqual([
-      { cefr_level: "C1", ai_model: "google/gemini-3.8-flash", updated_at: "2026-11-11T12:00:00.000Z" },
+      { cefr_level: "C1", ai_model: "google/gemini-3.8-flash" },
       { onConflict: "user_id" },
     ]);
     expect(calls.some((call) => call.method === "single")).toBe(true);

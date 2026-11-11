@@ -85,11 +85,20 @@ export function tooEasyIndexes(draft: ReviewDraft): number[] {
   return draft.items.flatMap((item, index) => (isTooEasy(item.original, draft.level) ? [index] : []));
 }
 
+/** The one rule for which group items the bulk reject applies to: still accepted and unedited. */
+function tooEasyEligible(draft: ReviewDraft): (item: DraftItem, index: number) => boolean {
+  const group = new Set(tooEasyIndexes(draft));
+  return (item, index) => group.has(index) && item.decision === "accept" && !isEdited(item);
+}
+
+/** How many group items "Odrzuć wszystkie jako Za łatwe" would reject now. */
+export function tooEasyEligibleCount(draft: ReviewDraft): number {
+  return draft.items.filter(tooEasyEligible(draft)).length;
+}
+
 /** Rejects as "too easy" every group item that is still accepted and unedited; other items are unchanged. */
 export function rejectTooEasy(draft: ReviewDraft): ReviewDraft {
-  const group = new Set(tooEasyIndexes(draft));
-  const eligible = (item: DraftItem, index: number) =>
-    group.has(index) && item.decision === "accept" && !isEdited(item);
+  const eligible = tooEasyEligible(draft);
   if (!draft.items.some(eligible)) {
     return draft;
   }

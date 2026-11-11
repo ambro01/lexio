@@ -109,6 +109,12 @@ const itemSchema = z
   .refine((item) => item.decision !== "accept" || item.final !== undefined, {
     message: "final is required for an accepted proposal",
     path: ["final"],
+  })
+  // A word already in the collection is never "too easy" (isTooEasy): a "Za łatwe" record for it would make
+  // S-09 hide a word the user is learning. The level part cannot be checked here (the server has no draft level).
+  .refine((item) => item.decision !== "reject_too_easy" || !item.inCollection, {
+    message: "a word already in the collection cannot be rejected as too easy",
+    path: ["decision"],
   });
 
 /** Body of `POST /api/proposal-sets`. Strings come out whitespace-normalised. */
