@@ -1,10 +1,10 @@
 ---
 change_id: paste-text-generation
 title: Paste text generation
-status: impl_reviewed
+status: archived
 created: 2026-11-10
 updated: 2026-11-11
-archived_at: null
+archived_at: 2026-11-11T12:31:20Z
 ---
 
 ## Notes
