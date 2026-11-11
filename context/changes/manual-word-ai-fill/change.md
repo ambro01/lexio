@@ -1,7 +1,7 @@
 ---
 change_id: manual-word-ai-fill
 title: Manual word ai fill
-status: implementing
+status: implemented
 created: 2026-11-11
 updated: 2026-11-11
 archived_at: null
@@ -10,3 +10,5 @@ archived_at: null
 ## Notes
 
 <!-- Free-form notes for this change: links, ad-hoc context, decisions that don't belong in research/frame/plan. -->
+
+- 2026-11-11 (Phase 4): gate 4.1 (CI green on master after the push) was skipped at the user's request. The CI run for 91f7b1b (run 43097437312) stayed queued with no jobs, suspected GitHub-side problem. The same checks passed locally in phases 1–3 (test, lint, astro check, build, check:client-only, check:rls, smoke), and the production checks 4.2–4.4 passed. Tick 4.1 once a CI run on master is green.

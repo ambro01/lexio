@@ -422,6 +422,6 @@ Apply the migration in production before the code, ship, verify, and update the 
 
 #### Manual
 
-- [ ] 4.2 Production migration applied before the deploy
-- [ ] 4.3 Production phone run saves a card and a `source = 'manual'` outcome row
-- [ ] 4.4 A production lesson accept still works and records `source = 'lesson'`
+- [x] 4.2 Production migration applied before the deploy — 91f7b1b
+- [x] 4.3 Production phone run saves a card and a `source = 'manual'` outcome row — 91f7b1b
+- [x] 4.4 A production lesson accept still works and records `source = 'lesson'` — 91f7b1b
