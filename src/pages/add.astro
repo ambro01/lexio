@@ -1,0 +1,33 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import AddWord from "@/components/manual/AddWord";
+import { suggestTags } from "@/lib/services/flashcards.service";
+import { createClient } from "@/lib/supabase";
+
+// The middleware redirects anonymous users. Tag suggestions are a convenience: without them the user simply
+// types a tag (or none).
+let tagNames: string[] = [];
+const client = createClient(Astro.request.headers, Astro.cookies);
+if (client) {
+  tagNames = await suggestTags(client).then(
+    (tags) => tags.map((tag) => tag.name),
+    () => [],
+  );
+}
+---
+
+<Layout title="Dodaj słowo">
+  <div class="bg-cosmic min-h-screen p-4">
+    <div class="mx-auto my-8 w-full max-w-xl rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-8">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+          Dodaj słowo
+        </h1>
+        <a href="/dashboard" class="text-sm text-purple-300 hover:underline">
+          ← Dashboard
+        </a>
+      </div>
+      <AddWord tagNames={tagNames} client:load />
+    </div>
+  </div>
+</Layout>

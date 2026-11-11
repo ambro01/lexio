@@ -388,31 +388,31 @@ Apply the migration in production before the code, ship, verify, and update the 
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including word-fill parser/input tests and the unchanged lesson generation tests: `npm test`
-- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 2.3 Build passes: `npm run build`
-- [x] 2.4 Smoke passes, including "word-fill API rejects anonymous user": `npm run smoke`
+- [x] 2.1 Unit tests pass, including word-fill parser/input tests and the unchanged lesson generation tests: `npm test` — 54e7a5e
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check` — 54e7a5e
+- [x] 2.3 Build passes: `npm run build` — 54e7a5e
+- [x] 2.4 Smoke passes, including "word-fill API rejects anonymous user": `npm run smoke` — 54e7a5e
 
 #### Manual
 
-- [x] 2.5 Local word-fill: "bank" with a river context gives the river meaning; an existing word returns 409 without an AI call
+- [x] 2.5 Local word-fill: "bank" with a river context gives the river meaning; an existing word returns 409 without an AI call — 54e7a5e
 
 ### Phase 3: "Dodaj słowo" page
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass: `npm test`
-- [ ] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 3.3 Build passes: `npm run build`
-- [ ] 3.4 Smoke passes, including "add redirects anonymous user": `npm run smoke`
+- [x] 3.1 Unit tests pass: `npm test`
+- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 3.3 Build passes: `npm run build`
+- [x] 3.4 Smoke passes, including "add redirects anonymous user": `npm run smoke`
 
 #### Manual
 
-- [ ] 3.5 Local save without a tag records `accepted_unchanged`, `source = 'manual'`, `tag_name` null
-- [ ] 3.6 "went" → "go" shows "poprawione z: went"; an edited save records `accepted_corrected`
-- [ ] 3.7 An existing word is stopped before the fill; a normalised existing word blocks "Zapisz"
-- [ ] 3.8 "Uzupełnij ponownie" replaces the card (confirm when edited); "Odrzuć" records nothing
-- [ ] 3.9 Saving with a tag tags the card; the page is usable at 390 px width
+- [x] 3.5 Local save without a tag records `accepted_unchanged`, `source = 'manual'`, `tag_name` null
+- [x] 3.6 "went" → "go" shows "poprawione z: went"; an edited save records `accepted_corrected`
+- [x] 3.7 An existing word is stopped before the fill; a normalised existing word blocks "Zapisz"
+- [x] 3.8 "Uzupełnij ponownie" replaces the card (confirm when edited); "Odrzuć" records nothing
+- [x] 3.9 Saving with a tag tags the card; the page is usable at 390 px width
 
 ### Phase 4: Production rollout and docs
 

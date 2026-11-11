@@ -36,9 +36,14 @@ if (client) {
         <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
           Nowa lekcja
         </h1>
-        <a href="/dashboard" class="text-sm text-purple-300 hover:underline">
-          ← Dashboard
-        </a>
+        <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
+          <a href="/add" class="text-sm text-purple-300 hover:underline">
+            Dodaj pojedyncze słowo
+          </a>
+          <a href="/dashboard" class="text-sm text-purple-300 hover:underline">
+            ← Dashboard
+          </a>
+        </div>
       </div>
       <LessonGenerator userId={userId} tagNames={tagNames} maxWords={MAX_INPUT_WORDS} level={level} client:load />
     </div>

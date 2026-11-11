@@ -11,8 +11,13 @@ interface Props {
   index: number;
   disabled: boolean;
   onEdit: (final: ProposalContent) => void;
-  onDecision: (decision: ProposalDecision) => void;
+  /** Not needed when `allowReject` is false (a manual card has no decision to change). */
+  onDecision?: (decision: ProposalDecision) => void;
   onRevert: () => void;
+  /** Shows the reject buttons; false for a manual card, which is saved or discarded, not rejected. */
+  allowReject?: boolean;
+  /** An extra note under the word, e.g. "poprawione z: went". */
+  note?: string;
 }
 
 const REJECT_LABELS: Record<Exclude<ProposalDecision, "accept">, string> = {
@@ -42,7 +47,16 @@ function Field({ id, label, children }: { id: string; label: string; children: R
   );
 }
 
-export default function ProposalReviewItem({ item, index, disabled, onEdit, onDecision, onRevert }: Props) {
+export default function ProposalReviewItem({
+  item,
+  index,
+  disabled,
+  onEdit,
+  onDecision,
+  onRevert,
+  allowReject = true,
+  note,
+}: Props) {
   const [editing, setEditing] = useState(false);
   const { original, final, decision } = item;
   const edited = isEdited(item);
@@ -60,7 +74,7 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
           size="sm"
           disabled={disabled}
           onClick={() => {
-            onDecision("accept");
+            onDecision?.("accept");
           }}
           className={actionClass}
         >
@@ -73,7 +87,7 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
 
   const reject = (next: Exclude<ProposalDecision, "accept">) => {
     setEditing(false);
-    onDecision(next);
+    onDecision?.(next);
   };
 
   return (
@@ -84,6 +98,7 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
         {original.inCollection && <Badge className="bg-blue-500/30 text-blue-100">W kolekcji — dostanie tag</Badge>}
         {edited && <Badge className="bg-amber-500/30 text-amber-100">poprawione</Badge>}
       </div>
+      {note && <p className="text-xs text-blue-100/70">{note}</p>}
 
       {editing ? (
         <div className="space-y-3">
@@ -204,32 +219,36 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
             </Button>
           )
         )}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={disabled}
-          onClick={() => {
-            reject("reject_known");
-          }}
-          className={actionClass}
-        >
-          <Ban />
-          {REJECT_LABELS.reject_known}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={disabled}
-          onClick={() => {
-            reject("reject_wrong");
-          }}
-          className={actionClass}
-        >
-          <X />
-          {REJECT_LABELS.reject_wrong}
-        </Button>
+        {allowReject && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={disabled}
+              onClick={() => {
+                reject("reject_known");
+              }}
+              className={actionClass}
+            >
+              <Ban />
+              {REJECT_LABELS.reject_known}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={disabled}
+              onClick={() => {
+                reject("reject_wrong");
+              }}
+              className={actionClass}
+            >
+              <X />
+              {REJECT_LABELS.reject_wrong}
+            </Button>
+          </>
+        )}
       </div>
     </li>
   );
