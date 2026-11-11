@@ -1,10 +1,10 @@
 ---
 change_id: cefr-too-easy-grouping
 title: Cefr too easy grouping
-status: impl_reviewed
+status: archived
 created: 2026-11-11
 updated: 2026-11-11
-archived_at: null
+archived_at: 2026-11-11T15:28:55Z
 ---
 
 ## Notes
