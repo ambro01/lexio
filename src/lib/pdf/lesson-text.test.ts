@@ -19,22 +19,28 @@ describe("pageLines", () => {
 describe("dropRepeatedLines", () => {
   it("removes footers that alternate between odd and even pages", () => {
     // Real worksheet: "FOOTERRIGHT 1/8 Learn" on odd pages, "FOOTERLEFT 2/8 Learn" on even pages (50% each).
-    const pages = Array.from({ length: 6 }, (_, i) => [
-      `content ${"abcdef"[i] ?? ""}`,
-      i % 2 === 0 ? `FOOTERRIGHT ${String(i + 1)}/6 Learn` : `FOOTERLEFT ${String(i + 1)}/6 Learn`,
+    const pages = Array.from({ length: 8 }, (_, i) => [
+      `content ${"abcdefgh"[i] ?? ""}`,
+      i % 2 === 0 ? `FOOTERRIGHT ${String(i + 1)}/8 Learn` : `FOOTERLEFT ${String(i + 1)}/8 Learn`,
     ]);
-    expect(dropRepeatedLines(pages)).toEqual([
-      ["content a"],
-      ["content b"],
-      ["content c"],
-      ["content d"],
-      ["content e"],
-      ["content f"],
-    ]);
+    expect(dropRepeatedLines(pages)).toEqual(Array.from("abcdefgh", (letter) => [`content ${letter}`]));
   });
 
-  it("keeps a line on both odd pages of a short PDF (each page set needs 3 pages)", () => {
+  it("keeps a line on both odd pages of a short PDF (each page set needs 4 pages)", () => {
     const pages = [["Exercise", "one"], ["two"], ["Exercise", "three"], ["four"]];
+    expect(dropRepeatedLines(pages)).toEqual(pages);
+  });
+
+  it("keeps lines that repeat on two same-parity pages of a 5-page PDF", () => {
+    const pages = [["Exercise 1", "Read the dialogue."], ["b"], ["Exercise 2", "Read the dialogue."], ["d"], ["e"]];
+    expect(dropRepeatedLines(pages)).toEqual(pages);
+  });
+
+  it("keeps a line on only half of the odd pages of a longer PDF", () => {
+    // Filler words are distinct letters: digits are stripped when comparing lines.
+    const pages = Array.from("abcdefgh", (letter, i) =>
+      i === 0 || i === 2 ? ["Warm up", `page ${letter}`] : [`page ${letter}`],
+    );
     expect(dropRepeatedLines(pages)).toEqual(pages);
   });
 
@@ -147,6 +153,14 @@ describe("truncateToLimit", () => {
 });
 
 describe("tagFromFileName", () => {
+  it("never splits an emoji at the length limit and stays within the UTF-16 limit", () => {
+    const name = `${"a".repeat(49)}😀 more.pdf`;
+    const tag = tagFromFileName(name);
+    expect(tag).toBe("a".repeat(49));
+    expect(tag.length).toBeLessThanOrEqual(50);
+    expect(tagFromFileName(`${"a".repeat(48)}😀.pdf`)).toBe(`${"a".repeat(48)}😀`);
+  });
+
   it("drops the .pdf extension, turns underscores into spaces and collapses whitespace", () => {
     expect(tagFromFileName("Unit_12__travel  plans.PDF")).toBe("Unit 12 travel plans");
   });

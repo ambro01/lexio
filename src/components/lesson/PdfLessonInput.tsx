@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { CircleAlert, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MAX_INPUT_WORDS } from "@/lib/ai/proposals";
+import { countWords } from "@/lib/ai/proposals";
 import type { PdfFailure } from "@/lib/pdf/extract";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,8 @@ interface Props {
 
 type Status = { name: "idle" } | { name: "reading"; page: number; pages: number } | { name: "error"; message: string };
 
-const FAILED = "Nie udało się odczytać PDF. Spróbuj ponownie.";
+// Browsers may cache a failed load of the pdf.js module, so a plain retry can keep failing until a reload.
+const FAILED = "Nie udało się odczytać PDF. Odśwież stronę i spróbuj ponownie.";
 
 const FAILURE_MESSAGES: Record<PdfFailure, string> = {
   too_large: "Plik jest za duży (maks. 20 MB).",
@@ -48,15 +49,21 @@ export default function PdfLessonInput({ disabled, result, onText }: Props) {
     }
     const id = ++pickId.current;
     const current = () => id === pickId.current;
+    // Generuj stays off while reading; if the new file fails, the previously loaded file is kept.
+    const previous = result;
+    const fail = (message: string) => {
+      if (current()) {
+        setStatus({ name: "error", message });
+        onText(previous);
+      }
+    };
     onText(null);
     setStatus({ name: "reading", page: 0, pages: 0 });
     try {
       const { MAX_PDF_BYTES, extractLessonText } = await import("@/lib/pdf/extract");
       // Refuse a huge file before downloading pdf.js or reading it into memory.
       if (file.size > MAX_PDF_BYTES) {
-        if (current()) {
-          setStatus({ name: "error", message: FAILURE_MESSAGES.too_large });
-        }
+        fail(FAILURE_MESSAGES.too_large);
         return;
       }
       const { loadPdfjs } = await import("@/lib/pdf/browser");
@@ -74,7 +81,7 @@ export default function PdfLessonInput({ disabled, result, onText }: Props) {
         return;
       }
       if (!extraction.ok) {
-        setStatus({ name: "error", message: FAILURE_MESSAGES[extraction.reason] });
+        fail(FAILURE_MESSAGES[extraction.reason]);
         return;
       }
       setStatus({ name: "idle" });
@@ -86,9 +93,7 @@ export default function PdfLessonInput({ disabled, result, onText }: Props) {
       });
     } catch {
       // The library failed to load (e.g. offline) or the file could not be read.
-      if (current()) {
-        setStatus({ name: "error", message: FAILED });
-      }
+      fail(FAILED);
     }
   }
 
@@ -126,7 +131,7 @@ export default function PdfLessonInput({ disabled, result, onText }: Props) {
             <p className="truncate font-medium text-white">{result.fileName}</p>
             <p className={cn(result.truncated ? "text-amber-200" : "text-blue-100/60")}>
               {result.truncated
-                ? `Użyto pierwszych ${String(MAX_INPUT_WORDS)} z ${String(result.totalWords)} słów`
+                ? `Użyto pierwszych ${String(countWords(result.text))} z ${String(result.totalWords)} słów`
                 : `${String(result.totalWords)} słów`}
             </p>
           </div>
