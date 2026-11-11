@@ -10,9 +10,12 @@ import {
   isEdited,
   itemProblem,
   parseDraft,
+  rejectTooEasy,
   revertItem,
   setDecision,
   toAcceptRequest,
+  tooEasyIndexes,
+  undoTooEasy,
   type DraftItem,
   type ReviewDraft,
 } from "./review-draft";
@@ -57,6 +60,7 @@ function itemAt(d: ReviewDraft, index: number): DraftItem {
 const draft = createDraft(
   "Lesson 1",
   "anthropic/claude-haiku-5.5",
+  null,
   [giveUp, reliable],
   new Date("2026-11-11T10:00:00Z"),
 );
@@ -64,9 +68,10 @@ const draft = createDraft(
 describe("createDraft", () => {
   it("accepts every proposal with its original content", () => {
     expect(draft).toEqual({
-      version: 1,
+      version: 2,
       tagName: "Lesson 1",
       model: "anthropic/claude-haiku-5.5",
+      level: null,
       createdAt: "2026-11-11T10:00:00.000Z",
       items: [
         { original: giveUp, final: content(giveUp), decision: "accept" },
@@ -122,9 +127,9 @@ describe("transitions", () => {
 
 describe("counts and accept guard", () => {
   it("counts items to save and rejected items", () => {
-    expect(counts(draft)).toEqual({ toSave: 2, rejected: 0 });
+    expect(counts(draft)).toEqual({ toSave: 2, rejected: 0, tooEasyRejected: 0 });
     const next = setDecision(setDecision(draft, 0, "reject_known"), 1, "reject_wrong");
-    expect(counts(next)).toEqual({ toSave: 0, rejected: 2 });
+    expect(counts(next)).toEqual({ toSave: 0, rejected: 2, tooEasyRejected: 0 });
   });
 
   it("blocks accept while an item to save has a blank word or translation", () => {
@@ -210,14 +215,91 @@ describe("parseDraft", () => {
     expect(parseDraft(JSON.parse(JSON.stringify(next)))).toEqual(next);
   });
 
+  it("round-trips a draft with a level and a too-easy rejection", () => {
+    const next = rejectTooEasy(createDraft("Lesson 1", "m", "B1", [giveUp, { ...giveUp, word: "cat", cefr: "A1" }]));
+    expect(next.level).toBe("B1");
+    expect(parseDraft(JSON.parse(JSON.stringify(next)))).toEqual(next);
+  });
+
+  it("upgrades a version-1 draft with no level and the same items", () => {
+    const { level: _level, ...rest } = setDecision(draft, 1, "reject_known");
+    const v1 = JSON.parse(JSON.stringify({ ...rest, version: 1 })) as unknown;
+    const parsed = parseDraft(v1);
+    expect(parsed).toEqual({ ...rest, version: 2, level: null });
+    expect(parsed && tooEasyIndexes(parsed)).toEqual([]);
+  });
+
   it("rejects malformed data and another version", () => {
     expect(parseDraft(null)).toBeNull();
     expect(parseDraft("draft")).toBeNull();
-    expect(parseDraft({ ...draft, version: 2 })).toBeNull();
+    expect(parseDraft({ ...draft, version: 3 })).toBeNull();
+    expect(parseDraft({ ...draft, version: 0 })).toBeNull();
+    expect(parseDraft({ ...draft, level: "D1" })).toBeNull();
+    expect(parseDraft({ ...draft, level: undefined })).toBeNull();
     expect(parseDraft({ ...draft, items: [] })).toBeNull();
+    expect(parseDraft({ ...draft, version: 1, items: [] })).toBeNull();
     expect(parseDraft({ ...draft, tagName: "" })).toBeNull();
     expect(parseDraft({ ...draft, items: [{ ...itemAt(draft, 0), decision: "maybe" }] })).toBeNull();
     expect(parseDraft({ ...draft, items: [{ ...itemAt(draft, 0), original: { ...giveUp, cefr: "D1" } }] })).toBeNull();
+  });
+});
+
+describe("too easy group", () => {
+  const word = (text: string, cefr: ReviewProposal["cefr"], inCollection = false): ReviewProposal => ({
+    word: text,
+    translation: `${text}-pl`,
+    additionalMeanings: [],
+    exampleSentence: `I like ${text}.`,
+    cefr,
+    inCollection,
+  });
+  // At B1: 0, 1, 3 are too easy; 2 (B1) and 4 (A1 in the collection) are not.
+  const walk = word("walk", "A2");
+  const proposals = [word("cat", "A1"), walk, giveUp, word("dog", "A2"), word("home", "A1", true)];
+  const leveled = createDraft("Lesson 2", "anthropic/claude-haiku-5.5", "B1", proposals);
+
+  it("stores the level and lists the group by original index", () => {
+    expect(leveled.level).toBe("B1");
+    expect(tooEasyIndexes(leveled)).toEqual([0, 1, 3]);
+    expect(tooEasyIndexes(createDraft("Lesson 2", "m", null, proposals))).toEqual([]);
+  });
+
+  it("bulk rejects only accepted, unedited group items", () => {
+    const prepared = setDecision(editItem(leveled, 1, content(walk, { translation: "spacer" })), 3, "reject_wrong");
+    const next = rejectTooEasy(prepared);
+    expect(next.items.map((item) => item.decision)).toEqual([
+      "reject_too_easy",
+      "accept",
+      "accept",
+      "reject_wrong",
+      "accept",
+    ]);
+    expect(counts(next)).toEqual({ toSave: 3, rejected: 2, tooEasyRejected: 1 });
+    expect(rejectTooEasy(next)).toBe(next);
+  });
+
+  it("undo restores only the too-easy rejections", () => {
+    const rejected = setDecision(rejectTooEasy(leveled), 2, "reject_known");
+    expect(counts(rejected)).toEqual({ toSave: 1, rejected: 4, tooEasyRejected: 3 });
+    const undone = undoTooEasy(rejected);
+    expect(undone.items.map((item) => item.decision)).toEqual(["accept", "accept", "reject_known", "accept", "accept"]);
+    expect(counts(undone)).toEqual({ toSave: 4, rejected: 1, tooEasyRejected: 0 });
+    expect(undoTooEasy(undone)).toBe(undone);
+  });
+
+  it("does not block accept for a too-easy rejection and round-trips through the request schema", () => {
+    const next = rejectTooEasy(leveled);
+    expect(itemProblem(itemAt(next, 0))).toBeNull();
+    expect(canAccept(next)).toBe(true);
+    const parsed = acceptRequestSchema.parse(toAcceptRequest(next));
+    expect(toAcceptSetItems(parsed).map((item) => [item.word, item.outcome])).toEqual([
+      ["cat", "rejected_too_easy"],
+      ["walk", "rejected_too_easy"],
+      ["give up", "accepted_unchanged"],
+      ["dog", "rejected_too_easy"],
+      ["home", "accepted_unchanged"],
+    ]);
+    expect(toAcceptRequest(next).items[0]).not.toHaveProperty("final");
   });
 });
 

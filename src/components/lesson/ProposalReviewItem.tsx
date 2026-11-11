@@ -18,6 +18,8 @@ interface Props {
 const REJECT_LABELS: Record<Exclude<ProposalDecision, "accept">, string> = {
   reject_known: "Znam / nieprzydatne",
   reject_wrong: "Błędne",
+  // Set only by the bulk action of the "too easy" group; there is no per-item button for it.
+  reject_too_easy: "Za łatwe",
 };
 
 const inputClass =

@@ -2,11 +2,13 @@
 // draft, so the UI can persist it to localStorage and the tests can run without React.
 import { z } from "zod";
 import { MAX_MEANINGS, MAX_MEANINGS_CHARS, MAX_TEXT_CHARS } from "@/lib/ai/limits";
+import { isTooEasy } from "@/lib/ai/cefr";
 import { CEFR_LEVELS } from "@/lib/ai/proposals";
-import { classifyOutcome, normaliseContent, type AcceptRequestBody } from "@/lib/ai/outcomes";
-import type { ProposalContent, ProposalDecision, ReviewProposal } from "@/types";
+import { PROPOSAL_DECISIONS, classifyOutcome, normaliseContent, type AcceptRequestBody } from "@/lib/ai/outcomes";
+import type { CefrLevel, ProposalContent, ProposalDecision, ReviewProposal } from "@/types";
 
-export const DRAFT_VERSION = 1;
+/** Version 2 added `level`; a stored version-1 draft is upgraded on read (see `parseDraft`). */
+export const DRAFT_VERSION = 2;
 
 export interface DraftItem {
   original: ReviewProposal;
@@ -18,6 +20,8 @@ export interface ReviewDraft {
   version: typeof DRAFT_VERSION;
   tagName: string;
   model: string;
+  /** The profile level when the draft was created; a later profile change does not regroup it. */
+  level: CefrLevel | null;
   createdAt: string;
   items: DraftItem[];
 }
@@ -34,6 +38,7 @@ function contentOf(proposal: ReviewProposal): ProposalContent {
 export function createDraft(
   tagName: string,
   model: string,
+  level: CefrLevel | null,
   proposals: ReviewProposal[],
   now: Date = new Date(),
 ): ReviewDraft {
@@ -41,6 +46,7 @@ export function createDraft(
     version: DRAFT_VERSION,
     tagName,
     model,
+    level,
     createdAt: now.toISOString(),
     items: proposals.map((proposal) => ({ original: proposal, final: contentOf(proposal), decision: "accept" })),
   };
@@ -74,9 +80,45 @@ export function isEdited(item: DraftItem): boolean {
   return classifyOutcome("accept", item.original, item.final) === "accepted_corrected";
 }
 
-export function counts(draft: ReviewDraft): { toSave: number; rejected: number } {
+/** Indexes (in `draft.items`) of the items in the "too easy" group, by the level stored in the draft. */
+export function tooEasyIndexes(draft: ReviewDraft): number[] {
+  return draft.items.flatMap((item, index) => (isTooEasy(item.original, draft.level) ? [index] : []));
+}
+
+/** Rejects as "too easy" every group item that is still accepted and unedited; other items are unchanged. */
+export function rejectTooEasy(draft: ReviewDraft): ReviewDraft {
+  const group = new Set(tooEasyIndexes(draft));
+  const eligible = (item: DraftItem, index: number) =>
+    group.has(index) && item.decision === "accept" && !isEdited(item);
+  if (!draft.items.some(eligible)) {
+    return draft;
+  }
+  return {
+    ...draft,
+    items: draft.items.map((item, index) =>
+      eligible(item, index) ? { ...item, decision: "reject_too_easy" as const } : item,
+    ),
+  };
+}
+
+/** Undoes the bulk reject: every item rejected as "too easy" goes back to accept (only the bulk action sets it). */
+export function undoTooEasy(draft: ReviewDraft): ReviewDraft {
+  if (!draft.items.some((item) => item.decision === "reject_too_easy")) {
+    return draft;
+  }
+  return {
+    ...draft,
+    items: draft.items.map((item) =>
+      item.decision === "reject_too_easy" ? { ...item, decision: "accept" as const } : item,
+    ),
+  };
+}
+
+/** `rejected` counts every rejection, including the "too easy" ones counted again in `tooEasyRejected`. */
+export function counts(draft: ReviewDraft): { toSave: number; rejected: number; tooEasyRejected: number } {
   const toSave = draft.items.filter((item) => item.decision === "accept").length;
-  return { toSave, rejected: draft.items.length - toSave };
+  const tooEasyRejected = draft.items.filter((item) => item.decision === "reject_too_easy").length;
+  return { toSave, rejected: draft.items.length - toSave, tooEasyRejected };
 }
 
 /**
@@ -134,8 +176,8 @@ const contentSchema = z.object({
   exampleSentence: z.string(),
 });
 
-const draftSchema = z.object({
-  version: z.literal(DRAFT_VERSION),
+const draftV1Schema = z.object({
+  version: z.literal(1),
   tagName: z.string().min(1),
   model: z.string(),
   createdAt: z.string(),
@@ -144,16 +186,28 @@ const draftSchema = z.object({
       z.object({
         original: contentSchema.extend({ cefr: z.enum(CEFR_LEVELS), inCollection: z.boolean() }),
         final: contentSchema,
-        decision: z.enum(["accept", "reject_known", "reject_wrong"]),
+        decision: z.enum(PROPOSAL_DECISIONS),
       }),
     )
     .min(1),
 });
 
-/** Validates stored data; malformed data or another draft version gives null. */
+const draftSchema = draftV1Schema.extend({
+  version: z.literal(DRAFT_VERSION),
+  level: z.enum(CEFR_LEVELS).nullable(),
+});
+
+/**
+ * Validates stored data. A version-1 draft (saved before levels existed) is upgraded with `level: null`, so a
+ * review open during a deploy is kept; malformed data or any other version gives null.
+ */
 export function parseDraft(value: unknown): ReviewDraft | null {
   const parsed = draftSchema.safeParse(value);
-  return parsed.success ? parsed.data : null;
+  if (parsed.success) {
+    return parsed.data;
+  }
+  const legacy = draftV1Schema.safeParse(value);
+  return legacy.success ? { ...legacy.data, version: DRAFT_VERSION, level: null } : null;
 }
 
 export function draftStorageKey(userId: string): string {

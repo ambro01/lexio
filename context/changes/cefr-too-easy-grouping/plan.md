@@ -375,37 +375,37 @@ Apply the migration in production before the code, ship, verify, and update the 
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 Types regenerated and committed: `npm run db:types` produces no diff after commit
-- [x] 1.3 Profile isolation checks pass: `npm run check:rls`
-- [x] 1.4 Unit tests pass, including the profile service tests: `npm test`
-- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 1.6 Build passes: `npm run build`
+- [x] 1.1 Migration applies cleanly: `npx supabase db reset` — 3ce50dd
+- [x] 1.2 Types regenerated and committed: `npm run db:types` produces no diff after commit — 3ce50dd
+- [x] 1.3 Profile isolation checks pass: `npm run check:rls` — 3ce50dd
+- [x] 1.4 Unit tests pass, including the profile service tests: `npm test` — 3ce50dd
+- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check` — 3ce50dd
+- [x] 1.6 Build passes: `npm run build` — 3ce50dd
 
 #### Manual
 
-- [x] 1.7 `/profile` saves level and model; values shown after reload
-- [x] 1.8 Generation uses the profile model (`modelSource: "profile"` in the log)
-- [x] 1.9 Resetting both settings generates with the default model
+- [x] 1.7 `/profile` saves level and model; values shown after reload — 3ce50dd
+- [x] 1.8 Generation uses the profile model (`modelSource: "profile"` in the log) — 3ce50dd
+- [x] 1.9 Resetting both settings generates with the default model — 3ce50dd
 
 ### Phase 2: "Too easy" group in the review
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including the decision, "too easy" rule and draft v2 tests: `npm test`
-- [ ] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 2.3 Build passes: `npm run build`
-- [ ] 2.4 Smoke still passes: `npm run smoke`
+- [x] 2.1 Unit tests pass, including the decision, "too easy" rule and draft v2 tests: `npm test`
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 2.3 Build passes: `npm run build`
+- [x] 2.4 Smoke still passes: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.5 With level B1, A1/A2 words (not in the collection) are in the collapsed group; B1+ stay in the main list
-- [ ] 2.6 Bulk reject + accept records `rejected_too_easy`; edited and individually rejected items keep their decision
-- [ ] 2.7 Group "Cofnij" restores the bulk-rejected words; untouched group items are saved
-- [ ] 2.8 A too-easy word already in the collection stays in the main list
-- [ ] 2.9 Without a level: no group, hint links to `/profile`; a level change does not regroup an open draft
-- [ ] 2.10 A version-1 draft from before the deploy still loads
-- [ ] 2.11 The group is usable at 390 px width
+- [x] 2.5 With level B1, A1/A2 words (not in the collection) are in the collapsed group; B1+ stay in the main list
+- [x] 2.6 Bulk reject + accept records `rejected_too_easy`; edited and individually rejected items keep their decision
+- [x] 2.7 Group "Cofnij" restores the bulk-rejected words; untouched group items are saved
+- [x] 2.8 A too-easy word already in the collection stays in the main list
+- [x] 2.9 Without a level: no group, hint links to `/profile`; a level change does not regroup an open draft
+- [x] 2.10 A version-1 draft from before the deploy still loads
+- [x] 2.11 The group is usable at 390 px width
 
 ### Phase 3: Production rollout and docs
 

@@ -16,6 +16,14 @@ export { MAX_SET_ITEMS, MAX_TAG_CHARS, MAX_TEXT_CHARS, MAX_WORD_CHARS };
 
 const MAX_MODEL_CHARS = 100;
 
+/** Every review decision; the accept request and the stored draft accept exactly these. */
+export const PROPOSAL_DECISIONS = [
+  "accept",
+  "reject_known",
+  "reject_wrong",
+  "reject_too_easy",
+] as const satisfies readonly ProposalDecision[];
+
 /** Collapses whitespace runs to one space and trims — the same rule the database uses for keys. */
 function normaliseText(value: string): string {
   return value.replace(/\s+/g, " ").trim();
@@ -61,6 +69,8 @@ export function classifyOutcome(
       return "rejected_known";
     case "reject_wrong":
       return "rejected_wrong";
+    case "reject_too_easy":
+      return "rejected_too_easy";
     case "accept":
       return sameContent(original, final) ? "accepted_unchanged" : "accepted_corrected";
   }
@@ -91,7 +101,7 @@ const originalSchema = contentSchema.extend({ cefr: z.enum(CEFR_LEVELS) });
 
 const itemSchema = z
   .object({
-    decision: z.enum(["accept", "reject_known", "reject_wrong"]),
+    decision: z.enum(PROPOSAL_DECISIONS),
     original: originalSchema,
     inCollection: z.boolean(),
     final: contentSchema.optional(),

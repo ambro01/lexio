@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useReviewDraft } from "@/components/hooks/useReviewDraft";
 import PdfLessonInput, { type PdfText } from "@/components/lesson/PdfLessonInput";
 import ProposalReviewItem from "@/components/lesson/ProposalReviewItem";
+import TooEasyGroup from "@/components/lesson/TooEasyGroup";
 import { MAX_TAG_CHARS } from "@/lib/ai/outcomes";
 import { countWords } from "@/lib/ai/proposals";
 import { tagFromFileName } from "@/lib/pdf/lesson-text";
@@ -12,18 +13,23 @@ import {
   counts,
   createDraft,
   editItem,
+  rejectTooEasy,
   revertItem,
   setDecision,
   toAcceptRequest,
+  tooEasyIndexes,
+  undoTooEasy,
   type ReviewDraft,
 } from "@/lib/review-draft";
 import { cn, isRecord } from "@/lib/utils";
-import type { AcceptSetResult, ReviewProposal } from "@/types";
+import type { AcceptSetResult, CefrLevel, ReviewProposal } from "@/types";
 
 interface Props {
   userId: string;
   tagNames: string[];
   maxWords: number;
+  /** The profile level; stored in each new draft, so a later profile change does not regroup an open one. */
+  level: CefrLevel | null;
 }
 
 type Stage =
@@ -149,7 +155,7 @@ function useElapsedSeconds(running: boolean): number {
   return elapsed;
 }
 
-export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
+export default function LessonGenerator({ userId, tagNames, maxWords, level }: Props) {
   const { draft, ready, setDraft, clearDraft } = useReviewDraft(userId);
   const [tagName, setTagName] = useState("");
   const [text, setText] = useState("");
@@ -190,7 +196,7 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
     setGenerateError(null);
     setNotice(null);
     setStage({ name: "generating" });
-    // No model is sent: the server uses its default and reports it in meta.
+    // No model is sent: the server uses the profile model (or the default) and reports it in meta.
     const result = await postJson("/api/ai/proposals", { text: lessonText }, isGenerationResponse);
     if (!mounted.current) {
       return;
@@ -205,7 +211,7 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
       return;
     }
     setAcceptError(null);
-    setDraft(createDraft(lessonTag, result.data.meta.model, result.data.proposals));
+    setDraft(createDraft(lessonTag, result.data.meta.model, level, result.data.proposals));
   }
 
   async function accept(current: ReviewDraft) {
@@ -266,8 +272,34 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
   }
 
   if (draft) {
-    const { toSave, rejected } = counts(draft);
+    const { toSave, rejected, tooEasyRejected } = counts(draft);
     const acceptable = canAccept(draft);
+    const tooEasy = tooEasyIndexes(draft);
+    const inGroup = new Set(tooEasy);
+    // Handlers use the item's index in draft.items, never its position in the main list or the group.
+    const renderItem = (index: number) => {
+      const item = draft.items.at(index);
+      if (!item) {
+        return null;
+      }
+      return (
+        <ProposalReviewItem
+          key={`${String(index)}-${item.original.word}`}
+          item={item}
+          index={index}
+          disabled={saving}
+          onEdit={(final) => {
+            setDraft((current) => editItem(current, index, final));
+          }}
+          onDecision={(decision) => {
+            setDraft((current) => setDecision(current, index, decision));
+          }}
+          onRevert={() => {
+            setDraft((current) => revertItem(current, index));
+          }}
+        />
+      );
+    };
     return (
       <div className="space-y-4">
         <div className="sticky top-0 z-10 -mx-4 space-y-3 border-b border-white/10 bg-slate-900/80 px-4 py-3 backdrop-blur-md sm:mx-0 sm:rounded-xl sm:border">
@@ -313,25 +345,32 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
           />
         )}
 
-        <ul className="space-y-3">
-          {draft.items.map((item, index) => (
-            <ProposalReviewItem
-              key={`${String(index)}-${item.original.word}`}
-              item={item}
-              index={index}
-              disabled={saving}
-              onEdit={(final) => {
-                setDraft((current) => editItem(current, index, final));
-              }}
-              onDecision={(decision) => {
-                setDraft((current) => setDecision(current, index, decision));
-              }}
-              onRevert={() => {
-                setDraft((current) => revertItem(current, index));
-              }}
-            />
-          ))}
-        </ul>
+        {draft.level === null && (
+          <p className="flex items-center gap-2 text-sm text-blue-100/70">
+            <Info className="size-4 shrink-0" />
+            <a href="/profile" className="text-purple-300 hover:underline">
+              Ustaw swój poziom w profilu, aby grupować zbyt łatwe słowa
+            </a>
+          </p>
+        )}
+
+        {tooEasy.length > 0 && (
+          <TooEasyGroup
+            items={draft.items}
+            indexes={tooEasy}
+            rejectedCount={tooEasyRejected}
+            disabled={saving}
+            onRejectAll={() => {
+              setDraft(rejectTooEasy);
+            }}
+            onUndo={() => {
+              setDraft(undoTooEasy);
+            }}
+            renderItem={renderItem}
+          />
+        )}
+
+        <ul className="space-y-3">{draft.items.map((_, index) => (inGroup.has(index) ? null : renderItem(index)))}</ul>
       </div>
     );
   }

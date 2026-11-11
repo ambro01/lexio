@@ -37,8 +37,8 @@ export type UpdateFlashcardInput = Partial<
   Pick<Flashcard, "word" | "translation" | "additionalMeanings" | "exampleSentence" | "cefr">
 >;
 
-/** The user's decision on one AI proposal during review. */
-export type ProposalDecision = "accept" | "reject_known" | "reject_wrong";
+/** The user's decision on one AI proposal during review; `reject_too_easy` is set only by the bulk "too easy" action. */
+export type ProposalDecision = "accept" | "reject_known" | "reject_wrong" | "reject_too_easy";
 
 /** Recorded outcome of one reviewed proposal; the values are a DB contract (`proposal_outcomes.outcome`). */
 export type ProposalOutcome =

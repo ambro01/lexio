@@ -3,20 +3,29 @@ import Layout from "@/layouts/Layout.astro";
 import LessonGenerator from "@/components/lesson/LessonGenerator";
 import { MAX_INPUT_WORDS } from "@/lib/ai/proposals";
 import { suggestTags } from "@/lib/services/flashcards.service";
+import { getProfile } from "@/lib/services/profiles.service";
 import { createClient } from "@/lib/supabase";
+import type { CefrLevel } from "@/types";
 
 // The middleware redirects anonymous users, so the user is always set here.
 const userId = Astro.locals.user?.id ?? "";
 
-// Tag suggestions are a convenience: without them the user simply types a new tag.
+// Both are conveniences: without tag suggestions the user simply types a new tag, and without a level
+// the review shows no "too easy" group (only a hint to set the level).
 let tagNames: string[] = [];
+let level: CefrLevel | null = null;
 const client = createClient(Astro.request.headers, Astro.cookies);
 if (client) {
-  try {
-    tagNames = (await suggestTags(client)).map((tag) => tag.name);
-  } catch {
-    tagNames = [];
-  }
+  [tagNames, level] = await Promise.all([
+    suggestTags(client).then(
+      (tags) => tags.map((tag) => tag.name),
+      () => [],
+    ),
+    getProfile(client).then(
+      (profile) => profile.cefrLevel,
+      () => null,
+    ),
+  ]);
 }
 ---
 
@@ -31,7 +40,7 @@ if (client) {
           ← Dashboard
         </a>
       </div>
-      <LessonGenerator userId={userId} tagNames={tagNames} maxWords={MAX_INPUT_WORDS} client:load />
+      <LessonGenerator userId={userId} tagNames={tagNames} maxWords={MAX_INPUT_WORDS} level={level} client:load />
     </div>
   </div>
 </Layout>

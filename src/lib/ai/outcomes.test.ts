@@ -76,6 +76,7 @@ describe("classifyOutcome", () => {
     const changed = { ...original, word: "something else" };
     expect(classifyOutcome("reject_known", original, changed)).toBe("rejected_known");
     expect(classifyOutcome("reject_wrong", original, original)).toBe("rejected_wrong");
+    expect(classifyOutcome("reject_too_easy", original, changed)).toBe("rejected_too_easy");
   });
 });
 
@@ -99,6 +100,20 @@ describe("acceptRequestSchema", () => {
       body([{ decision: "reject_known", original: proposal, inCollection: false }]),
     );
     expect(result.success).toBe(true);
+  });
+
+  it("does not require final for a proposal rejected as too easy", () => {
+    const result = acceptRequestSchema.safeParse(
+      body([{ decision: "reject_too_easy", original: proposal, inCollection: false }]),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an unknown decision", () => {
+    const result = acceptRequestSchema.safeParse(
+      body([{ decision: "reject_maybe" as "reject_known", original: proposal, inCollection: false }]),
+    );
+    expect(result.success).toBe(false);
   });
 
   it("rejects more than the item limit and an empty set", () => {
@@ -161,5 +176,12 @@ describe("toAcceptSetItems", () => {
     const [item] = items([{ decision: "reject_wrong", original: proposal, inCollection: false, final }]);
     expect(item.word).toBe("give up");
     expect(item.outcome).toBe("rejected_wrong");
+  });
+
+  it("records the AI original word for a proposal rejected as too easy", () => {
+    const final = { ...original, word: "give in" };
+    expect(items([{ decision: "reject_too_easy", original: proposal, inCollection: false, final }])).toEqual([
+      { ...original, cefr: "B1", outcome: "rejected_too_easy" },
+    ]);
   });
 });
