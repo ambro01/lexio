@@ -120,7 +120,8 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 ## Non-Functional Requirements
 
 - Flashcard proposals from a typical lesson PDF (up to ~10 pages) are ready in < 60 s, with continuous visible progress during generation.
-- Generation accepts input up to 2,000 words (pasted text or text extracted from a PDF); larger input is rejected with a clear message.
+- Generation accepts input up to 2,000 words. Pasted text over 2,000 words is rejected with a clear message; text extracted from a PDF is cut to its first 2,000 words with a visible notice.
+  > Decision 2026-11-11 (while planning PDF lesson generation): PDF text is truncated, not rejected, so that long lesson PDFs stay usable without manual editing.
 - An uploaded PDF is not retained after the proposals are generated; only the flashcards remain.
 - Review is comfortable in the latest two major versions of the mainstream mobile browsers.
 - A user never sees another user's flashcards, tags or statistics.
@@ -161,4 +162,4 @@ The user meets the rule twice: when reviewing proposals after uploading a lesson
 
 ## Open Questions
 
-None — all resolved. (2026-11-03: input limit set to 2,000 words; "too easy" bulk rejections recorded as "Za łatwe"; 3-week MVP estimate confirmed.)
+None — all resolved. (2026-11-03: input limit set to 2,000 words; 2026-11-11: PDF text over the limit is truncated instead of rejected; "too easy" bulk rejections recorded as "Za łatwe"; 3-week MVP estimate confirmed.)

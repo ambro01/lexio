@@ -156,7 +156,7 @@ Users can then sign in immediately after sign-up without clicking a confirmation
 | `/auth/signup`        | Email/password sign-up form                                             |
 | `/auth/confirm-email` | Post-signup "check your inbox" page                                     |
 | `/dashboard`          | Example protected page (redirects to `/auth/signin` if unauthenticated) |
-| `/generate`           | Nowa lekcja: paste text → review → accept (protected)                   |
+| `/generate`           | Nowa lekcja: paste text or PDF → review → accept (protected)            |
 
 Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication.
 

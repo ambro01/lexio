@@ -312,18 +312,18 @@ Bring the PRD and docs in line with the new behaviour, ship, and verify on a pho
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm test`
-- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 2.3 Build passes and pdf.js is absent from the server bundle: `npm run build` and `npm run check:client-only`
-- [x] 2.4 Smoke still passes: `npm run smoke`
+- [x] 2.1 Unit tests pass: `npm test` — 5bc7d8e
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check` — 5bc7d8e
+- [x] 2.3 Build passes and pdf.js is absent from the server bundle: `npm run build` and `npm run check:client-only` — 5bc7d8e
+- [x] 2.4 Smoke still passes: `npm run smoke` — 5bc7d8e
 
 #### Manual
 
-- [x] 2.5 Local PDF run: progress, file name and word count, tag prefill, generation and review work
-- [x] 2.6 A PDF over 2,000 words shows the truncation notice and generates
-- [x] 2.7 Scanned, password-protected and non-PDF files show their messages and do not generate
-- [x] 2.8 pdf.js downloads only after picking a file; the Tekst tab works as before
-- [x] 2.9 The PDF tab is usable at 390 px width
+- [x] 2.5 Local PDF run: progress, file name and word count, tag prefill, generation and review work — 5bc7d8e
+- [x] 2.6 A PDF over 2,000 words shows the truncation notice and generates — 5bc7d8e
+- [x] 2.7 Scanned, password-protected and non-PDF files show their messages and do not generate — 5bc7d8e
+- [x] 2.8 pdf.js downloads only after picking a file; the Tekst tab works as before — 5bc7d8e
+- [x] 2.9 The PDF tab is usable at 390 px width — 5bc7d8e
 
 ### Phase 3: Docs and production check
 

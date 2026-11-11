@@ -1,6 +1,6 @@
 # AGENTS.md
 
-**Lexio** is an AI flashcard app: it turns English lesson PDFs or pasted text into English→Polish flashcards with spaced review. Product scope lives in `context/foundation/prd.md`, and stack rationale lives in `context/foundation/tech-stack.md`. Read the PRD before building features. Built on the 10x Astro Starter; so far it has auth, AI flashcard generation (`POST /api/ai/proposals`), flashcard storage, and the pasted-text lesson flow at `/generate` (`src/components/lesson/LessonGenerator.tsx`; the review draft is kept per user in localStorage via `src/lib/review-draft.ts`).
+**Lexio** is an AI flashcard app: it turns English lesson PDFs or pasted text into English→Polish flashcards with spaced review. Product scope lives in `context/foundation/prd.md`, and stack rationale lives in `context/foundation/tech-stack.md`. Read the PRD before building features. Built on the 10x Astro Starter; so far it has auth, AI flashcard generation (`POST /api/ai/proposals`), flashcard storage, and the lesson flow at `/generate` from pasted text or a PDF (`src/components/lesson/LessonGenerator.tsx`; PDF text is extracted in the browser by `src/components/lesson/PdfLessonInput.tsx` and `src/lib/pdf/`; the review draft is kept per user in localStorage via `src/lib/review-draft.ts`).
 
 ## Hard rules
 
@@ -9,6 +9,7 @@
 - `src/lib/supabase.ts` — creates a Supabase SSR client using `@supabase/ssr` with cookie-based sessions. Uses `astro:env/server` for `SUPABASE_URL` and `SUPABASE_KEY` (server-only secrets declared in astro.config.mjs `env.schema`). Both are `optional`, and `createClient()` **returns `null` when they are missing**. The app still boots, with auth disabled and a banner driven by `src/lib/config-status.ts`. Every caller must handle the `null` client (see `src/pages/api/auth/signin.ts`).
 - **API routes**: use uppercase `GET`, `POST` exports; validate input with zod (already a dependency). The existing auth endpoints don't validate input yet.
 - Auth endpoints are plain HTML form POSTs that answer with redirects (errors go in the `?error=` query param), not JSON.
+- **pdf.js is browser-only**: `pdfjs-dist` is loaded only through `src/lib/pdf/browser.ts`, via `await import(...)` inside an event handler guarded by `if (import.meta.env.SSR) return;`. Never import it (or `browser.ts`, or a `?url` worker import) statically from a component — a plain dynamic import in a `client:load` island still lands in the server (Worker) bundle. `npm run check:client-only` guards this.
 - **Never write to `context/archive/`.** Archived changes are immutable. If a target path starts with `context/archive/`, stop with: "This change is archived. Open a new change with `/10x-new` instead."
 
 ## Commands
@@ -20,6 +21,7 @@ Standard scripts (`dev`, `build`, `preview`, `lint`, `lint:fix`, `format`) are i
 
 - `npm run db:types` — regenerate `src/db/database.types.ts` from the running local Supabase (`supabase gen types typescript --local`). Run after every migration and commit the result.
 - `npm run check:rls` — two-user RLS isolation and one-word-per-user check (`scripts/check-rls.mjs`) against local Supabase; needs `SUPABASE_URL` / `SUPABASE_KEY` env (values from `npx supabase status -o env`). CI runs it in the smoke job.
+- `npm run check:client-only` — fails if pdf.js code reached the server bundle (`scripts/check-client-only.mjs` scans `dist/server`); run after `npm run build`. CI runs it in the ci job after the build.
 - `npm test` — Vitest unit tests (`src/**/*.test.ts`, config in `vitest.config.ts`); no network or API key needed. Import `describe`/`it`/`expect` from `vitest` explicitly (no globals). Modules under test must not import `astro:*`. CI runs it after lint.
 
 ## Architecture
