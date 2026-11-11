@@ -3,7 +3,9 @@ import {
   DuplicateWordError,
   FlashcardNotFoundError,
   FlashcardStoreError,
+  acceptProposalSet,
   deleteFlashcard,
+  findExistingWordKeys,
   listFlashcards,
   saveFlashcard,
   suggestTags,
@@ -27,7 +29,18 @@ function stubClient(result: Result) {
   const builder: Record<string, unknown> = {
     then: (resolve: (value: Result) => unknown) => Promise.resolve(result).then(resolve),
   };
-  for (const method of ["select", "order", "eq", "update", "delete", "like", "limit", "maybeSingle", "overrideTypes"]) {
+  for (const method of [
+    "select",
+    "order",
+    "eq",
+    "update",
+    "delete",
+    "like",
+    "in",
+    "limit",
+    "maybeSingle",
+    "overrideTypes",
+  ]) {
     builder[method] = (...args: unknown[]) => {
       calls.push({ method, args });
       return builder;
@@ -194,5 +207,68 @@ describe("suggestTags", () => {
     const { client, calls } = stubClient({ data: [], error: null });
     await suggestTags(client, "   ");
     expect(calls.some((call) => call.method === "like")).toBe(false);
+  });
+});
+
+describe("acceptProposalSet", () => {
+  const input = {
+    tagName: "Lesson 1",
+    model: "anthropic/claude-haiku-5.5",
+    items: [
+      {
+        word: "give up",
+        translation: "poddać się",
+        additionalMeanings: [],
+        exampleSentence: "Don't give up.",
+        cefr: "B1" as const,
+        outcome: "accepted_unchanged" as const,
+      },
+    ],
+  };
+
+  it("calls accept_proposal_set with snake_case args and maps the counts", async () => {
+    const { client, calls } = stubClient({
+      data: [{ created_count: 1, merged_count: 2, rejected_count: 3 }],
+      error: null,
+    });
+
+    const result = await acceptProposalSet(client, input);
+
+    expect(result).toEqual({ created: 1, merged: 2, rejected: 3 });
+    expect(calls[0]).toEqual({
+      method: "rpc",
+      args: ["accept_proposal_set", { p_tag_name: "Lesson 1", p_model: input.model, p_items: input.items }],
+    });
+  });
+
+  it("maps a database error to FlashcardStoreError without user content", async () => {
+    const { client } = stubClient({ data: null, error: { code: "22023", message: "give up Lesson 1" } });
+    const promise = acceptProposalSet(client, input);
+    await expect(promise).rejects.toBeInstanceOf(FlashcardStoreError);
+    await expect(promise).rejects.not.toThrow("give up");
+    await expect(promise).rejects.not.toThrow("Lesson 1");
+  });
+});
+
+describe("findExistingWordKeys", () => {
+  it("queries folded, unique keys and returns the found ones", async () => {
+    const { client, calls } = stubClient({ data: [{ word_key: "give up" }], error: null });
+
+    const keys = await findExistingWordKeys(client, ["Give  Up", " give up", "Look\tAfter"]);
+
+    expect(keys).toEqual(new Set(["give up"]));
+    expect(calls.find((call) => call.method === "from")?.args).toEqual(["flashcards"]);
+    expect(calls.find((call) => call.method === "in")?.args).toEqual(["word_key", ["give up", "look after"]]);
+  });
+
+  it("skips the query for an empty list", async () => {
+    const { client, calls } = stubClient({ data: [], error: null });
+    expect(await findExistingWordKeys(client, [])).toEqual(new Set());
+    expect(calls).toEqual([]);
+  });
+
+  it("maps a database error to FlashcardStoreError", async () => {
+    const { client } = stubClient({ data: null, error: { code: "42501" } });
+    await expect(findExistingWordKeys(client, ["give up"])).rejects.toBeInstanceOf(FlashcardStoreError);
   });
 });

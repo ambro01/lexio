@@ -1,7 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/db/database.types";
 import { CEFR_LEVELS, type CefrLevel } from "@/lib/ai/proposals";
-import type { Flashcard, SaveFlashcardInput, Tag, UpdateFlashcardInput } from "@/types";
+import type {
+  AcceptProposalSetInput,
+  AcceptSetResult,
+  Flashcard,
+  SaveFlashcardInput,
+  Tag,
+  UpdateFlashcardInput,
+} from "@/types";
 
 export type FlashcardsClient = SupabaseClient<Database>;
 
@@ -70,7 +77,7 @@ function toFlashcard(row: FlashcardRow): Flashcard {
 }
 
 /** Same folding as the database's word_key / name_key: lowercase, trimmed, inner whitespace collapsed. */
-function toKey(value: string): string {
+export function toKey(value: string): string {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
@@ -100,6 +107,43 @@ export async function saveFlashcard(
     throw new FlashcardStoreError("Flashcard save returned no row");
   }
   return { id: row.flashcard_id, created: row.created };
+}
+
+/**
+ * Saves a reviewed set in one transaction: accepted items become cards (or gain the tag if the word
+ * exists) and every item gets an outcome record. All or nothing.
+ */
+export async function acceptProposalSet(
+  client: FlashcardsClient,
+  input: AcceptProposalSetInput,
+): Promise<AcceptSetResult> {
+  const { data, error } = await client.rpc("accept_proposal_set", {
+    p_tag_name: input.tagName,
+    p_model: input.model,
+    p_items: input.items,
+  });
+  if (error) {
+    throw storeError("set accept", error);
+  }
+  const row = data.at(0);
+  if (!row) {
+    throw new FlashcardStoreError("Flashcard set accept returned no row");
+  }
+  return { created: row.created_count, merged: row.merged_count, rejected: row.rejected_count };
+}
+
+/** The word keys (see `toKey`) of the given words that are already in the user's collection. */
+export async function findExistingWordKeys(client: FlashcardsClient, words: string[]): Promise<Set<string>> {
+  const keys = [...new Set(words.map(toKey))].filter((key) => key !== "");
+  if (keys.length === 0) {
+    return new Set();
+  }
+  const { data, error } = await client.from("flashcards").select("word_key").in("word_key", keys);
+  if (error) {
+    throw storeError("word lookup", error);
+  }
+  // word_key is a generated column, so the generated types mark it nullable; it is never null in practice.
+  return new Set(data.map((row) => row.word_key).filter((key): key is string => key !== null));
 }
 
 /** All of the user's cards with their tags, newest first. */

@@ -2,8 +2,17 @@ import type { APIRoute } from "astro";
 import { OPENROUTER_API_KEY } from "astro:env/server";
 import { z } from "zod";
 import { DEFAULT_AI_MODEL_ID, isAiModelId } from "@/lib/ai/models";
-import { InvalidModelOutputError, MAX_INPUT_CHARS, MAX_INPUT_WORDS, validateInput } from "@/lib/ai/proposals";
+import {
+  InvalidModelOutputError,
+  MAX_INPUT_CHARS,
+  MAX_INPUT_WORDS,
+  validateInput,
+  type Proposal,
+} from "@/lib/ai/proposals";
 import { UpstreamError, UpstreamTimeoutError, generateProposals } from "@/lib/services/ai-generation.service";
+import { findExistingWordKeys, toKey } from "@/lib/services/flashcards.service";
+import { createClient } from "@/lib/supabase";
+import type { ReviewProposal } from "@/types";
 
 // Hard ceiling well above the 30,000-char input cap: keeps parsing and word counting cheap on the 10 ms CPU budget.
 const MAX_TEXT_CHARS = MAX_INPUT_CHARS * 10;
@@ -27,7 +36,34 @@ function logGeneration(fields: Record<string, unknown>): void {
   console.log(JSON.stringify({ event: "ai_generation", ...fields }));
 }
 
-export const POST: APIRoute = async ({ request, locals }) => {
+type InCollectionLookup = "ok" | "unavailable" | "failed";
+
+/** Marks proposals whose word the user already has. Never throws: a paid generation must not fail here. */
+async function markInCollection(
+  proposals: Proposal[],
+  client: ReturnType<typeof createClient>,
+): Promise<{ proposals: ReviewProposal[]; lookup: InCollectionLookup }> {
+  let existing = new Set<string>();
+  let lookup: InCollectionLookup = "ok";
+  if (!client) {
+    lookup = "unavailable";
+  } else {
+    try {
+      existing = await findExistingWordKeys(
+        client,
+        proposals.map((proposal) => proposal.word),
+      );
+    } catch {
+      lookup = "failed";
+    }
+  }
+  return {
+    proposals: proposals.map((proposal) => ({ ...proposal, inCollection: existing.has(toKey(proposal.word)) })),
+    lookup,
+  };
+}
+
+export const POST: APIRoute = async ({ request, locals, cookies }) => {
   if (!locals.user) {
     return json(401, { error: "unauthorized", message: "Zaloguj się, aby generować fiszki." });
   }
@@ -75,6 +111,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const started = Date.now();
   try {
     const result = await generateProposals({ text: input.text, model, apiKey: OPENROUTER_API_KEY });
+    const marked = await markInCollection(result.proposals, createClient(request.headers, cookies));
     logGeneration({
       status: 200,
       model: result.model,
@@ -84,9 +121,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
       droppedCount: result.dropped,
       promptTokens: result.usage.promptTokens,
       completionTokens: result.usage.completionTokens,
+      inCollectionCount: marked.proposals.filter((proposal) => proposal.inCollection).length,
+      inCollectionLookup: marked.lookup,
     });
     return json(200, {
-      proposals: result.proposals,
+      proposals: marked.proposals,
       meta: {
         model: result.model,
         durationMs: result.durationMs,

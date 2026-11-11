@@ -401,27 +401,27 @@ Ship the migration before the code, verify the flow on production, and update th
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 Types regenerated and committed: `npm run db:types` produces no diff after commit
-- [x] 1.3 RLS and accept-set checks pass: `npm run check:rls`
-- [x] 1.4 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 1.1 Migration applies cleanly: `npx supabase db reset` — ee825db
+- [x] 1.2 Types regenerated and committed: `npm run db:types` produces no diff after commit — ee825db
+- [x] 1.3 RLS and accept-set checks pass: `npm run check:rls` — ee825db
+- [x] 1.4 Lint and type check pass: `npm run lint` and `npx astro check` — ee825db
 
 #### Manual
 
-- [x] 1.5 In local Studio, `proposal_outcomes` shows RLS enabled with only select and insert policies
+- [x] 1.5 In local Studio, `proposal_outcomes` shows RLS enabled with only select and insert policies — ee825db
 
 ### Phase 2: Server: outcome rules, service and endpoints
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including the new classifier, schema and service tests: `npm test`
-- [ ] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 2.3 Build passes: `npm run build`
-- [ ] 2.4 Smoke passes against the local preview: `npm run smoke`
+- [x] 2.1 Unit tests pass, including the new classifier, schema and service tests: `npm test`
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 2.3 Build passes: `npm run build`
+- [x] 2.4 Smoke passes against the local preview: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.5 With local Supabase, a signed-in `POST /api/proposal-sets` saves cards and outcome rows; a second identical call reports them as `merged`
+- [x] 2.5 With local Supabase, a signed-in `POST /api/proposal-sets` saves cards and outcome rows; a second identical call reports them as `merged`
 
 ### Phase 3: Review UI
 
