@@ -35,7 +35,8 @@ jobs:
           cache: npm
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned: CLI v3 rejects the [inbucket] section of supabase/config.toml. Bump together with the local CLI.
+          version: 2.117.0
       - run: npm ci
       - name: Start local Supabase
         run: |
