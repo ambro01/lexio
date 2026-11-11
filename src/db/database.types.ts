@@ -138,6 +138,7 @@ export type Database = {
           model: string | null
           outcome: string
           set_id: string
+          source: string
           tag_name: string | null
           user_id: string
           word: string
@@ -150,6 +151,7 @@ export type Database = {
           model?: string | null
           outcome: string
           set_id: string
+          source?: string
           tag_name?: string | null
           user_id?: string
           word: string
@@ -162,6 +164,7 @@ export type Database = {
           model?: string | null
           outcome?: string
           set_id?: string
+          source?: string
           tag_name?: string | null
           user_id?: string
           word?: string
@@ -199,7 +202,12 @@ export type Database = {
     }
     Functions: {
       accept_proposal_set: {
-        Args: { p_items: Json; p_model: string; p_tag_name: string }
+        Args: {
+          p_items: Json
+          p_model: string
+          p_source?: string
+          p_tag_name: string
+        }
         Returns: {
           created_count: number
           merged_count: number

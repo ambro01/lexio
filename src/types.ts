@@ -53,10 +53,15 @@ export type ReviewProposal = Proposal & { inCollection: boolean };
 /** One item of an accepted set as stored by `accept_proposal_set`: final content plus its classified outcome. */
 export type AcceptSetItem = ProposalContent & { cefr: CefrLevel | null; outcome: ProposalOutcome };
 
+/** Where a set of outcomes came from; the values are a DB contract (`proposal_outcomes.source`). */
+export type ProposalSource = "lesson" | "manual";
+
 export interface AcceptProposalSetInput {
-  tagName: string;
+  /** `null` only for a manual save without a tag. */
+  tagName: string | null;
   model: string;
   items: AcceptSetItem[];
+  source: ProposalSource;
 }
 
 export interface AcceptSetResult {

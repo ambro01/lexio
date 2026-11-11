@@ -10,7 +10,7 @@ import {
   MAX_WORD_CHARS,
 } from "@/lib/ai/limits";
 import { CEFR_LEVELS } from "@/lib/ai/proposals";
-import type { AcceptSetItem, ProposalContent, ProposalDecision, ProposalOutcome } from "@/types";
+import type { AcceptSetItem, ProposalContent, ProposalDecision, ProposalOutcome, ProposalSource } from "@/types";
 
 export { MAX_SET_ITEMS, MAX_TAG_CHARS, MAX_TEXT_CHARS, MAX_WORD_CHARS };
 
@@ -23,6 +23,9 @@ export const PROPOSAL_DECISIONS = [
   "reject_wrong",
   "reject_too_easy",
 ] as const satisfies readonly ProposalDecision[];
+
+/** Where an accepted set comes from: a lesson review or a manually added word (S-04). */
+export const PROPOSAL_SOURCES = ["lesson", "manual"] as const satisfies readonly ProposalSource[];
 
 /** Collapses whitespace runs to one space and trims — the same rule the database uses for keys. */
 function normaliseText(value: string): string {
@@ -117,12 +120,33 @@ const itemSchema = z
     path: ["decision"],
   });
 
-/** Body of `POST /api/proposal-sets`. Strings come out whitespace-normalised. */
-export const acceptRequestSchema = z.object({
-  tagName: textField(1, MAX_TAG_CHARS),
-  model: z.string().max(MAX_MODEL_CHARS),
-  items: z.array(itemSchema).min(1).max(MAX_SET_ITEMS),
-});
+// Absent, null or blank → null ("no tag"); whether a tag is required depends on the source.
+const tagNameField = z
+  .string()
+  .nullish()
+  .transform((value) => normaliseText(value ?? ""))
+  .pipe(z.string().max(MAX_TAG_CHARS))
+  .transform((value) => (value === "" ? null : value));
+
+/**
+ * Body of `POST /api/proposal-sets`. Strings come out whitespace-normalised.
+ * A lesson set (the default source) needs a tag and 1–150 items; a manual save is exactly 1 item, tag optional.
+ */
+export const acceptRequestSchema = z
+  .object({
+    source: z.enum(PROPOSAL_SOURCES).default("lesson"),
+    tagName: tagNameField,
+    model: z.string().max(MAX_MODEL_CHARS),
+    items: z.array(itemSchema).min(1).max(MAX_SET_ITEMS),
+  })
+  .refine((request) => request.source !== "lesson" || request.tagName !== null, {
+    message: "a lesson set needs a tag name",
+    path: ["tagName"],
+  })
+  .refine((request) => request.source !== "manual" || request.items.length === 1, {
+    message: "a manual save has exactly one item",
+    path: ["items"],
+  });
 
 /** What the client sends. */
 export type AcceptRequestBody = z.input<typeof acceptRequestSchema>;

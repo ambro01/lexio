@@ -67,8 +67,14 @@ function acceptItem(word, outcome, translation = `tłumaczenie ${word}`) {
   return { word, translation, additionalMeanings: [], exampleSentence: "", cefr: null, outcome };
 }
 
-async function acceptSet(client, tagName, items) {
-  return client.rpc("accept_proposal_set", { p_tag_name: tagName, p_model: "check-rls", p_items: items });
+// Without a source the call is the three-argument lesson call older code makes (p_source defaults to 'lesson').
+async function acceptSet(client, tagName, items, source) {
+  return client.rpc("accept_proposal_set", {
+    p_tag_name: tagName,
+    p_model: "check-rls",
+    p_items: items,
+    ...(source === undefined ? {} : { p_source: source }),
+  });
 }
 
 // Row counts of everything an accepted set can write, to prove a failed call wrote nothing.
@@ -364,9 +370,9 @@ await step("anon: accept_proposal_set is rejected", async () => {
 });
 
 // Each invalid call must fail as a whole: the counts of every written table stay the same.
-async function rejectedWithoutWrites(tagName, items) {
+async function rejectedWithoutWrites(tagName, items, source) {
   const before = await writeCounts(a.client);
-  const { error } = await acceptSet(a.client, tagName, items);
+  const { error } = await acceptSet(a.client, tagName, items, source);
   const after = await writeCounts(a.client);
   const unchanged = JSON.stringify(before) === JSON.stringify(after);
   return [
@@ -391,6 +397,98 @@ await step("A: an unknown outcome after a valid item rolls the whole set back", 
     acceptItem("rollback word", "accepted_unchanged"),
     acceptItem("bogus word", "accepted_maybe"),
   ]),
+);
+
+// ---------------------------------------------------------------------------
+// accept_proposal_set sources (S-04): manual saves are 1 item with an optional tag; lesson saves are unchanged.
+// ---------------------------------------------------------------------------
+
+async function cardByWord(client, word) {
+  const card = await client.from("flashcards").select("id").eq("word", word).maybeSingle();
+  if (card.error) throw new Error(card.error.message);
+  return card.data;
+}
+
+async function outcomesOfWord(client, word) {
+  const outcomes = await client.from("proposal_outcomes").select("outcome, tag_name, source").eq("word", word);
+  if (outcomes.error) throw new Error(outcomes.error.message);
+  return outcomes.data;
+}
+
+await step("A: a manual save with no tag creates 1 untagged card and 1 'manual' outcome with no tag", async () => {
+  const { data, error } = await acceptSet(a.client, null, [acceptItem("manual word", "accepted_unchanged")], "manual");
+  if (error) return [false, error.message];
+  const row = firstRow(data);
+  const card = await cardByWord(a.client, "manual word");
+  const names = card ? await cardTagNames(a.client, card.id) : ["<no card>"];
+  const outcomes = await outcomesOfWord(a.client, "manual word");
+  const ok =
+    row?.created_count === 1 &&
+    row.merged_count === 0 &&
+    row.rejected_count === 0 &&
+    names.length === 0 &&
+    outcomes.length === 1 &&
+    outcomes[0].source === "manual" &&
+    outcomes[0].tag_name === null &&
+    outcomes[0].outcome === "accepted_unchanged";
+  return [ok, `${JSON.stringify(row)} tags=${names.join(",")} outcomes=${JSON.stringify(outcomes)}`];
+});
+
+await step("A: a manual save with a blank tag also saves without a tag", async () => {
+  const { error } = await acceptSet(a.client, " \t ", [acceptItem("manual blank", "accepted_corrected")], "manual");
+  if (error) return [false, error.message];
+  const card = await cardByWord(a.client, "manual blank");
+  const names = card ? await cardTagNames(a.client, card.id) : ["<no card>"];
+  const outcomes = await outcomesOfWord(a.client, "manual blank");
+  const ok = names.length === 0 && outcomes.length === 1 && outcomes[0].tag_name === null;
+  return [ok, `tags=${names.join(",")} outcomes=${JSON.stringify(outcomes)}`];
+});
+
+await step("A: a manual save with a tag tags the card", async () => {
+  const { error } = await acceptSet(
+    a.client,
+    "Manual tag",
+    [acceptItem("manual tagged", "accepted_unchanged")],
+    "manual",
+  );
+  if (error) return [false, error.message];
+  const card = await cardByWord(a.client, "manual tagged");
+  const names = card ? await cardTagNames(a.client, card.id) : ["<no card>"];
+  const outcomes = await outcomesOfWord(a.client, "manual tagged");
+  const ok =
+    names.join("|") === "Manual tag" &&
+    outcomes.length === 1 &&
+    outcomes[0].source === "manual" &&
+    outcomes[0].tag_name === "Manual tag";
+  return [ok, `tags=${names.join(",")} outcomes=${JSON.stringify(outcomes)}`];
+});
+
+await step("A: a manual save with 2 items is rejected and nothing is written", async () =>
+  rejectedWithoutWrites(
+    "Manual two",
+    [acceptItem("manual two a", "accepted_unchanged"), acceptItem("manual two b", "accepted_unchanged")],
+    "manual",
+  ),
+);
+
+await step("A: a lesson save without p_source still works and records source = 'lesson'", async () => {
+  const { error } = await acceptSet(a.client, "Default source lesson", [
+    acceptItem("default source one", "accepted_unchanged"),
+    acceptItem("default source two", "rejected_wrong"),
+  ]);
+  if (error) return [false, error.message];
+  const outcomes = await a.client.from("proposal_outcomes").select("source").eq("tag_name", "Default source lesson");
+  if (outcomes.error) return [false, outcomes.error.message];
+  const ok = outcomes.data.length === 2 && outcomes.data.every((o) => o.source === "lesson");
+  return [ok, JSON.stringify(outcomes.data)];
+});
+
+await step("A: a lesson save with source 'lesson' and a blank tag is still rejected and nothing is written", async () =>
+  rejectedWithoutWrites(" ", [acceptItem("lesson blank tag", "accepted_unchanged")], "lesson"),
+);
+
+await step("A: an unknown source is rejected and nothing is written", async () =>
+  rejectedWithoutWrites("Import lesson", [acceptItem("unknown source word", "accepted_unchanged")], "import"),
 );
 
 // ---------------------------------------------------------------------------

@@ -111,16 +111,21 @@ export async function saveFlashcard(
 
 /**
  * Saves a reviewed set in one transaction: accepted items become cards (or gain the tag if the word
- * exists) and every item gets an outcome record. All or nothing.
+ * exists) and every item gets an outcome record marked with its source. All or nothing. A manual save
+ * has exactly one item and may have no tag.
  */
 export async function acceptProposalSet(
   client: FlashcardsClient,
   input: AcceptProposalSetInput,
 ): Promise<AcceptSetResult> {
   const { data, error } = await client.rpc("accept_proposal_set", {
-    p_tag_name: input.tagName,
+    // The SQL parameter accepts null (a manual save without a tag); the generated type marks it non-null.
+    // A `!` would claim the value is never null, which is the opposite of the intent.
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- null is passed through
+    p_tag_name: input.tagName as string,
     p_model: input.model,
     p_items: input.items,
+    p_source: input.source,
   });
   if (error) {
     throw storeError("set accept", error);

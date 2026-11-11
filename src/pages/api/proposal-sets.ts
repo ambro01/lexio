@@ -21,7 +21,10 @@ function logAccept(fields: Record<string, unknown>): void {
   console.log(JSON.stringify({ event: "proposal_set_accepted", ...fields }));
 }
 
-/** Saves a reviewed proposal set: accepted cards with the lesson tag plus one outcome record per proposal. */
+/**
+ * Saves a reviewed proposal set: accepted cards with the lesson tag plus one outcome record per proposal.
+ * A manual save (`source: "manual"`) is one card with an optional tag.
+ */
 export const POST: APIRoute = async ({ request, locals, cookies }) => {
   if (!locals.user) {
     return json(401, { error: "unauthorized", message: "Zaloguj się, aby zapisać fiszki." });
@@ -53,15 +56,16 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     return json(503, { error: "not_configured", message: "Zapisywanie fiszek nie jest skonfigurowane." });
   }
 
+  const { tagName, model, source } = parsed.data;
   const items = toAcceptSetItems(parsed.data);
   const corrected = items.filter((item) => item.outcome === "accepted_corrected").length;
   try {
-    const result = await acceptProposalSet(client, { tagName: parsed.data.tagName, model: parsed.data.model, items });
-    logAccept({ status: 200, items: items.length, ...result, corrected });
+    const result = await acceptProposalSet(client, { tagName, model, items, source });
+    logAccept({ status: 200, source, items: items.length, ...result, corrected });
     return json(200, result);
   } catch (error) {
     if (error instanceof FlashcardStoreError) {
-      logAccept({ status: 500, items: items.length, corrected, reason: error.message });
+      logAccept({ status: 500, source, items: items.length, corrected, reason: error.message });
       return json(500, { error: "store_failed", message: "Nie udało się zapisać zestawu. Spróbuj ponownie." });
     }
     throw error;

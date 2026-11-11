@@ -224,6 +224,7 @@ describe("acceptProposalSet", () => {
         outcome: "accepted_unchanged" as const,
       },
     ],
+    source: "lesson" as const,
   };
 
   it("calls accept_proposal_set with snake_case args and maps the counts", async () => {
@@ -237,7 +238,27 @@ describe("acceptProposalSet", () => {
     expect(result).toEqual({ created: 1, merged: 2, rejected: 3 });
     expect(calls[0]).toEqual({
       method: "rpc",
-      args: ["accept_proposal_set", { p_tag_name: "Lesson 1", p_model: input.model, p_items: input.items }],
+      args: [
+        "accept_proposal_set",
+        { p_tag_name: "Lesson 1", p_model: input.model, p_items: input.items, p_source: "lesson" },
+      ],
+    });
+  });
+
+  it("passes the manual source and a null tag for a manual save without a tag", async () => {
+    const { client, calls } = stubClient({
+      data: [{ created_count: 1, merged_count: 0, rejected_count: 0 }],
+      error: null,
+    });
+
+    await acceptProposalSet(client, { ...input, tagName: null, source: "manual" });
+
+    expect(calls[0]).toEqual({
+      method: "rpc",
+      args: [
+        "accept_proposal_set",
+        { p_tag_name: null, p_model: input.model, p_items: input.items, p_source: "manual" },
+      ],
     });
   });
 

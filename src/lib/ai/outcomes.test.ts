@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ProposalContent } from "@/types";
 import {
   MAX_SET_ITEMS,
+  MAX_TAG_CHARS,
   acceptRequestSchema,
   classifyOutcome,
   normaliseContent,
@@ -139,6 +140,52 @@ describe("acceptRequestSchema", () => {
   it("rejects a blank tag name", () => {
     const item = { decision: "reject_wrong" as const, original: proposal, inCollection: false };
     expect(acceptRequestSchema.safeParse(body([item], "   ")).success).toBe(false);
+  });
+
+  it("defaults the source to 'lesson'", () => {
+    const item = { decision: "reject_wrong" as const, original: proposal, inCollection: false };
+    expect(acceptRequestSchema.parse(body([item])).source).toBe("lesson");
+  });
+
+  it("rejects a lesson set without a tag, whether absent or null", () => {
+    const item = { decision: "reject_wrong" as const, original: proposal, inCollection: false };
+    const { tagName: _tagName, ...withoutTag } = body([item]);
+    expect(acceptRequestSchema.safeParse(withoutTag).success).toBe(false);
+    expect(acceptRequestSchema.safeParse({ ...withoutTag, tagName: null }).success).toBe(false);
+  });
+
+  it("rejects an unknown source", () => {
+    const item = { decision: "reject_wrong" as const, original: proposal, inCollection: false };
+    expect(acceptRequestSchema.safeParse({ ...body([item]), source: "import" }).success).toBe(false);
+  });
+
+  describe("manual source", () => {
+    const item = { decision: "accept" as const, original: proposal, inCollection: false, final: original };
+    const manual = (overrides: Partial<AcceptRequestBody>): AcceptRequestBody => {
+      const { tagName: _tagName, ...rest } = body([item]);
+      return { ...rest, source: "manual", ...overrides };
+    };
+
+    it("accepts a save without a tag: absent, null, empty or blank becomes null", () => {
+      for (const overrides of [{}, { tagName: null }, { tagName: "" }, { tagName: " \t " }]) {
+        const parsed = acceptRequestSchema.parse(manual(overrides));
+        expect(parsed.source).toBe("manual");
+        expect(parsed.tagName).toBeNull();
+      }
+    });
+
+    it("keeps a given tag, normalised", () => {
+      expect(acceptRequestSchema.parse(manual({ tagName: "  My   words " })).tagName).toBe("My words");
+    });
+
+    it("rejects an over-long tag", () => {
+      expect(acceptRequestSchema.safeParse(manual({ tagName: "x".repeat(MAX_TAG_CHARS + 1) })).success).toBe(false);
+    });
+
+    it("requires exactly one item", () => {
+      expect(acceptRequestSchema.safeParse(manual({ items: [item, item] })).success).toBe(false);
+      expect(acceptRequestSchema.safeParse(manual({ items: [] })).success).toBe(false);
+    });
   });
 
   it("rejects a blank final word and translation, and an over-long word", () => {
