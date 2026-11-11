@@ -411,10 +411,10 @@ Apply the migration in production before the code, ship, verify, and update the 
 
 #### Automated
 
-- [ ] 3.1 CI (lint, test, astro check, build, check:client-only, check:rls, smoke) is green on `master` after the push
+- [x] 3.1 CI (lint, test, astro check, build, check:client-only, check:rls, smoke) is green on `master` after the push — 5f5d0ad
 
 #### Manual
 
-- [ ] 3.2 Production migration applied before the deploy
-- [ ] 3.3 Production lesson with level B1 groups easy words and records `rejected_too_easy` rows
-- [ ] 3.4 Production profile page saves level and model; the next generation uses the model
+- [x] 3.2 Production migration applied before the deploy — 5f5d0ad
+- [x] 3.3 Production lesson with level B1 groups easy words and records `rejected_too_easy` rows — 5f5d0ad
+- [x] 3.4 Production profile page saves level and model; the next generation uses the model — 5f5d0ad
