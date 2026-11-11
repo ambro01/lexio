@@ -109,6 +109,45 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_outcomes: {
+        Row: {
+          created_at: string
+          id: string
+          merged: boolean
+          model: string | null
+          outcome: string
+          set_id: string
+          tag_name: string | null
+          user_id: string
+          word: string
+          word_key: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merged?: boolean
+          model?: string | null
+          outcome: string
+          set_id: string
+          tag_name?: string | null
+          user_id?: string
+          word: string
+          word_key?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merged?: boolean
+          model?: string | null
+          outcome?: string
+          set_id?: string
+          tag_name?: string | null
+          user_id?: string
+          word?: string
+          word_key?: string | null
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           created_at: string
@@ -138,6 +177,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_proposal_set: {
+        Args: { p_items: Json; p_model: string; p_tag_name: string }
+        Returns: {
+          created_count: number
+          merged_count: number
+          rejected_count: number
+        }[]
+      }
       save_flashcard: {
         Args: {
           p_additional_meanings: string[]

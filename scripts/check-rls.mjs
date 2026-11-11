@@ -63,6 +63,25 @@ async function save(client, word, translation, tagNames) {
   });
 }
 
+function acceptItem(word, outcome, translation = `tłumaczenie ${word}`) {
+  return { word, translation, additionalMeanings: [], exampleSentence: "", cefr: null, outcome };
+}
+
+async function acceptSet(client, tagName, items) {
+  return client.rpc("accept_proposal_set", { p_tag_name: tagName, p_model: "check-rls", p_items: items });
+}
+
+// Row counts of everything an accepted set can write, to prove a failed call wrote nothing.
+async function writeCounts(client) {
+  const counts = {};
+  for (const table of [...TABLES, "proposal_outcomes"]) {
+    const { count, error } = await client.from(table).select("*", { count: "exact", head: true });
+    if (error) throw new Error(`${table}: ${error.message}`);
+    counts[table] = count;
+  }
+  return counts;
+}
+
 function firstRow(data) {
   return Array.isArray(data) ? data[0] : data;
 }
@@ -228,5 +247,150 @@ await step("A: deleting the card removes its links and keeps the tags", async ()
     `deleted=${del.data.length} links=${links.data.length} tags=${tags.data.length}`,
   ];
 });
+
+// ---------------------------------------------------------------------------
+// accept_proposal_set and proposal_outcomes
+// ---------------------------------------------------------------------------
+
+let aSetOutcomeIds = [];
+
+await step(
+  "A: accept a set (2 accepted, 1 rejected) returns (2, 0, 1) with 2 tagged cards and 3 outcomes",
+  async () => {
+    const { data, error } = await acceptSet(a.client, "Set lesson", [
+      acceptItem("set word one", "accepted_unchanged"),
+      acceptItem("set word two", "accepted_corrected"),
+      acceptItem("set word three", "rejected_known"),
+    ]);
+    if (error) return [false, error.message];
+    const row = firstRow(data);
+    const cards = await a.client
+      .from("flashcards")
+      .select("id, word")
+      .in("word", ["set word one", "set word two", "set word three"]);
+    if (cards.error) return [false, cards.error.message];
+    const tagNames = await Promise.all(cards.data.map((c) => cardTagNames(a.client, c.id)));
+    const outcomes = await a.client
+      .from("proposal_outcomes")
+      .select("id, set_id, outcome")
+      .eq("tag_name", "Set lesson");
+    if (outcomes.error) return [false, outcomes.error.message];
+    aSetOutcomeIds = outcomes.data.map((o) => o.id);
+    const ok =
+      row?.created_count === 2 &&
+      row.merged_count === 0 &&
+      row.rejected_count === 1 &&
+      cards.data.length === 2 &&
+      tagNames.every((names) => names.join("|") === "Set lesson") &&
+      outcomes.data.length === 3 &&
+      new Set(outcomes.data.map((o) => o.set_id)).size === 1;
+    return [ok, `${JSON.stringify(row)} cards=${cards.data.length} outcomes=${outcomes.data.length}`];
+  },
+);
+
+await step("A: accept a set with an existing word merges it and keeps its translation", async () => {
+  const { data, error } = await acceptSet(a.client, "Merge lesson", [
+    acceptItem("Set  Word One", "accepted_unchanged", "inna treść"),
+  ]);
+  if (error) return [false, error.message];
+  const row = firstRow(data);
+  const card = await a.client.from("flashcards").select("id, translation").eq("word", "set word one").single();
+  if (card.error) return [false, card.error.message];
+  const names = await cardTagNames(a.client, card.data.id);
+  const outcome = await a.client.from("proposal_outcomes").select("merged").eq("tag_name", "Merge lesson");
+  if (outcome.error) return [false, outcome.error.message];
+  const ok =
+    row?.created_count === 0 &&
+    row.merged_count === 1 &&
+    row.rejected_count === 0 &&
+    card.data.translation === "tłumaczenie set word one" &&
+    names.join("|") === "Merge lesson|Set lesson" &&
+    outcome.data.length === 1 &&
+    outcome.data[0].merged === true;
+  return [ok, `${JSON.stringify(row)} translation=${card.data.translation} outcome=${JSON.stringify(outcome.data)}`];
+});
+
+await step("A: an all-rejected set creates no card and no tag", async () => {
+  const before = await writeCounts(a.client);
+  const { data, error } = await acceptSet(a.client, "Rejected lesson", [
+    acceptItem("rejected word one", "rejected_wrong"),
+    acceptItem("rejected word two", "rejected_too_easy"),
+  ]);
+  if (error) return [false, error.message];
+  const row = firstRow(data);
+  const after = await writeCounts(a.client);
+  const ok =
+    row?.created_count === 0 &&
+    row.merged_count === 0 &&
+    row.rejected_count === 2 &&
+    after.flashcards === before.flashcards &&
+    after.tags === before.tags &&
+    after.flashcard_tags === before.flashcard_tags &&
+    after.proposal_outcomes === before.proposal_outcomes + 2;
+  return [ok, `${JSON.stringify(row)} before=${JSON.stringify(before)} after=${JSON.stringify(after)}`];
+});
+
+await step("B: select on proposal_outcomes returns no rows of A", async () => {
+  const all = await b.client.from("proposal_outcomes").select("id, user_id");
+  if (all.error) return [false, all.error.message];
+  const byId = await b.client.from("proposal_outcomes").select("id").in("id", aSetOutcomeIds);
+  if (byId.error) return [false, byId.error.message];
+  const leaked = all.data.filter((r) => r.user_id === a.userId).length + byId.data.length;
+  return [aSetOutcomeIds.length === 3 && leaked === 0, `${leaked} row(s) of A visible`];
+});
+
+await step("A: update and delete of own outcome rows affect 0 rows (append-only)", async () => {
+  const upd = await a.client
+    .from("proposal_outcomes")
+    .update({ outcome: "rejected_wrong" })
+    .in("id", aSetOutcomeIds)
+    .select();
+  if (upd.error) return [false, upd.error.message];
+  const del = await a.client.from("proposal_outcomes").delete().in("id", aSetOutcomeIds).select();
+  if (del.error) return [false, del.error.message];
+  const still = await a.client.from("proposal_outcomes").select("outcome").in("id", aSetOutcomeIds);
+  if (still.error) return [false, still.error.message];
+  const ok =
+    upd.data.length === 0 &&
+    del.data.length === 0 &&
+    still.data.length === 3 &&
+    !still.data.every((r) => r.outcome === "rejected_wrong");
+  return [ok, `updated=${upd.data.length} deleted=${del.data.length} remaining=${still.data.length}`];
+});
+
+await step("anon: accept_proposal_set is rejected", async () => {
+  const { error } = await acceptSet(anon, "Anon lesson", [acceptItem("anon word", "accepted_unchanged")]);
+  return [Boolean(error), error ? error.message : "call succeeded"];
+});
+
+// Each invalid call must fail as a whole: the counts of every written table stay the same.
+async function rejectedWithoutWrites(tagName, items) {
+  const before = await writeCounts(a.client);
+  const { error } = await acceptSet(a.client, tagName, items);
+  const after = await writeCounts(a.client);
+  const unchanged = JSON.stringify(before) === JSON.stringify(after);
+  return [
+    error !== null && unchanged,
+    `${error?.message ?? "accepted"} before=${JSON.stringify(before)} after=${JSON.stringify(after)}`,
+  ];
+}
+
+await step("A: a set of 151 items is rejected and nothing is written", async () =>
+  rejectedWithoutWrites(
+    "Too many lesson",
+    Array.from({ length: 151 }, (_, i) => acceptItem(`limit word ${String(i)}`, "accepted_unchanged")),
+  ),
+);
+
+await step("A: a blank tag name is rejected and nothing is written", async () =>
+  rejectedWithoutWrites("\t \n", [acceptItem("blank tag word", "accepted_unchanged")]),
+);
+
+await step("A: an unknown outcome after a valid item rolls the whole set back", async () =>
+  rejectedWithoutWrites("Rollback lesson", [
+    acceptItem("rollback word", "accepted_unchanged"),
+    acceptItem("bogus word", "accepted_maybe"),
+  ]),
+);
 
 finish();
