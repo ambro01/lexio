@@ -1,10 +1,10 @@
 ---
 change_id: pdf-lesson-generation
 title: PDF lesson generation
-status: impl_reviewed
+status: archived
 created: 2026-11-11
 updated: 2026-11-11
-archived_at: null
+archived_at: 2026-11-11T14:25:54Z
 ---
 
 ## Notes
