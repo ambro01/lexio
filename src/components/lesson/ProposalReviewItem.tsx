@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Ban, Check, CircleAlert, Pencil, RotateCcw, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MAX_TEXT_CHARS, MAX_WORD_CHARS } from "@/lib/ai/outcomes";
-import { isEdited, isIncomplete, type DraftItem } from "@/lib/review-draft";
+import { isEdited, itemProblem, type DraftItem } from "@/lib/review-draft";
 import { cn } from "@/lib/utils";
 import type { ProposalContent, ProposalDecision } from "@/types";
 
@@ -44,7 +44,7 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
   const [editing, setEditing] = useState(false);
   const { original, final, decision } = item;
   const edited = isEdited(item);
-  const incomplete = isIncomplete(item);
+  const problem = itemProblem(item);
   const idPrefix = `proposal-${String(index)}`;
 
   if (decision !== "accept") {
@@ -75,9 +75,7 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
   };
 
   return (
-    <li
-      className={cn("space-y-3 rounded-xl border bg-white/5 p-4", incomplete ? "border-red-400/60" : "border-white/10")}
-    >
+    <li className={cn("space-y-3 rounded-xl border bg-white/5 p-4", problem ? "border-red-400/60" : "border-white/10")}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-lg font-semibold break-words text-white">{final.word || original.word}</span>
         <Badge className="bg-purple-500/30 text-purple-100">{original.cefr}</Badge>
@@ -90,6 +88,7 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
           <Field id={`${idPrefix}-word`} label="Słowo">
             <input
               id={`${idPrefix}-word`}
+              disabled={disabled}
               value={final.word}
               maxLength={MAX_WORD_CHARS}
               onChange={(e) => {
@@ -101,6 +100,7 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
           <Field id={`${idPrefix}-translation`} label="Tłumaczenie">
             <input
               id={`${idPrefix}-translation`}
+              disabled={disabled}
               value={final.translation}
               maxLength={MAX_TEXT_CHARS}
               onChange={(e) => {
@@ -112,6 +112,7 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
           <Field id={`${idPrefix}-meanings`} label="Inne znaczenia (jedno w linii)">
             <textarea
               id={`${idPrefix}-meanings`}
+              disabled={disabled}
               value={final.additionalMeanings.join("\n")}
               rows={3}
               onChange={(e) => {
@@ -123,6 +124,7 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
           <Field id={`${idPrefix}-example`} label="Przykład">
             <textarea
               id={`${idPrefix}-example`}
+              disabled={disabled}
               value={final.exampleSentence}
               maxLength={MAX_TEXT_CHARS}
               rows={2}
@@ -149,10 +151,10 @@ export default function ProposalReviewItem({ item, index, disabled, onEdit, onDe
         </div>
       )}
 
-      {incomplete && (
+      {problem && (
         <p className="flex items-center gap-1 text-xs text-red-300">
           <CircleAlert className="size-3" />
-          Uzupełnij słowo i tłumaczenie.
+          {problem}
         </p>
       )}
 

@@ -281,9 +281,7 @@ export default function LessonGenerator({ userId, tagNames, maxWords }: Props) {
               Odrzuć szkic
             </Button>
           </div>
-          {!acceptable && (
-            <p className="text-xs text-red-300">Uzupełnij słowo i tłumaczenie w zaznaczonych propozycjach.</p>
-          )}
+          {!acceptable && <p className="text-xs text-red-300">Popraw zaznaczone propozycje, aby zapisać zestaw.</p>}
         </div>
 
         {acceptError && (

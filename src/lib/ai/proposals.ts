@@ -1,3 +1,4 @@
+import { MAX_MEANINGS, MAX_MEANINGS_CHARS, MAX_SET_ITEMS, MAX_TEXT_CHARS, MAX_WORD_CHARS } from "@/lib/ai/limits";
 import { isRecord } from "@/lib/utils";
 
 export const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
@@ -100,13 +101,27 @@ function toProposal(item: unknown): Proposal | null {
     return null;
   }
   const meanings: unknown[] = item.additionalMeanings;
-  const additionalMeanings = meanings.map(nonEmptyString).filter((meaning): meaning is string => meaning !== null);
+  const additionalMeanings = meanings
+    .map(nonEmptyString)
+    .filter((meaning): meaning is string => meaning !== null && meaning.length <= MAX_TEXT_CHARS)
+    .slice(0, MAX_MEANINGS);
   return { word, translation, additionalMeanings, exampleSentence, cefr };
 }
 
+/** True when the proposal fits the database limits, so an accept of it can never be refused. */
+function withinLimits(proposal: Proposal): boolean {
+  return (
+    proposal.word.length <= MAX_WORD_CHARS &&
+    proposal.translation.length <= MAX_TEXT_CHARS &&
+    proposal.exampleSentence.length <= MAX_TEXT_CHARS &&
+    proposal.additionalMeanings.join("|").length <= MAX_MEANINGS_CHARS
+  );
+}
+
 /**
- * Validates the model's parsed JSON. Malformed items and repeated words are dropped and counted;
- * only a root that is not `{ proposals: array }` fails the whole generation.
+ * Validates the model's parsed JSON. Malformed items, items over the size limits, repeated words and items
+ * beyond `MAX_SET_ITEMS` are dropped and counted; extra or over-long meanings are cut. Only a root that is
+ * not `{ proposals: array }` fails the whole generation.
  */
 export function parseProposals(raw: unknown): { proposals: Proposal[]; dropped: number } {
   if (!isRecord(raw) || !Array.isArray(raw.proposals)) {
@@ -116,8 +131,11 @@ export function parseProposals(raw: unknown): { proposals: Proposal[]; dropped: 
   const seen = new Set<string>();
   const proposals: Proposal[] = [];
   for (const item of items) {
+    if (proposals.length >= MAX_SET_ITEMS) {
+      break;
+    }
     const proposal = toProposal(item);
-    if (!proposal) {
+    if (!proposal || !withinLimits(proposal)) {
       continue;
     }
     const key = proposal.word.toLowerCase();

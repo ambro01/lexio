@@ -59,6 +59,35 @@ describe("parseProposals", () => {
     expect(result.dropped).toBe(2);
   });
 
+  it("drops items over the database size limits", () => {
+    const result = parseProposals({
+      proposals: [
+        validItem,
+        { ...validItem, word: "w".repeat(101) },
+        { ...validItem, word: "run", translation: "t".repeat(501) },
+        { ...validItem, word: "walk", exampleSentence: "e".repeat(501) },
+        { ...validItem, word: "jump", additionalMeanings: Array.from({ length: 10 }, () => "m".repeat(250)) },
+        { ...validItem, word: "go", translation: "t".repeat(500) },
+      ],
+    });
+    expect(result.proposals.map((p) => p.word)).toEqual(["give up", "go"]);
+    expect(result.dropped).toBe(4);
+  });
+
+  it("keeps at most 10 meanings and drops over-long ones", () => {
+    const meanings = ["m".repeat(501), ...Array.from({ length: 12 }, (_, i) => `znaczenie ${String(i)}`)];
+    const { proposals } = parseProposals({ proposals: [{ ...validItem, additionalMeanings: meanings }] });
+    expect(proposals.at(0)?.additionalMeanings).toEqual(Array.from({ length: 10 }, (_, i) => `znaczenie ${String(i)}`));
+  });
+
+  it("keeps at most 150 proposals and counts the rest as dropped", () => {
+    const items = Array.from({ length: 160 }, (_, i) => ({ ...validItem, word: `word${String(i)}` }));
+    const result = parseProposals({ proposals: items });
+    expect(result.proposals).toHaveLength(150);
+    expect(result.proposals.at(-1)?.word).toBe("word149");
+    expect(result.dropped).toBe(10);
+  });
+
   it("drops items with an invalid CEFR level", () => {
     const result = parseProposals({ proposals: [validItem, { ...validItem, word: "run", cefr: "D1" }] });
     expect(result.proposals).toHaveLength(1);

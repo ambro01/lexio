@@ -1,8 +1,9 @@
 // The review of one generated proposal set: every state transition is a pure function over a serialisable
 // draft, so the UI can persist it to localStorage and the tests can run without React.
 import { z } from "zod";
+import { MAX_MEANINGS, MAX_MEANINGS_CHARS, MAX_TEXT_CHARS } from "@/lib/ai/limits";
 import { CEFR_LEVELS } from "@/lib/ai/proposals";
-import { classifyOutcome, type AcceptRequestBody } from "@/lib/ai/outcomes";
+import { classifyOutcome, normaliseContent, type AcceptRequestBody } from "@/lib/ai/outcomes";
 import type { ProposalContent, ProposalDecision, ReviewProposal } from "@/types";
 
 export const DRAFT_VERSION = 1;
@@ -78,13 +79,35 @@ export function counts(draft: ReviewDraft): { toSave: number; rejected: number }
   return { toSave, rejected: draft.items.length - toSave };
 }
 
-/** An item that would be saved but has no word or no translation; it blocks accepting the set. */
-export function isIncomplete(item: DraftItem): boolean {
-  return item.decision === "accept" && (item.final.word.trim() === "" || item.final.translation.trim() === "");
+/**
+ * Why an item that would be saved is refused by the accept request, or null when it is fine. Word, translation
+ * and example lengths are capped by the inputs; the meanings are checked here like the server does.
+ */
+export function itemProblem(item: DraftItem): string | null {
+  if (item.decision !== "accept") {
+    return null;
+  }
+  const { word, translation, additionalMeanings } = item.final;
+  if (word.trim() === "" || translation.trim() === "") {
+    return "Uzupełnij słowo i tłumaczenie.";
+  }
+  const meanings = normaliseContent(item.final).additionalMeanings;
+  if (meanings.length > MAX_MEANINGS) {
+    return `Maksymalnie ${String(MAX_MEANINGS)} innych znaczeń.`;
+  }
+  if (
+    additionalMeanings.length > MAX_MEANINGS * 5 ||
+    additionalMeanings.some((meaning) => meaning.length > MAX_TEXT_CHARS) ||
+    meanings.join("|").length > MAX_MEANINGS_CHARS
+  ) {
+    return `Inne znaczenia są za długie (do ${String(MAX_TEXT_CHARS)} znaków każde, ${String(MAX_MEANINGS_CHARS)} łącznie).`;
+  }
+  return null;
 }
 
+/** True when no item that would be saved has a problem (see `itemProblem`). */
 export function canAccept(draft: ReviewDraft): boolean {
-  return draft.items.length > 0 && !draft.items.some(isIncomplete);
+  return draft.items.length > 0 && draft.items.every((item) => itemProblem(item) === null);
 }
 
 /** The body of `POST /api/proposal-sets`. */

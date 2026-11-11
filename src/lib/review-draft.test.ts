@@ -8,7 +8,7 @@ import {
   draftStorageKey,
   editItem,
   isEdited,
-  isIncomplete,
+  itemProblem,
   parseDraft,
   revertItem,
   setDecision,
@@ -129,10 +129,32 @@ describe("counts and accept guard", () => {
 
   it("blocks accept while an item to save has a blank word or translation", () => {
     const blank = editItem(draft, 0, content(giveUp, { translation: "  " }));
-    expect(isIncomplete(itemAt(blank, 0))).toBe(true);
+    expect(itemProblem(itemAt(blank, 0))).toBe("Uzupełnij słowo i tłumaczenie.");
     expect(canAccept(blank)).toBe(false);
     expect(canAccept(setDecision(blank, 0, "reject_wrong"))).toBe(true);
     expect(canAccept(draft)).toBe(true);
+    expect(itemProblem(itemAt(draft, 0))).toBeNull();
+  });
+
+  it("blocks accept on the meaning limits the server enforces", () => {
+    const meanings = (count: number, text = "znaczenie") => Array.from({ length: count }, () => text);
+    const withMeanings = (additionalMeanings: string[]) =>
+      itemAt(editItem(draft, 0, content(giveUp, { additionalMeanings })), 0);
+
+    expect(itemProblem(withMeanings([...meanings(10), "", "  "]))).toBeNull();
+    expect(itemProblem(withMeanings(meanings(11)))).toMatch(/Maksymalnie 10/);
+    expect(itemProblem(withMeanings(["m".repeat(501)]))).toMatch(/za długie/);
+    expect(itemProblem(withMeanings(meanings(5, "m".repeat(450))))).toMatch(/za długie/);
+    expect(itemProblem(withMeanings(meanings(4, "m".repeat(450))))).toBeNull();
+  });
+
+  it("matches the server: a set the UI allows is accepted by the request schema", () => {
+    const next = editItem(draft, 0, content(giveUp, { additionalMeanings: Array.from({ length: 10 }, () => "x") }));
+    expect(canAccept(next)).toBe(true);
+    expect(acceptRequestSchema.safeParse(toAcceptRequest(next)).success).toBe(true);
+    const tooMany = editItem(draft, 0, content(giveUp, { additionalMeanings: Array.from({ length: 11 }, () => "x") }));
+    expect(canAccept(tooMany)).toBe(false);
+    expect(acceptRequestSchema.safeParse(toAcceptRequest(tooMany)).success).toBe(false);
   });
 });
 

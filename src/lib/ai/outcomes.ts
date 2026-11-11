@@ -1,17 +1,19 @@
 // Business rules for reviewed proposals: what counts as "corrected", and the accept request contract.
 // Pure (no astro:* imports), so the endpoint, the UI and the tests share one definition.
 import { z } from "zod";
+import {
+  MAX_MEANINGS,
+  MAX_MEANINGS_CHARS,
+  MAX_SET_ITEMS,
+  MAX_TAG_CHARS,
+  MAX_TEXT_CHARS,
+  MAX_WORD_CHARS,
+} from "@/lib/ai/limits";
 import { CEFR_LEVELS } from "@/lib/ai/proposals";
 import type { AcceptSetItem, ProposalContent, ProposalDecision, ProposalOutcome } from "@/types";
 
-export const MAX_SET_ITEMS = 150;
+export { MAX_SET_ITEMS, MAX_TAG_CHARS, MAX_TEXT_CHARS, MAX_WORD_CHARS };
 
-// Limits mirror the database checks (see 20261110221827_flashcard_key_folding.sql); the review UI reuses them.
-export const MAX_WORD_CHARS = 100;
-export const MAX_TEXT_CHARS = 500;
-const MAX_MEANINGS = 10;
-const MAX_MEANINGS_CHARS = 2000;
-export const MAX_TAG_CHARS = 50;
 const MAX_MODEL_CHARS = 100;
 
 /** Collapses whitespace runs to one space and trims — the same rule the database uses for keys. */
