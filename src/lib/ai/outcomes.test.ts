@@ -186,6 +186,14 @@ describe("acceptRequestSchema", () => {
       expect(acceptRequestSchema.safeParse(manual({ items: [item, item] })).success).toBe(false);
       expect(acceptRequestSchema.safeParse(manual({ items: [] })).success).toBe(false);
     });
+
+    it("accepts only an accepted item (a manual card is saved, never rejected)", () => {
+      expect(acceptRequestSchema.safeParse(manual({ items: [item] })).success).toBe(true);
+      for (const decision of ["reject_known", "reject_wrong", "reject_too_easy"] as const) {
+        const rejected = { decision, original: proposal, inCollection: false };
+        expect(acceptRequestSchema.safeParse(manual({ items: [rejected] })).success).toBe(false);
+      }
+    });
   });
 
   it("rejects a blank final word and translation, and an over-long word", () => {

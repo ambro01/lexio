@@ -18,7 +18,12 @@ interface Props {
   tagNames: string[];
 }
 
-type Stage = { name: "idle" } | { name: "filling" } | { name: "saving" } | { name: "saved"; word: string };
+type Stage =
+  | { name: "idle" }
+  | { name: "filling" }
+  | { name: "saving" }
+  // merged: the word was already in the collection, so the save only added the tag (if any) and kept the card.
+  | { name: "saved"; word: string; merged: boolean; tagged: boolean };
 
 interface Fill {
   item: ManualItem;
@@ -210,7 +215,12 @@ export default function AddWord({ tagNames }: Props) {
       return;
     }
     setFill(null);
-    setStage({ name: "saved", word: current.item.final.word.trim().replace(/\s+/g, " ") });
+    setStage({
+      name: "saved",
+      word: current.item.final.word.trim().replace(/\s+/g, " "),
+      merged: result.data.merged > 0,
+      tagged: tagName.trim() !== "",
+    });
   }
 
   function discard() {
@@ -231,10 +241,17 @@ export default function AddWord({ tagNames }: Props) {
   if (stage.name === "saved") {
     return (
       <div className="space-y-4">
-        <p className="flex items-center gap-2 text-lg font-semibold text-white" role="status">
-          <Check className="size-5 text-green-300" />
-          Zapisano: {stage.word}
-        </p>
+        {stage.merged ? (
+          <p className="flex items-center gap-2 text-base font-semibold text-white" role="status">
+            <Info className="size-5 shrink-0 text-amber-300" />
+            {`„${stage.word}” już było w kolekcji — treść nie została zmieniona${stage.tagged ? " (dodano tag)" : ""}.`}
+          </p>
+        ) : (
+          <p className="flex items-center gap-2 text-lg font-semibold text-white" role="status">
+            <Check className="size-5 text-green-300" />
+            Zapisano: {stage.word}
+          </p>
+        )}
         <Button type="button" onClick={addAnother} className={primaryClass}>
           <Plus className="size-4" />
           Dodaj kolejne

@@ -162,7 +162,7 @@ describe("fillWord", () => {
     const body = JSON.parse(calls[0]?.init?.body as string) as SentBody;
     expect(body.response_format.json_schema.strict).toBe(true);
     expect(body.response_format.json_schema.schema).toEqual(WORD_FILL_JSON_SCHEMA);
-    expect(body.max_tokens).toBe(800);
+    expect(body.max_tokens).toBe(2000);
     expect(body.messages[1]?.content).toBe("Word: bank\nContext: I sat on the bank of the river");
 
     expect(result.proposal).toEqual(fill);

@@ -146,6 +146,11 @@ export const acceptRequestSchema = z
   .refine((request) => request.source !== "manual" || request.items.length === 1, {
     message: "a manual save has exactly one item",
     path: ["items"],
+  })
+  // A manual card is saved or discarded, never rejected: a rejection marked "manual" would skew S-07.
+  .refine((request) => request.source !== "manual" || request.items.every((item) => item.decision === "accept"), {
+    message: "a manual save must accept its item",
+    path: ["items"],
   });
 
 /** What the client sends. */

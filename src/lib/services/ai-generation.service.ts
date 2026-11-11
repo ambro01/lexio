@@ -8,8 +8,11 @@ const APP_URL = "https://lexio.rafalambro.workers.dev";
 const APP_TITLE = "Lexio";
 const DEFAULT_TIMEOUT_MS = 60000;
 const MAX_TOKENS = 8000;
-/** One card: a few hundred tokens of JSON. */
-const WORD_FILL_MAX_TOKENS = 800;
+/**
+ * One card is a few hundred tokens of JSON (bounded by the schema), but some OpenRouter providers count a
+ * model's reasoning tokens toward max_tokens, so the cap leaves room for that instead of cutting the JSON off.
+ */
+const WORD_FILL_MAX_TOKENS = 2000;
 const TEMPERATURE = 0.2;
 
 export const SYSTEM_PROMPT = [
