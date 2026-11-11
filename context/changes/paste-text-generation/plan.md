@@ -427,18 +427,18 @@ Ship the migration before the code, verify the flow on production, and update th
 
 #### Automated
 
-- [x] 3.1 Unit tests pass, including the draft model tests: `npm test`
-- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 3.3 Build passes: `npm run build`
-- [x] 3.4 Smoke still passes (`/generate` redirects anonymous users): `npm run smoke`
+- [x] 3.1 Unit tests pass, including the draft model tests: `npm test` — d374062
+- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check` — d374062
+- [x] 3.3 Build passes: `npm run build` — d374062
+- [x] 3.4 Smoke still passes (`/generate` redirects anonymous users): `npm run smoke` — d374062
 
 #### Manual
 
-- [x] 3.5 Local end-to-end run: edit, both rejections, undo, accept; summary, tags and outcome rows match
-- [x] 3.6 An edit reverted with "Przywróć oryginał" is recorded as `accepted_unchanged`
-- [x] 3.7 Regenerating shows the "W kolekcji" badge and accepting only adds the tag
-- [x] 3.8 Reload restores the draft; "Odrzuć szkic" clears it; another user does not see it
-- [x] 3.9 Review is usable at 390 px width
+- [x] 3.5 Local end-to-end run: edit, both rejections, undo, accept; summary, tags and outcome rows match — d374062
+- [x] 3.6 An edit reverted with "Przywróć oryginał" is recorded as `accepted_unchanged` — d374062
+- [x] 3.7 Regenerating shows the "W kolekcji" badge and accepting only adds the tag — d374062
+- [x] 3.8 Reload restores the draft; "Odrzuć szkic" clears it; another user does not see it — d374062
+- [x] 3.9 Review is usable at 390 px width — d374062
 
 ### Phase 4: Production rollout and docs
 
