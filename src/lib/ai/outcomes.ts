@@ -6,12 +6,12 @@ import type { AcceptSetItem, ProposalContent, ProposalDecision, ProposalOutcome 
 
 export const MAX_SET_ITEMS = 150;
 
-// Limits mirror the database checks (see 20261110221827_flashcard_key_folding.sql).
-const MAX_WORD_CHARS = 100;
-const MAX_TEXT_CHARS = 500;
+// Limits mirror the database checks (see 20261110221827_flashcard_key_folding.sql); the review UI reuses them.
+export const MAX_WORD_CHARS = 100;
+export const MAX_TEXT_CHARS = 500;
 const MAX_MEANINGS = 10;
 const MAX_MEANINGS_CHARS = 2000;
-const MAX_TAG_CHARS = 50;
+export const MAX_TAG_CHARS = 50;
 const MAX_MODEL_CHARS = 100;
 
 /** Collapses whitespace runs to one space and trims — the same rule the database uses for keys. */

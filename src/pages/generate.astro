@@ -1,21 +1,37 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import GenerationSpike from "@/components/generation/GenerationSpike";
-import { AI_MODELS, DEFAULT_AI_MODEL_ID } from "@/lib/ai/models";
+import LessonGenerator from "@/components/lesson/LessonGenerator";
+import { MAX_INPUT_WORDS } from "@/lib/ai/proposals";
+import { suggestTags } from "@/lib/services/flashcards.service";
+import { createClient } from "@/lib/supabase";
+
+// The middleware redirects anonymous users, so the user is always set here.
+const userId = Astro.locals.user?.id ?? "";
+
+// Tag suggestions are a convenience: without them the user simply types a new tag.
+let tagNames: string[] = [];
+const client = createClient(Astro.request.headers, Astro.cookies);
+if (client) {
+  try {
+    tagNames = (await suggestTags(client)).map((tag) => tag.name);
+  } catch {
+    tagNames = [];
+  }
+}
 ---
 
-<Layout title="Generowanie fiszek (test)">
+<Layout title="Nowa lekcja">
   <div class="bg-cosmic min-h-screen p-4">
-    <div class="mx-auto my-8 w-full max-w-5xl rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
+    <div class="mx-auto my-8 w-full max-w-3xl rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-8">
       <div class="mb-6 flex items-center justify-between gap-4">
         <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
-          Generowanie fiszek (test)
+          Nowa lekcja
         </h1>
         <a href="/dashboard" class="text-sm text-purple-300 hover:underline">
           ← Dashboard
         </a>
       </div>
-      <GenerationSpike models={AI_MODELS} defaultModelId={DEFAULT_AI_MODEL_ID} client:load />
+      <LessonGenerator userId={userId} tagNames={tagNames} maxWords={MAX_INPUT_WORDS} client:load />
     </div>
   </div>
 </Layout>

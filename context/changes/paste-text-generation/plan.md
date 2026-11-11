@@ -414,31 +414,31 @@ Ship the migration before the code, verify the flow on production, and update th
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including the new classifier, schema and service tests: `npm test`
-- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 2.3 Build passes: `npm run build`
-- [x] 2.4 Smoke passes against the local preview: `npm run smoke`
+- [x] 2.1 Unit tests pass, including the new classifier, schema and service tests: `npm test` — 0e307b0
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check` — 0e307b0
+- [x] 2.3 Build passes: `npm run build` — 0e307b0
+- [x] 2.4 Smoke passes against the local preview: `npm run smoke` — 0e307b0
 
 #### Manual
 
-- [x] 2.5 With local Supabase, a signed-in `POST /api/proposal-sets` saves cards and outcome rows; a second identical call reports them as `merged`
+- [x] 2.5 With local Supabase, a signed-in `POST /api/proposal-sets` saves cards and outcome rows; a second identical call reports them as `merged` — 0e307b0
 
 ### Phase 3: Review UI
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass, including the draft model tests: `npm test`
-- [ ] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 3.3 Build passes: `npm run build`
-- [ ] 3.4 Smoke still passes (`/generate` redirects anonymous users): `npm run smoke`
+- [x] 3.1 Unit tests pass, including the draft model tests: `npm test`
+- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 3.3 Build passes: `npm run build`
+- [x] 3.4 Smoke still passes (`/generate` redirects anonymous users): `npm run smoke`
 
 #### Manual
 
-- [ ] 3.5 Local end-to-end run: edit, both rejections, undo, accept; summary, tags and outcome rows match
-- [ ] 3.6 An edit reverted with "Przywróć oryginał" is recorded as `accepted_unchanged`
-- [ ] 3.7 Regenerating shows the "W kolekcji" badge and accepting only adds the tag
-- [ ] 3.8 Reload restores the draft; "Odrzuć szkic" clears it; another user does not see it
-- [ ] 3.9 Review is usable at 390 px width
+- [x] 3.5 Local end-to-end run: edit, both rejections, undo, accept; summary, tags and outcome rows match
+- [x] 3.6 An edit reverted with "Przywróć oryginał" is recorded as `accepted_unchanged`
+- [x] 3.7 Regenerating shows the "W kolekcji" badge and accepting only adds the tag
+- [x] 3.8 Reload restores the draft; "Odrzuć szkic" clears it; another user does not see it
+- [x] 3.9 Review is usable at 390 px width
 
 ### Phase 4: Production rollout and docs
 
