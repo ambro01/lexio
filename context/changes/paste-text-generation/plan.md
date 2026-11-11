@@ -444,10 +444,10 @@ Ship the migration before the code, verify the flow on production, and update th
 
 #### Automated
 
-- [ ] 4.1 CI (lint, test, astro check, build, check:rls, smoke) is green on `master` after the push
+- [x] 4.1 CI (lint, test, astro check, build, check:rls, smoke) is green on `master` after the push — 0700085
 
 #### Manual
 
-- [ ] 4.2 Production migration applied before the deploy
-- [ ] 4.3 Full lesson run on production saves cards with the tag and outcome rows
-- [ ] 4.4 Production generation still finishes within 60 s with visible progress
+- [x] 4.2 Production migration applied before the deploy — 0700085
+- [x] 4.3 Full lesson run on production saves cards with the tag and outcome rows — 0700085
+- [x] 4.4 Production generation still finishes within 60 s with visible progress — 0700085
