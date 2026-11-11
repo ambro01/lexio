@@ -373,29 +373,29 @@ Apply the migration in production before the code, ship, verify, and update the 
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 Types regenerated and committed: `npm run db:types` produces no diff after commit
-- [x] 1.3 RLS and accept checks pass, including the manual-save steps: `npm run check:rls`
-- [x] 1.4 Unit tests pass, including the source and optional-tag schema tests: `npm test`
-- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 1.6 Build passes: `npm run build`
+- [x] 1.1 Migration applies cleanly: `npx supabase db reset` — 0e3331c
+- [x] 1.2 Types regenerated and committed: `npm run db:types` produces no diff after commit — 0e3331c
+- [x] 1.3 RLS and accept checks pass, including the manual-save steps: `npm run check:rls` — 0e3331c
+- [x] 1.4 Unit tests pass, including the source and optional-tag schema tests: `npm test` — 0e3331c
+- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check` — 0e3331c
+- [x] 1.6 Build passes: `npm run build` — 0e3331c
 
 #### Manual
 
-- [x] 1.7 A local lesson accept records outcome rows with `source = 'lesson'`
+- [x] 1.7 A local lesson accept records outcome rows with `source = 'lesson'` — 0e3331c
 
 ### Phase 2: Word fill AI and endpoint
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including word-fill parser/input tests and the unchanged lesson generation tests: `npm test`
-- [ ] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 2.3 Build passes: `npm run build`
-- [ ] 2.4 Smoke passes, including "word-fill API rejects anonymous user": `npm run smoke`
+- [x] 2.1 Unit tests pass, including word-fill parser/input tests and the unchanged lesson generation tests: `npm test`
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 2.3 Build passes: `npm run build`
+- [x] 2.4 Smoke passes, including "word-fill API rejects anonymous user": `npm run smoke`
 
 #### Manual
 
-- [ ] 2.5 Local word-fill: "bank" with a river context gives the river meaning; an existing word returns 409 without an AI call
+- [x] 2.5 Local word-fill: "bank" with a river context gives the river meaning; an existing word returns 409 without an AI call
 
 ### Phase 3: "Dodaj słowo" page
 

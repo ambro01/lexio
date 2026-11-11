@@ -1,5 +1,6 @@
 import type { AiModelId } from "@/lib/ai/models";
 import { PROPOSALS_JSON_SCHEMA, parseProposals, type Proposal } from "@/lib/ai/proposals";
+import { WORD_FILL_JSON_SCHEMA, WORD_FILL_SYSTEM_PROMPT, parseWordFill, wordFillUserMessage } from "@/lib/ai/word-fill";
 import { isRecord } from "@/lib/utils";
 
 export const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -7,6 +8,8 @@ const APP_URL = "https://lexio.rafalambro.workers.dev";
 const APP_TITLE = "Lexio";
 const DEFAULT_TIMEOUT_MS = 60000;
 const MAX_TOKENS = 8000;
+/** One card: a few hundred tokens of JSON. */
+const WORD_FILL_MAX_TOKENS = 800;
 const TEMPERATURE = 0.2;
 
 export const SYSTEM_PROMPT = [
@@ -113,8 +116,30 @@ function describeUpstream(payload: unknown): string {
   return parts.length ? ` (${parts.join("; ")})` : "";
 }
 
-/** Sends the lesson text to OpenRouter and returns validated flashcard proposals with measurement data. */
-export async function generateProposals(opts: GenerateProposalsOptions): Promise<GenerationResult> {
+interface StructuredJsonRequest {
+  model: AiModelId;
+  apiKey: string;
+  system: string;
+  user: string;
+  schemaName: string;
+  schema: Record<string, unknown>;
+  maxTokens: number;
+  fetchImpl?: typeof fetch;
+  timeoutMs?: number;
+}
+
+interface StructuredJsonResult {
+  parsed: unknown;
+  model: string;
+  durationMs: number;
+  usage: GenerationUsage;
+}
+
+/**
+ * One OpenRouter chat call with a strict JSON-schema response: the timeout, error typing, model echo and usage
+ * live here for every AI feature. Returns the parsed message content, not yet validated against the schema.
+ */
+async function requestStructuredJson(opts: StructuredJsonRequest): Promise<StructuredJsonResult> {
   const fetchImpl = opts.fetchImpl ?? ((input, init) => fetch(input, init));
   const started = Date.now();
 
@@ -131,14 +156,14 @@ export async function generateProposals(opts: GenerateProposalsOptions): Promise
       body: JSON.stringify({
         model: opts.model,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `Lesson text:\n\n${opts.text}` },
+          { role: "system", content: opts.system },
+          { role: "user", content: opts.user },
         ],
         response_format: {
           type: "json_schema",
-          json_schema: { name: "flashcard_proposals", strict: true, schema: PROPOSALS_JSON_SCHEMA },
+          json_schema: { name: opts.schemaName, strict: true, schema: opts.schema },
         },
-        max_tokens: MAX_TOKENS,
+        max_tokens: opts.maxTokens,
         temperature: TEMPERATURE,
         usage: { include: true },
       }),
@@ -176,12 +201,65 @@ export async function generateProposals(opts: GenerateProposalsOptions): Promise
     throw new UpstreamError(`Model message content is not JSON${describeUpstream(payload)}`, { cause: error });
   }
 
-  const { proposals, dropped } = parseProposals(parsed);
   return {
-    proposals,
-    dropped,
+    parsed,
     model: typeof payload.model === "string" ? payload.model : opts.model,
     durationMs,
     usage: readUsage(payload),
+  };
+}
+
+/** Sends the lesson text to OpenRouter and returns validated flashcard proposals with measurement data. */
+export async function generateProposals(opts: GenerateProposalsOptions): Promise<GenerationResult> {
+  const result = await requestStructuredJson({
+    model: opts.model,
+    apiKey: opts.apiKey,
+    system: SYSTEM_PROMPT,
+    user: `Lesson text:\n\n${opts.text}`,
+    schemaName: "flashcard_proposals",
+    schema: PROPOSALS_JSON_SCHEMA,
+    maxTokens: MAX_TOKENS,
+    fetchImpl: opts.fetchImpl,
+    timeoutMs: opts.timeoutMs,
+  });
+  const { proposals, dropped } = parseProposals(result.parsed);
+  return { proposals, dropped, model: result.model, durationMs: result.durationMs, usage: result.usage };
+}
+
+export interface FillWordOptions {
+  /** The typed word, already whitespace-normalised by `wordFillInputSchema`. */
+  word: string;
+  context?: string;
+  model: AiModelId;
+  apiKey: string;
+  fetchImpl?: typeof fetch;
+  timeoutMs?: number;
+}
+
+export interface FillWordResult {
+  proposal: Proposal;
+  model: string;
+  durationMs: number;
+  usage: GenerationUsage;
+}
+
+/** Fills one flashcard from a word and an optional context sentence (S-04, FR-006). */
+export async function fillWord(opts: FillWordOptions): Promise<FillWordResult> {
+  const result = await requestStructuredJson({
+    model: opts.model,
+    apiKey: opts.apiKey,
+    system: WORD_FILL_SYSTEM_PROMPT,
+    user: wordFillUserMessage({ word: opts.word, context: opts.context }),
+    schemaName: "word_fill",
+    schema: WORD_FILL_JSON_SCHEMA,
+    maxTokens: WORD_FILL_MAX_TOKENS,
+    fetchImpl: opts.fetchImpl,
+    timeoutMs: opts.timeoutMs,
+  });
+  return {
+    proposal: parseWordFill(result.parsed),
+    model: result.model,
+    durationMs: result.durationMs,
+    usage: result.usage,
   };
 }

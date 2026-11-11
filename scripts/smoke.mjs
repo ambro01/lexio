@@ -40,6 +40,7 @@ const steps = [
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["generate redirects anonymous user", () => request("/generate"), { status: 302, location: "/auth/signin" }],
   ["proposals API rejects anonymous user", () => request("/api/ai/proposals", { method: "POST" }), { status: 401 }],
+  ["word-fill API rejects anonymous user", () => request("/api/ai/word-fill", { method: "POST" }), { status: 401 }],
   [
     "proposal-sets API rejects anonymous user",
     () => request("/api/proposal-sets", { method: "POST" }),

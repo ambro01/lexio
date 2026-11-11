@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { OPENROUTER_API_KEY } from "astro:env/server";
 import { z } from "zod";
-import { DEFAULT_AI_MODEL_ID, isAiModelId, type AiModelId } from "@/lib/ai/models";
+import { isAiModelId } from "@/lib/ai/models";
 import {
   InvalidModelOutputError,
   MAX_INPUT_CHARS,
@@ -11,7 +11,7 @@ import {
 } from "@/lib/ai/proposals";
 import { UpstreamError, UpstreamTimeoutError, generateProposals } from "@/lib/services/ai-generation.service";
 import { findExistingWordKeys, toKey } from "@/lib/services/flashcards.service";
-import { getProfile } from "@/lib/services/profiles.service";
+import { resolveProfileModel, type Lookup } from "@/lib/services/model-resolution";
 import { createClient } from "@/lib/supabase";
 import type { ReviewProposal } from "@/types";
 
@@ -35,29 +35,6 @@ function logGeneration(fields: Record<string, unknown>): void {
   // One structured line per call for Workers logs; never log the lesson text.
   // eslint-disable-next-line no-console -- intentional observability log
   console.log(JSON.stringify({ event: "ai_generation", ...fields }));
-}
-
-type Lookup = "ok" | "unavailable" | "failed";
-type ModelSource = "request" | "profile" | "default";
-
-/**
- * The model from the user's profile, else the default (FR-016). Never throws: a missing client or a failed
- * read only falls back to the default, reported as `profileLookup` in the log line.
- */
-async function profileModel(
-  client: ReturnType<typeof createClient>,
-): Promise<{ model: AiModelId; modelSource: ModelSource; profileLookup: Lookup }> {
-  if (!client) {
-    return { model: DEFAULT_AI_MODEL_ID, modelSource: "default", profileLookup: "unavailable" };
-  }
-  try {
-    const { aiModel } = await getProfile(client);
-    return aiModel
-      ? { model: aiModel, modelSource: "profile", profileLookup: "ok" }
-      : { model: DEFAULT_AI_MODEL_ID, modelSource: "default", profileLookup: "ok" };
-  } catch {
-    return { model: DEFAULT_AI_MODEL_ID, modelSource: "default", profileLookup: "failed" };
-  }
 }
 
 /** Marks proposals whose word the user already has. Never throws: a paid generation must not fail here. */
@@ -135,7 +112,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   const client = createClient(request.headers, cookies);
   const { model, modelSource, profileLookup } = isAiModelId(requestedModel)
     ? { model: requestedModel, modelSource: "request" as const, profileLookup: undefined }
-    : await profileModel(client);
+    : await resolveProfileModel(client);
 
   const started = Date.now();
   try {

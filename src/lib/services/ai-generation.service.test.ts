@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { OPENROUTER_URL, UpstreamError, UpstreamTimeoutError, generateProposals } from "./ai-generation.service";
+import {
+  OPENROUTER_URL,
+  UpstreamError,
+  UpstreamTimeoutError,
+  fillWord,
+  generateProposals,
+} from "./ai-generation.service";
 import { InvalidModelOutputError } from "@/lib/ai/proposals";
+import { WORD_FILL_JSON_SCHEMA } from "@/lib/ai/word-fill";
 
 const proposal = {
   word: "give up",
@@ -125,5 +132,58 @@ describe("generateProposals", () => {
     await expect(generateProposals({ ...baseOpts, fetchImpl, timeoutMs: 10 })).rejects.toBeInstanceOf(
       UpstreamTimeoutError,
     );
+  });
+});
+
+describe("fillWord", () => {
+  const fill = {
+    word: "bank",
+    translation: "brzeg",
+    additionalMeanings: ["bank"],
+    exampleSentence: "We sat on the river bank.",
+    cefr: "A2",
+  };
+  const fillOpts = { word: "bank", model: "anthropic/claude-haiku-5.5", apiKey: "test-key" } as const;
+
+  interface SentBody {
+    messages: { role: string; content: string }[];
+    response_format: { json_schema: { name: string; strict: boolean; schema: unknown } };
+    max_tokens: number;
+  }
+
+  it("sends the word-fill schema and the Word/Context message and returns the proposal", async () => {
+    const { calls, fetchImpl } = stubFetch(() =>
+      Promise.resolve(completion(JSON.stringify(fill), { usage: { prompt_tokens: 90, completion_tokens: 30 } })),
+    );
+
+    const result = await fillWord({ ...fillOpts, context: "I sat on the bank of the river", fetchImpl });
+
+    expect(calls).toHaveLength(1);
+    const body = JSON.parse(calls[0]?.init?.body as string) as SentBody;
+    expect(body.response_format.json_schema.strict).toBe(true);
+    expect(body.response_format.json_schema.schema).toEqual(WORD_FILL_JSON_SCHEMA);
+    expect(body.max_tokens).toBe(800);
+    expect(body.messages[1]?.content).toBe("Word: bank\nContext: I sat on the bank of the river");
+
+    expect(result.proposal).toEqual(fill);
+    expect(result.model).toBe("anthropic/claude-haiku-5.5");
+    expect(result.usage).toEqual({ promptTokens: 90, completionTokens: 30, costUsd: undefined });
+  });
+
+  it("sends only the Word line without a context", async () => {
+    const { calls, fetchImpl } = stubFetch(() => Promise.resolve(completion(JSON.stringify(fill))));
+    await fillWord({ ...fillOpts, fetchImpl });
+    const body = JSON.parse(calls[0]?.init?.body as string) as SentBody;
+    expect(body.messages[1]?.content).toBe("Word: bank");
+  });
+
+  it("throws InvalidModelOutputError for an invalid fill", async () => {
+    const { fetchImpl } = stubFetch(() => Promise.resolve(completion(JSON.stringify({ ...fill, cefr: "Z9" }))));
+    await expect(fillWord({ ...fillOpts, fetchImpl })).rejects.toBeInstanceOf(InvalidModelOutputError);
+  });
+
+  it("maps HTTP 500 to UpstreamError", async () => {
+    const { fetchImpl } = stubFetch(() => Promise.resolve(new Response("boom", { status: 500 })));
+    await expect(fillWord({ ...fillOpts, fetchImpl })).rejects.toBeInstanceOf(UpstreamError);
   });
 });

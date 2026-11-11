@@ -72,7 +72,7 @@ export const PROPOSALS_JSON_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-/** The model's JSON does not have the `{ proposals: array }` root. */
+/** The model's JSON does not have the expected shape: no `{ proposals: array }` root, or an invalid single fill. */
 export class InvalidModelOutputError extends Error {
   override name = "InvalidModelOutputError";
 }
@@ -118,6 +118,12 @@ function withinLimits(proposal: Proposal): boolean {
   );
 }
 
+/** One model item as a proposal, or `null` when it is malformed or over the size limits. */
+export function toValidProposal(item: unknown): Proposal | null {
+  const proposal = toProposal(item);
+  return proposal && withinLimits(proposal) ? proposal : null;
+}
+
 /**
  * Validates the model's parsed JSON. Malformed items, items over the size limits, repeated words and items
  * beyond `MAX_SET_ITEMS` are dropped and counted; extra or over-long meanings are cut. Only a root that is
@@ -134,8 +140,8 @@ export function parseProposals(raw: unknown): { proposals: Proposal[]; dropped: 
     if (proposals.length >= MAX_SET_ITEMS) {
       break;
     }
-    const proposal = toProposal(item);
-    if (!proposal || !withinLimits(proposal)) {
+    const proposal = toValidProposal(item);
+    if (!proposal) {
       continue;
     }
     const key = proposal.word.toLowerCase();
