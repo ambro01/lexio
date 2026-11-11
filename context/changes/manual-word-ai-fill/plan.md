@@ -401,18 +401,18 @@ Apply the migration in production before the code, ship, verify, and update the 
 
 #### Automated
 
-- [x] 3.1 Unit tests pass: `npm test`
-- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 3.3 Build passes: `npm run build`
-- [x] 3.4 Smoke passes, including "add redirects anonymous user": `npm run smoke`
+- [x] 3.1 Unit tests pass: `npm test` — 7adccda
+- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check` — 7adccda
+- [x] 3.3 Build passes: `npm run build` — 7adccda
+- [x] 3.4 Smoke passes, including "add redirects anonymous user": `npm run smoke` — 7adccda
 
 #### Manual
 
-- [x] 3.5 Local save without a tag records `accepted_unchanged`, `source = 'manual'`, `tag_name` null
-- [x] 3.6 "went" → "go" shows "poprawione z: went"; an edited save records `accepted_corrected`
-- [x] 3.7 An existing word is stopped before the fill; a normalised existing word blocks "Zapisz"
-- [x] 3.8 "Uzupełnij ponownie" replaces the card (confirm when edited); "Odrzuć" records nothing
-- [x] 3.9 Saving with a tag tags the card; the page is usable at 390 px width
+- [x] 3.5 Local save without a tag records `accepted_unchanged`, `source = 'manual'`, `tag_name` null — 7adccda
+- [x] 3.6 "went" → "go" shows "poprawione z: went"; an edited save records `accepted_corrected` — 7adccda
+- [x] 3.7 An existing word is stopped before the fill; a normalised existing word blocks "Zapisz" — 7adccda
+- [x] 3.8 "Uzupełnij ponownie" replaces the card (confirm when edited); "Odrzuć" records nothing — 7adccda
+- [x] 3.9 Saving with a tag tags the card; the page is usable at 390 px width — 7adccda
 
 ### Phase 4: Production rollout and docs
 

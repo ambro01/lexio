@@ -158,6 +158,7 @@ Users can then sign in immediately after sign-up without clicking a confirmation
 | `/dashboard`          | Example protected page (redirects to `/auth/signin` if unauthenticated) |
 | `/generate`           | Nowa lekcja: paste text or PDF → review → accept (protected)            |
 | `/profile`            | Profil: CEFR level and AI model (protected)                             |
+| `/add`                | Dodaj słowo: one word with AI fill (protected)                          |
 
 Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication.
 
