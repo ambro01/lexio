@@ -3,7 +3,7 @@ project: Lexio
 version: 1
 status: draft
 created: 2026-11-03
-updated: 2026-11-11
+updated: 2026-11-12
 prd_version: 4
 main_goal: speed
 top_blocker: time
@@ -47,7 +47,7 @@ A Polish learner taking 1–2 English lessons a week copies new words from lesso
 | S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | done     |
 | S-03 | cefr-too-easy-grouping      | set CEFR level and AI model in profile; bulk-reject "too easy" ones                | S-01          | US-01, FR-014, FR-016           | done     |
 | S-04 | manual-word-ai-fill         | enter a word with optional context and get an AI-filled flashcard to review        | F-01, F-02    | FR-006                          | done     |
-| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | proposed |
+| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | done     |
 | S-06 | spaced-review-session       | run a review by tag or general, rate cards and mark them "Opanowane"               | F-02, S-01    | FR-010, FR-011                  | proposed |
 | S-07 | acceptance-rate-stats       | see the AI content-quality rate (unchanged / corrected / rejected as "Błędne")     | S-01          | FR-013                          | proposed |
 | S-08 | password-reset              | reset a forgotten password via email                                               | —             | FR-001                          | ready    |
@@ -164,7 +164,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Needs cards from S-01 to be meaningful; search/filter by tag (FR-009) is parked, so keep the list simple.
-- **Status:** proposed
+- **Status:** done
 
 ### S-06: Spaced-repetition review session
 
@@ -259,3 +259,4 @@ None — all resolved (2026-11-03: 3-week MVP estimate confirmed; input limit 2,
 - **S-02: user can upload a lesson PDF with a text layer and get the same proposal review as S-01; the PDF is not retained afterwards and oversized input is rejected with a clear message.** — Archived 2026-11-11 → `context/archive/2026-11-11-pdf-lesson-generation/`. Lesson: —.
 - **S-03: user can set their CEFR level and their AI model (one of the three configured in F-01) in their profile and see proposals below that level in a separate collapsed "too easy" group that they can reject in one action — bulk-rejected proposals are recorded automatically with the reason "Za łatwe".** — Archived 2026-11-11 → `context/archive/2026-11-11-cefr-too-easy-grouping/`. Lesson: —.
 - **S-04: user can enter a word or phrasal verb with an optional context sentence and get an AI-filled Polish translation (matching the context), additional meanings and an example sentence to review before saving.** — Archived 2026-11-11 → `context/archive/2026-11-11-manual-word-ai-fill/`. Lesson: —.
+- **S-05: user can browse their flashcards, edit and delete them, and add tags with suggestions of existing tags (a "set" is just a tag); editing does not change learning progress.** — Archived 2026-11-12 → `context/archive/2026-11-11-collection-edit-and-tags/`. Lesson: —.
