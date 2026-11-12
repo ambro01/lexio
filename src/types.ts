@@ -22,6 +22,12 @@ export interface Flashcard {
   updatedAt: string;
 }
 
+/** One page of the collection; `hasMore` is true when another page follows. */
+export interface FlashcardPage {
+  cards: Flashcard[];
+  hasMore: boolean;
+}
+
 /** Input for "save the word, or add the tags if the word already exists" (FR-005). */
 export interface SaveFlashcardInput {
   word: string;

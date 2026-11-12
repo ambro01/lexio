@@ -3,10 +3,14 @@ import {
   DuplicateWordError,
   FlashcardNotFoundError,
   FlashcardStoreError,
+  TagLimitError,
   acceptProposalSet,
+  addFlashcardTag,
   deleteFlashcard,
   findExistingWordKeys,
   listFlashcards,
+  listTags,
+  removeFlashcardTag,
   saveFlashcard,
   suggestTags,
   updateFlashcard,
@@ -38,6 +42,7 @@ function stubClient(result: Result) {
     "like",
     "in",
     "limit",
+    "range",
     "maybeSingle",
     "overrideTypes",
   ]) {
@@ -120,9 +125,9 @@ describe("listFlashcards", () => {
   it("maps rows to domain objects with sorted tags and drops empty links", async () => {
     const { client } = stubClient({ data: [row], error: null });
 
-    const [card] = await listFlashcards(client);
+    const { cards } = await listFlashcards(client, { offset: 0, limit: 50 });
 
-    expect(card).toEqual({
+    expect(cards[0]).toEqual({
       id: "card-1",
       word: "Give up",
       translation: "poddać się",
@@ -140,8 +145,42 @@ describe("listFlashcards", () => {
 
   it("maps an unknown CEFR value to null", async () => {
     const { client } = stubClient({ data: [{ ...row, cefr: null }], error: null });
-    const [card] = await listFlashcards(client);
-    expect(card.cefr).toBeNull();
+    const { cards } = await listFlashcards(client, { offset: 0, limit: 50 });
+    expect(cards[0].cefr).toBeNull();
+  });
+
+  it("orders by created_at desc then word_key and requests one extra row", async () => {
+    const { client, calls } = stubClient({ data: [], error: null });
+
+    await listFlashcards(client, { offset: 100, limit: 50 });
+
+    expect(calls.filter((call) => call.method === "order").map((call) => call.args)).toEqual([
+      ["created_at", { ascending: false }],
+      ["word_key", { ascending: true }],
+    ]);
+    expect(calls.find((call) => call.method === "range")?.args).toEqual([100, 150]);
+  });
+
+  it("returns at most limit cards and sets hasMore from the extra row", async () => {
+    const rows = [row, { ...row, id: "card-2" }, { ...row, id: "card-3" }];
+    const { client } = stubClient({ data: rows, error: null });
+
+    const page = await listFlashcards(client, { offset: 0, limit: 2 });
+
+    expect(page.cards.map((card) => card.id)).toEqual(["card-1", "card-2"]);
+    expect(page.hasMore).toBe(true);
+  });
+
+  it("sets hasMore to false when no extra row comes back", async () => {
+    const { client } = stubClient({ data: [row, { ...row, id: "card-2" }], error: null });
+    const page = await listFlashcards(client, { offset: 0, limit: 2 });
+    expect(page.cards).toHaveLength(2);
+    expect(page.hasMore).toBe(false);
+  });
+
+  it("maps a database error to FlashcardStoreError", async () => {
+    const { client } = stubClient({ data: null, error: { code: "42501" } });
+    await expect(listFlashcards(client, { offset: 0, limit: 50 })).rejects.toBeInstanceOf(FlashcardStoreError);
   });
 });
 
@@ -183,6 +222,83 @@ describe("deleteFlashcard", () => {
   it("maps zero deleted rows to FlashcardNotFoundError", async () => {
     const { client } = stubClient({ data: [], error: null });
     await expect(deleteFlashcard(client, "card-1")).rejects.toBeInstanceOf(FlashcardNotFoundError);
+  });
+});
+
+describe("addFlashcardTag", () => {
+  it("calls add_flashcard_tag and maps the row", async () => {
+    const { client, calls } = stubClient({
+      data: [{ tag_id: "t1", tag_name: "Lesson 1", linked: true }],
+      error: null,
+    });
+
+    const result = await addFlashcardTag(client, "card-1", " lesson  1 ");
+
+    expect(result).toEqual({ tag: { id: "t1", name: "Lesson 1" }, linked: true });
+    expect(calls[0]).toEqual({
+      method: "rpc",
+      args: ["add_flashcard_tag", { p_flashcard_id: "card-1", p_tag_name: " lesson  1 " }],
+    });
+  });
+
+  it("maps P0002 to FlashcardNotFoundError", async () => {
+    const { client } = stubClient({ data: null, error: { code: "P0002" } });
+    await expect(addFlashcardTag(client, "card-1", "x")).rejects.toBeInstanceOf(FlashcardNotFoundError);
+  });
+
+  it("maps 54000 to TagLimitError", async () => {
+    const { client } = stubClient({ data: null, error: { code: "54000" } });
+    await expect(addFlashcardTag(client, "card-1", "x")).rejects.toBeInstanceOf(TagLimitError);
+  });
+
+  it("maps another error to FlashcardStoreError without user content", async () => {
+    const { client } = stubClient({ data: null, error: { code: "22023", message: "Secret tag" } });
+    const promise = addFlashcardTag(client, "card-1", "Secret tag");
+    await expect(promise).rejects.toBeInstanceOf(FlashcardStoreError);
+    await expect(promise).rejects.not.toThrow("Secret tag");
+  });
+});
+
+describe("removeFlashcardTag", () => {
+  it("deletes the link row of the card and tag", async () => {
+    const { client, calls } = stubClient({ data: null, error: null });
+
+    await removeFlashcardTag(client, "card-1", "t1");
+
+    expect(calls.find((call) => call.method === "from")?.args).toEqual(["flashcard_tags"]);
+    expect(calls.some((call) => call.method === "delete")).toBe(true);
+    expect(calls.filter((call) => call.method === "eq").map((call) => call.args)).toEqual([
+      ["flashcard_id", "card-1"],
+      ["tag_id", "t1"],
+    ]);
+  });
+
+  it("treats zero deleted rows as success", async () => {
+    const { client } = stubClient({ data: [], error: null });
+    await expect(removeFlashcardTag(client, "card-1", "t1")).resolves.toBeUndefined();
+  });
+
+  it("maps a database error to FlashcardStoreError", async () => {
+    const { client } = stubClient({ data: null, error: { code: "42501" } });
+    await expect(removeFlashcardTag(client, "card-1", "t1")).rejects.toBeInstanceOf(FlashcardStoreError);
+  });
+});
+
+describe("listTags", () => {
+  it("returns the user's tags ordered by name, at most 500", async () => {
+    const { client, calls } = stubClient({ data: [{ id: "t1", name: "Lesson 1" }], error: null });
+
+    const tags = await listTags(client);
+
+    expect(tags).toEqual([{ id: "t1", name: "Lesson 1" }]);
+    expect(calls.find((call) => call.method === "from")?.args).toEqual(["tags"]);
+    expect(calls.find((call) => call.method === "order")?.args).toEqual(["name"]);
+    expect(calls.find((call) => call.method === "limit")?.args).toEqual([500]);
+  });
+
+  it("maps a database error to FlashcardStoreError", async () => {
+    const { client } = stubClient({ data: null, error: { code: "42501" } });
+    await expect(listTags(client)).rejects.toBeInstanceOf(FlashcardStoreError);
   });
 });
 

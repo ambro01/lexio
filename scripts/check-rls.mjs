@@ -584,4 +584,228 @@ await step("anon: select on profiles returns no rows", async () => {
   return [!data?.length, data?.length ? `${data.length} row(s)` : ""];
 });
 
+// ---------------------------------------------------------------------------
+// collection (S-05): add_flashcard_tag, link removal, edit/delete isolation and the paging order.
+// ---------------------------------------------------------------------------
+
+async function addTag(client, cardId, tagName) {
+  return client.rpc("add_flashcard_tag", { p_flashcard_id: cardId, p_tag_name: tagName });
+}
+
+async function tagIdByName(client, name) {
+  const { data, error } = await client.from("tags").select("id").eq("name", name).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data?.id;
+}
+
+let collCardId;
+let collOtherId;
+let collNewTagId;
+let collReuseTagId;
+
+await step("A: setup — save two cards for the collection checks", async () => {
+  const first = await save(a.client, "collection word", "słowo kolekcji", []);
+  if (first.error) return [false, first.error.message];
+  const second = await save(a.client, "collection other", "inne słowo", ["Coll reuse"]);
+  if (second.error) return [false, second.error.message];
+  collCardId = firstRow(first.data)?.flashcard_id;
+  collOtherId = firstRow(second.data)?.flashcard_id;
+  collReuseTagId = await tagIdByName(a.client, "Coll reuse");
+  return [Boolean(collCardId && collOtherId && collReuseTagId), `card=${collCardId} other=${collOtherId}`];
+});
+
+await step("A: add_flashcard_tag with a new name creates one tag and one link (linked = true)", async () => {
+  const before = await writeCounts(a.client);
+  const { data, error } = await addTag(a.client, collCardId, "Coll New");
+  if (error) return [false, error.message];
+  const row = firstRow(data);
+  collNewTagId = row?.tag_id;
+  const after = await writeCounts(a.client);
+  const names = await cardTagNames(a.client, collCardId);
+  const ok =
+    row?.linked === true &&
+    row.tag_name === "Coll New" &&
+    Boolean(collNewTagId) &&
+    after.tags === before.tags + 1 &&
+    after.flashcard_tags === before.flashcard_tags + 1 &&
+    names.join("|") === "Coll New";
+  return [ok, `${JSON.stringify(row)} before=${JSON.stringify(before)} after=${JSON.stringify(after)}`];
+});
+
+await step(
+  "A: repeating it with different case/spacing returns the same tag, linked = false, no new rows",
+  async () => {
+    const before = await writeCounts(a.client);
+    const { data, error } = await addTag(a.client, collCardId, "  coll \t NEW ");
+    if (error) return [false, error.message];
+    const row = firstRow(data);
+    const after = await writeCounts(a.client);
+    const ok =
+      row?.tag_id === collNewTagId &&
+      row.linked === false &&
+      row.tag_name === "Coll New" &&
+      JSON.stringify(before) === JSON.stringify(after);
+    return [ok, `${JSON.stringify(row)} before=${JSON.stringify(before)} after=${JSON.stringify(after)}`];
+  },
+);
+
+await step("A: adding an existing tag name (from save) reuses that tag", async () => {
+  const before = await writeCounts(a.client);
+  const { data, error } = await addTag(a.client, collCardId, "COLL REUSE");
+  if (error) return [false, error.message];
+  const row = firstRow(data);
+  const after = await writeCounts(a.client);
+  const ok =
+    row?.tag_id === collReuseTagId &&
+    row.linked === true &&
+    row.tag_name === "Coll reuse" &&
+    after.tags === before.tags &&
+    after.flashcard_tags === before.flashcard_tags + 1;
+  return [ok, `${JSON.stringify(row)} before=${JSON.stringify(before)} after=${JSON.stringify(after)}`];
+});
+
+await step("A: a blank tag name is rejected (22023)", async () => {
+  const { error } = await addTag(a.client, collCardId, " \t\n ");
+  return [error?.code === "22023", error ? `${error.code} ${error.message}` : "accepted"];
+});
+
+await step("B: add_flashcard_tag on A's card fails with P0002 and writes nothing", async () => {
+  const beforeA = await writeCounts(a.client);
+  const beforeB = await writeCounts(b.client);
+  const { error } = await addTag(b.client, collCardId, "B intruder tag");
+  const afterA = await writeCounts(a.client);
+  const afterB = await writeCounts(b.client);
+  const names = await cardTagNames(a.client, collCardId);
+  const ok =
+    error?.code === "P0002" &&
+    JSON.stringify(beforeA) === JSON.stringify(afterA) &&
+    JSON.stringify(beforeB) === JSON.stringify(afterB) &&
+    names.join("|") === "Coll New|Coll reuse";
+  return [ok, `${error ? `${error.code} ${error.message}` : "call succeeded"} tags=${names.join(",")}`];
+});
+
+await step("anon: add_flashcard_tag is rejected", async () => {
+  const { error } = await addTag(anon, collCardId, "Anon tag");
+  return [Boolean(error), error ? `${error.code} ${error.message}` : "call succeeded"];
+});
+
+await step("A: a 21st tag on one card fails with 54000 and the would-be new tag does not exist", async () => {
+  const save20 = await save(a.client, "collection limit", "limit", []);
+  if (save20.error) return [false, save20.error.message];
+  const limitCardId = firstRow(save20.data)?.flashcard_id;
+  for (let i = 1; i <= 20; i++) {
+    const { error } = await addTag(a.client, limitCardId, `Coll limit ${String(i)}`);
+    if (error) return [false, `tag ${String(i)}: ${error.message}`];
+  }
+  const before = await writeCounts(a.client);
+  const { error } = await addTag(a.client, limitCardId, "Coll overflow");
+  const after = await writeCounts(a.client);
+  const overflow = await tagIdByName(a.client, "Coll overflow");
+  const again = await addTag(a.client, limitCardId, "coll limit 1");
+  const ok =
+    error?.code === "54000" &&
+    overflow === undefined &&
+    JSON.stringify(before) === JSON.stringify(after) &&
+    again.error === null &&
+    firstRow(again.data)?.linked === false;
+  return [
+    ok,
+    `${error ? `${error.code} ${error.message}` : "accepted"} overflowTag=${String(overflow)} relink=${JSON.stringify(again.data ?? again.error)}`,
+  ];
+});
+
+await step("B: delete of A's tag link affects 0 rows", async () => {
+  const { data, error } = await b.client
+    .from("flashcard_tags")
+    .delete()
+    .eq("flashcard_id", collCardId)
+    .eq("tag_id", collReuseTagId)
+    .select();
+  if (error) return [false, error.message];
+  const names = await cardTagNames(a.client, collCardId);
+  return [data.length === 0 && names.includes("Coll reuse"), `${data.length} row(s) tags=${names.join(",")}`];
+});
+
+await step("A: deleting a tag link keeps the tag; deleting it again affects 0 rows", async () => {
+  const del = await a.client
+    .from("flashcard_tags")
+    .delete()
+    .eq("flashcard_id", collCardId)
+    .eq("tag_id", collNewTagId)
+    .select();
+  if (del.error) return [false, del.error.message];
+  const again = await a.client
+    .from("flashcard_tags")
+    .delete()
+    .eq("flashcard_id", collCardId)
+    .eq("tag_id", collNewTagId)
+    .select();
+  if (again.error) return [false, again.error.message];
+  const tagStill = await tagIdByName(a.client, "Coll New");
+  const names = await cardTagNames(a.client, collCardId);
+  const ok =
+    del.data.length === 1 && again.data.length === 0 && tagStill === collNewTagId && names.join("|") === "Coll reuse";
+  return [ok, `deleted=${del.data.length} again=${again.data.length} tags=${names.join(",")}`];
+});
+
+await step("B: update and delete of A's collection card affect 0 rows", async () => {
+  const upd = await b.client.from("flashcards").update({ translation: "hacked" }).eq("id", collCardId).select();
+  if (upd.error) return [false, upd.error.message];
+  const del = await b.client.from("flashcards").delete().eq("id", collCardId).select();
+  if (del.error) return [false, del.error.message];
+  const card = await a.client.from("flashcards").select("translation").eq("id", collCardId);
+  if (card.error) return [false, card.error.message];
+  const ok =
+    upd.data.length === 0 &&
+    del.data.length === 0 &&
+    card.data.length === 1 &&
+    card.data[0].translation === "słowo kolekcji";
+  return [ok, `updated=${upd.data.length} deleted=${del.data.length} card=${JSON.stringify(card.data)}`];
+});
+
+await step("A: renaming a card to another of A's words fails with 23505", async () => {
+  const { error } = await a.client
+    .from("flashcards")
+    .update({ word: "Collection  Other" })
+    .eq("id", collCardId)
+    .select();
+  const other = await a.client.from("flashcards").select("word").eq("id", collOtherId).single();
+  if (other.error) return [false, other.error.message];
+  return [
+    error?.code === "23505" && other.data.word === "collection other",
+    error ? `${error.code} ${error.message}` : "update succeeded",
+  ];
+});
+
+await step("A: cards from one accept_proposal_set call share created_at and page in word_key order", async () => {
+  const words = ["paging cherry", "paging apple", "paging banana"];
+  const { error } = await acceptSet(
+    a.client,
+    "Paging lesson",
+    words.map((word) => acceptItem(word, "accepted_unchanged")),
+  );
+  if (error) return [false, error.message];
+  const { data, error: listError } = await a.client
+    .from("flashcards")
+    .select("word_key, created_at")
+    .in("word", words)
+    .order("created_at", { ascending: false })
+    .order("word_key", { ascending: true })
+    .range(0, 1);
+  if (listError) return [false, listError.message];
+  const rest = await a.client
+    .from("flashcards")
+    .select("word_key, created_at")
+    .in("word", words)
+    .order("created_at", { ascending: false })
+    .order("word_key", { ascending: true })
+    .range(2, 3);
+  if (rest.error) return [false, rest.error.message];
+  const all = [...data, ...rest.data];
+  const ok =
+    all.map((r) => r.word_key).join("|") === "paging apple|paging banana|paging cherry" &&
+    new Set(all.map((r) => r.created_at)).size === 1;
+  return [ok, JSON.stringify(all)];
+});
+
 finish();

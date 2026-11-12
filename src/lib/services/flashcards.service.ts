@@ -5,6 +5,7 @@ import type {
   AcceptProposalSetInput,
   AcceptSetResult,
   Flashcard,
+  FlashcardPage,
   SaveFlashcardInput,
   Tag,
   UpdateFlashcardInput,
@@ -22,13 +23,25 @@ export class FlashcardNotFoundError extends Error {
   override name = "FlashcardNotFoundError";
 }
 
+/** Thrown when adding a tag would give a card more than 20 tags. */
+export class TagLimitError extends Error {
+  override name = "TagLimitError";
+}
+
 /** Any other storage failure. The message never contains user content. */
 export class FlashcardStoreError extends Error {
   override name = "FlashcardStoreError";
 }
 
 const UNIQUE_VIOLATION = "23505";
+const NO_DATA_FOUND = "P0002";
+const PROGRAM_LIMIT_EXCEEDED = "54000";
 const TAG_SUGGESTION_LIMIT = 20;
+
+/** Cards per collection page. */
+export const COLLECTION_PAGE_SIZE = 50;
+/** Most tags `listTags` returns (suggestions for the collection's tag input). */
+export const TAG_LIST_LIMIT = 500;
 
 // Tags are reached through the link table: the composite foreign keys mean PostgREST
 // cannot embed `tags` directly from `flashcards`.
@@ -151,17 +164,26 @@ export async function findExistingWordKeys(client: FlashcardsClient, words: stri
   return new Set(data.map((row) => row.word_key).filter((key): key is string => key !== null));
 }
 
-/** All of the user's cards with their tags, newest first. */
-export async function listFlashcards(client: FlashcardsClient): Promise<Flashcard[]> {
+/**
+ * One page of the user's cards with their tags, newest first; cards saved together (same `created_at`) are
+ * ordered by `word_key`, which is unique per user, so the order is total and offset paging is stable.
+ * One extra row is fetched to tell whether another page follows.
+ */
+export async function listFlashcards(
+  client: FlashcardsClient,
+  { offset, limit }: { offset: number; limit: number },
+): Promise<FlashcardPage> {
   const { data, error } = await client
     .from("flashcards")
     .select(FLASHCARD_SELECT)
     .order("created_at", { ascending: false })
+    .order("word_key", { ascending: true })
+    .range(offset, offset + limit)
     .overrideTypes<FlashcardRow[], { merge: false }>();
   if (error) {
     throw storeError("list", error);
   }
-  return data.map(toFlashcard);
+  return { cards: data.slice(0, limit).map(toFlashcard), hasMore: data.length > limit };
 }
 
 /** Edits a card's content; learning progress and tags are untouched. */
@@ -203,6 +225,52 @@ export async function deleteFlashcard(client: FlashcardsClient, id: string): Pro
   if (data.length === 0) {
     throw new FlashcardNotFoundError("Flashcard not found");
   }
+}
+
+/**
+ * Links a tag to an existing card, creating the tag if the user has none with that name (one transaction).
+ * `linked` is false when the card already had the tag.
+ */
+export async function addFlashcardTag(
+  client: FlashcardsClient,
+  flashcardId: string,
+  tagName: string,
+): Promise<{ tag: Tag; linked: boolean }> {
+  const { data, error } = await client.rpc("add_flashcard_tag", {
+    p_flashcard_id: flashcardId,
+    p_tag_name: tagName,
+  });
+  if (error) {
+    if (error.code === NO_DATA_FOUND) {
+      throw new FlashcardNotFoundError("Flashcard not found");
+    }
+    if (error.code === PROGRAM_LIMIT_EXCEEDED) {
+      throw new TagLimitError("Flashcard already has the maximum number of tags");
+    }
+    throw storeError("tag add", error);
+  }
+  const row = data.at(0);
+  if (!row) {
+    throw new FlashcardStoreError("Flashcard tag add returned no row");
+  }
+  return { tag: { id: row.tag_id, name: row.tag_name }, linked: row.linked };
+}
+
+/** Removes a tag from a card; the tag itself stays. Removing a link that is already gone is not an error. */
+export async function removeFlashcardTag(client: FlashcardsClient, flashcardId: string, tagId: string): Promise<void> {
+  const { error } = await client.from("flashcard_tags").delete().eq("flashcard_id", flashcardId).eq("tag_id", tagId);
+  if (error) {
+    throw storeError("tag remove", error);
+  }
+}
+
+/** All of the user's tags ordered by name, at most `TAG_LIST_LIMIT`. */
+export async function listTags(client: FlashcardsClient): Promise<Tag[]> {
+  const { data, error } = await client.from("tags").select("id, name").order("name").limit(TAG_LIST_LIMIT);
+  if (error) {
+    throw storeError("tag list", error);
+  }
+  return data;
 }
 
 /** The user's tags ordered by name, optionally filtered by a case-insensitive prefix. */

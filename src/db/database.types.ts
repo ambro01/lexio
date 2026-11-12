@@ -214,6 +214,14 @@ export type Database = {
           rejected_count: number
         }[]
       }
+      add_flashcard_tag: {
+        Args: { p_flashcard_id: string; p_tag_name: string }
+        Returns: {
+          linked: boolean
+          tag_id: string
+          tag_name: string
+        }[]
+      }
       save_flashcard: {
         Args: {
           p_additional_meanings: string[]
