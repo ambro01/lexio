@@ -1,0 +1,38 @@
+// Request contracts of the collection API (S-05): edit a card, add a tag, page through the list.
+// Pure (no astro:* imports), so the endpoints, the UI and the tests share one definition.
+import { z } from "zod";
+import { MAX_TAG_CHARS } from "@/lib/ai/limits";
+import { contentSchema } from "@/lib/ai/outcomes";
+import { CEFR_LEVELS } from "@/lib/ai/proposals";
+
+/** Highest `offset` the list endpoint accepts (far beyond any real collection). */
+export const MAX_PAGE_OFFSET = 100_000;
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Body of `PATCH /api/flashcards/[id]`: the whole card (the form always sends every field), with the same
+ * normalisation and limits as an accepted proposal. `cefr: null` means "no level".
+ */
+export const editRequestSchema = contentSchema.extend({ cefr: z.enum(CEFR_LEVELS).nullable() });
+
+/** What the client sends. */
+export type EditRequestBody = z.input<typeof editRequestSchema>;
+
+/** Body of `POST /api/flashcards/[id]/tags`; the name comes out whitespace-normalised, 1–50 characters. */
+export const addTagRequestSchema = z.object({
+  name: z
+    .string()
+    .transform((value) => value.replace(/\s+/g, " ").trim())
+    .pipe(z.string().min(1).max(MAX_TAG_CHARS)),
+});
+
+/** Query of `GET /api/flashcards`: `offset` is a non-negative integer, 0 when absent. */
+export const pageQuerySchema = z.object({
+  offset: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().max(MAX_PAGE_OFFSET)).default(0),
+});
+
+/** True for a canonical UUID; route ids are checked before any query so a malformed id is a 404, not a 500. */
+export function isUuid(value: string | undefined): value is string {
+  return value !== undefined && UUID_PATTERN.test(value);
+}

@@ -364,11 +364,11 @@ Additive only: one new function, no table or data changes. Rollback = drop the f
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 Types regenerated and committed: `npm run db:types` produces no diff after commit
-- [x] 1.3 RLS and collection checks pass, including the new S-05 section: `npm run check:rls`
-- [x] 1.4 Unit tests pass, including the new service tests: `npm test`
-- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 1.1 Migration applies cleanly: `npx supabase db reset` — 62a8609
+- [x] 1.2 Types regenerated and committed: `npm run db:types` produces no diff after commit — 62a8609
+- [x] 1.3 RLS and collection checks pass, including the new S-05 section: `npm run check:rls` — 62a8609
+- [x] 1.4 Unit tests pass, including the new service tests: `npm test` — 62a8609
+- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check` — 62a8609
 
 #### Manual
 
@@ -378,9 +378,9 @@ Additive only: one new function, no table or data changes. Rollback = drop the f
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including the collection schema tests: `npm test`
-- [ ] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 2.3 Build passes: `npm run build`
+- [x] 2.1 Unit tests pass, including the collection schema tests: `npm test`
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 2.3 Build passes: `npm run build`
 
 #### Manual
 

@@ -93,7 +93,8 @@ const meaningsField = z
       .refine((meanings) => meanings.join("|").length <= MAX_MEANINGS_CHARS),
   );
 
-const contentSchema = z.object({
+/** Editable card content: whitespace-normalised, blank meanings dropped, database size limits. */
+export const contentSchema = z.object({
   word: textField(1, MAX_WORD_CHARS),
   translation: textField(1, MAX_TEXT_CHARS),
   additionalMeanings: meaningsField,

@@ -3,7 +3,7 @@ change_id: collection-edit-and-tags
 title: Collection edit and tags
 status: implementing
 created: 2026-11-11
-updated: 2026-11-11
+updated: 2026-11-12
 archived_at: null
 ---
 
