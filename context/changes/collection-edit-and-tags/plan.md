@@ -372,7 +372,7 @@ Additive only: one new function, no table or data changes. Rollback = drop the f
 
 #### Manual
 
-- [ ] 1.6 In local Studio, calling `add_flashcard_tag` as a signed-in user on an own card shows the new tag and link rows
+- [x] 1.6 In local Studio, calling `add_flashcard_tag` as a signed-in user on an own card shows the new tag and link rows — 62a8609
 
 ### Phase 2: Collection API
 
@@ -384,8 +384,8 @@ Additive only: one new function, no table or data changes. Rollback = drop the f
 
 #### Manual
 
-- [ ] 2.4 Against the local dev server, signed in, the endpoints answer as specified
-- [ ] 2.5 Signed out, every endpoint returns 401
+- [x] 2.4 Against the local dev server, signed in, the endpoints answer as specified — c267d43
+- [x] 2.5 Signed out, every endpoint returns 401 — c267d43
 
 ### Phase 3: "Kolekcja" page
 
@@ -398,20 +398,20 @@ Additive only: one new function, no table or data changes. Rollback = drop the f
 
 #### Manual
 
-- [ ] 3.5 Signed out, `/collection` redirects to sign-in; the dashboard links to "Kolekcja"
-- [ ] 3.6 With more than 50 cards, "Pokaż więcej" loads the next ones without duplicates and disappears at the end
-- [ ] 3.7 Edit: content and CEFR change and survive a reload; duplicate word shows the message; "Anuluj" discards
-- [ ] 3.8 Delete: confirm removes the card; cancelling keeps it; its tag still appears in suggestions
-- [ ] 3.9 Tags: add new, add existing in different case, remove, 21st tag limit all behave as specified
-- [ ] 3.10 Empty collection shows the hint with links; layout works on a narrow (mobile) viewport
+- [x] 3.5 Signed out, `/collection` redirects to sign-in; the dashboard links to "Kolekcja" — dd20b91
+- [x] 3.6 With more than 50 cards, "Pokaż więcej" loads the next ones without duplicates and disappears at the end — dd20b91
+- [x] 3.7 Edit: content and CEFR change and survive a reload; duplicate word shows the message; "Anuluj" discards — dd20b91
+- [x] 3.8 Delete: confirm removes the card; cancelling keeps it; its tag still appears in suggestions — dd20b91
+- [x] 3.9 Tags: add new, add existing in different case, remove, 21st tag limit all behave as specified — dd20b91
+- [x] 3.10 Empty collection shows the hint with links; layout works on a narrow (mobile) viewport — dd20b91
 
 ### Phase 4: Production rollout and docs
 
 #### Automated
 
-- [ ] 4.1 CI passes on `master` (lint, check, build, smoke)
+- [x] 4.1 CI passes on `master` (lint, check, build, smoke) — 2072079
 
 #### Manual
 
-- [x] 4.2 `npx supabase migration list` shows the new migration applied in production
-- [ ] 4.3 On production: browse, edit, delete and add/remove a tag on a test card work end to end
+- [x] 4.2 `npx supabase migration list` shows the new migration applied in production — 2072079
+- [x] 4.3 On production: browse, edit, delete and add/remove a tag on a test card work end to end — 2072079
