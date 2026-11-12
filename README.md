@@ -159,6 +159,7 @@ Users can then sign in immediately after sign-up without clicking a confirmation
 | `/generate`           | Nowa lekcja: paste text or PDF → review → accept (protected)            |
 | `/profile`            | Profil: CEFR level and AI model (protected)                             |
 | `/add`                | Dodaj słowo: one word with AI fill (protected)                          |
+| `/collection`         | Kolekcja: browse, edit, delete and tag flashcards (protected)           |
 
 Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication.
 

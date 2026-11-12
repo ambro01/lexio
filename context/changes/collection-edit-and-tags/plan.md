@@ -391,10 +391,10 @@ Additive only: one new function, no table or data changes. Rollback = drop the f
 
 #### Automated
 
-- [x] 3.1 Unit tests pass, including the collection helper tests and the unchanged review-draft tests: `npm test`
-- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 3.3 Build passes: `npm run build`
-- [x] 3.4 Smoke test still passes against the local preview: `npm run smoke`
+- [x] 3.1 Unit tests pass, including the collection helper tests and the unchanged review-draft tests: `npm test` — dd20b91
+- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check` — dd20b91
+- [x] 3.3 Build passes: `npm run build` — dd20b91
+- [x] 3.4 Smoke test still passes against the local preview: `npm run smoke` — dd20b91
 
 #### Manual
 
@@ -413,5 +413,5 @@ Additive only: one new function, no table or data changes. Rollback = drop the f
 
 #### Manual
 
-- [ ] 4.2 `npx supabase migration list` shows the new migration applied in production
+- [x] 4.2 `npx supabase migration list` shows the new migration applied in production
 - [ ] 4.3 On production: browse, edit, delete and add/remove a tag on a test card work end to end
