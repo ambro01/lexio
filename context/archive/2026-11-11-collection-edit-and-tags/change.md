@@ -1,10 +1,10 @@
 ---
 change_id: collection-edit-and-tags
 title: Collection edit and tags
-status: impl_reviewed
+status: archived
 created: 2026-11-11
 updated: 2026-11-12
-archived_at: null
+archived_at: 2026-11-12T19:42:26Z
 ---
 
 ## Notes
