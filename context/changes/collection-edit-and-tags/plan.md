@@ -378,9 +378,9 @@ Additive only: one new function, no table or data changes. Rollback = drop the f
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including the collection schema tests: `npm test`
-- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 2.3 Build passes: `npm run build`
+- [x] 2.1 Unit tests pass, including the collection schema tests: `npm test` — c267d43
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check` — c267d43
+- [x] 2.3 Build passes: `npm run build` — c267d43
 
 #### Manual
 
@@ -391,10 +391,10 @@ Additive only: one new function, no table or data changes. Rollback = drop the f
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass, including the collection helper tests and the unchanged review-draft tests: `npm test`
-- [ ] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 3.3 Build passes: `npm run build`
-- [ ] 3.4 Smoke test still passes against the local preview: `npm run smoke`
+- [x] 3.1 Unit tests pass, including the collection helper tests and the unchanged review-draft tests: `npm test`
+- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 3.3 Build passes: `npm run build`
+- [x] 3.4 Smoke test still passes against the local preview: `npm run smoke`
 
 #### Manual
 

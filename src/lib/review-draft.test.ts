@@ -3,6 +3,7 @@ import { acceptRequestSchema, toAcceptSetItems } from "@/lib/ai/outcomes";
 import type { ProposalContent, ReviewProposal } from "@/types";
 import {
   canAccept,
+  contentProblem,
   counts,
   createDraft,
   draftStorageKey,
@@ -161,6 +162,18 @@ describe("counts and accept guard", () => {
     const tooMany = editItem(draft, 0, content(giveUp, { additionalMeanings: Array.from({ length: 11 }, () => "x") }));
     expect(canAccept(tooMany)).toBe(false);
     expect(acceptRequestSchema.safeParse(toAcceptRequest(tooMany)).success).toBe(false);
+  });
+});
+
+describe("contentProblem", () => {
+  it("checks bare content with the same messages as itemProblem", () => {
+    expect(contentProblem(content(giveUp))).toBeNull();
+    expect(contentProblem(content(giveUp, { word: " " }))).toBe("Uzupełnij słowo i tłumaczenie.");
+    expect(contentProblem(content(giveUp, { translation: "" }))).toBe("Uzupełnij słowo i tłumaczenie.");
+    expect(contentProblem(content(giveUp, { additionalMeanings: Array.from({ length: 11 }, () => "x") }))).toMatch(
+      /Maksymalnie 10/,
+    );
+    expect(contentProblem(content(giveUp, { additionalMeanings: ["m".repeat(501)] }))).toMatch(/za długie/);
   });
 });
 

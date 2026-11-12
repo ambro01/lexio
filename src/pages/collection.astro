@@ -1,0 +1,50 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import CollectionBrowser from "@/components/collection/CollectionBrowser";
+import { COLLECTION_PAGE_SIZE, listFlashcards, listTags } from "@/lib/services/flashcards.service";
+import { createClient } from "@/lib/supabase";
+import type { FlashcardPage } from "@/types";
+
+// The middleware redirects anonymous users. The first page is required: without it (no client or a failed
+// read) the page shows an error with a reload link. Tag suggestions are a convenience and fall back to none.
+let page: FlashcardPage | null = null;
+let tagNames: string[] = [];
+const client = createClient(Astro.request.headers, Astro.cookies);
+if (client) {
+  [page, tagNames] = await Promise.all([
+    listFlashcards(client, { offset: 0, limit: COLLECTION_PAGE_SIZE }).catch(() => null),
+    listTags(client).then(
+      (tags) => tags.map((tag) => tag.name),
+      () => [],
+    ),
+  ]);
+}
+---
+
+<Layout title="Kolekcja">
+  <div class="bg-cosmic min-h-screen p-4">
+    <div class="mx-auto my-8 w-full max-w-3xl rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-8">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+          Kolekcja
+        </h1>
+        <a href="/dashboard" class="text-sm text-purple-300 hover:underline">
+          ← Dashboard
+        </a>
+      </div>
+      {page ? (
+        <CollectionBrowser initialPage={page} tagNames={tagNames} client:load />
+      ) : (
+        <div
+          class="space-y-2 rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300"
+          role="alert"
+        >
+          <p>Nie udało się wczytać kolekcji.</p>
+          <a href="/collection" class="text-purple-300 hover:underline">
+            Odśwież stronę
+          </a>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>

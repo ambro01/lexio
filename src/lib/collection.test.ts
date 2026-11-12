@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { MAX_TAG_CHARS } from "@/lib/ai/limits";
+import type { Flashcard } from "@/types";
 import {
   MAX_PAGE_OFFSET,
   addTagRequestSchema,
+  appendPage,
   editRequestSchema,
   isUuid,
+  mergeTagName,
   pageQuerySchema,
+  withTag,
+  withoutTag,
   type EditRequestBody,
 } from "./collection";
 
@@ -97,5 +102,83 @@ describe("isUuid", () => {
     ]) {
       expect(isUuid(value), String(value)).toBe(false);
     }
+  });
+});
+
+function flashcard(id: string, word: string, tags: Flashcard["tags"] = []): Flashcard {
+  return {
+    id,
+    word,
+    translation: "tłumaczenie",
+    additionalMeanings: [],
+    exampleSentence: "",
+    cefr: null,
+    tags,
+    createdAt: "2026-11-12T10:00:00Z",
+    updatedAt: "2026-11-12T10:00:00Z",
+  };
+}
+
+describe("appendPage", () => {
+  it("appends the next page in order", () => {
+    const loaded = [flashcard("a", "apple"), flashcard("b", "bear")];
+    const next = appendPage(loaded, { cards: [flashcard("c", "cat"), flashcard("d", "dog")], hasMore: false });
+    expect(next.map((card) => card.id)).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("drops cards already shown and keeps the shown version", () => {
+    const renamed = flashcard("b", "zebra");
+    const next = appendPage([flashcard("a", "apple"), renamed], {
+      cards: [flashcard("b", "bear"), flashcard("c", "cat")],
+      hasMore: true,
+    });
+    expect(next.map((card) => card.id)).toEqual(["a", "b", "c"]);
+    expect(next[1]).toBe(renamed);
+  });
+
+  it("handles an empty page", () => {
+    const loaded = [flashcard("a", "apple")];
+    expect(appendPage(loaded, { cards: [], hasMore: false })).toEqual(loaded);
+  });
+});
+
+describe("withTag / withoutTag", () => {
+  const travel = { id: "t1", name: "travel" };
+  const animals = { id: "t2", name: "Animals" };
+  const lesson = { id: "t3", name: "lekcja 1" };
+
+  it("adds a tag and sorts by name", () => {
+    const card = withTag(flashcard("a", "apple", [travel]), animals);
+    expect(card.tags).toEqual([animals, travel]);
+    expect(withTag(card, lesson).tags).toEqual([animals, lesson, travel]);
+  });
+
+  it("does not duplicate a tag the card already has", () => {
+    const card = flashcard("a", "apple", [animals, travel]);
+    expect(withTag(card, { ...travel }).tags).toEqual([animals, travel]);
+  });
+
+  it("removes a tag by id and leaves the original card untouched", () => {
+    const card = flashcard("a", "apple", [animals, travel]);
+    expect(withoutTag(card, "t2").tags).toEqual([travel]);
+    expect(withoutTag(card, "missing").tags).toEqual([animals, travel]);
+    expect(card.tags).toEqual([animals, travel]);
+  });
+});
+
+describe("mergeTagName", () => {
+  it("adds a new name and keeps the list sorted", () => {
+    expect(mergeTagName(["animals", "travel"], "lekcja 1")).toEqual(["animals", "lekcja 1", "travel"]);
+  });
+
+  it("ignores a name already present in any case or spacing", () => {
+    const names = ["Lekcja 1", "travel"];
+    expect(mergeTagName(names, "lekcja 1")).toBe(names);
+    expect(mergeTagName(names, " LEKCJA  1 ")).toBe(names);
+  });
+
+  it("ignores a blank name", () => {
+    const names = ["travel"];
+    expect(mergeTagName(names, "  ")).toBe(names);
   });
 });

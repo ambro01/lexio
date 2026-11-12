@@ -131,18 +131,15 @@ export function counts(draft: ReviewDraft): { toSave: number; rejected: number; 
 }
 
 /**
- * Why an item that would be saved is refused by the accept request, or null when it is fine. Word, translation
+ * Why edited card content is refused by the server's content rules, or null when it is fine. Word, translation
  * and example lengths are capped by the inputs; the meanings are checked here like the server does.
  */
-export function itemProblem(item: DraftItem): string | null {
-  if (item.decision !== "accept") {
-    return null;
-  }
-  const { word, translation, additionalMeanings } = item.final;
+export function contentProblem(content: ProposalContent): string | null {
+  const { word, translation, additionalMeanings } = content;
   if (word.trim() === "" || translation.trim() === "") {
     return "Uzupełnij słowo i tłumaczenie.";
   }
-  const meanings = normaliseContent(item.final).additionalMeanings;
+  const meanings = normaliseContent(content).additionalMeanings;
   if (meanings.length > MAX_MEANINGS) {
     return `Maksymalnie ${String(MAX_MEANINGS)} innych znaczeń.`;
   }
@@ -154,6 +151,11 @@ export function itemProblem(item: DraftItem): string | null {
     return `Inne znaczenia są za długie (do ${String(MAX_TEXT_CHARS)} znaków każde, ${String(MAX_MEANINGS_CHARS)} łącznie).`;
   }
   return null;
+}
+
+/** Why an item that would be saved is refused by the accept request, or null when it is fine (or rejected). */
+export function itemProblem(item: DraftItem): string | null {
+  return item.decision === "accept" ? contentProblem(item.final) : null;
 }
 
 /** True when no item that would be saved has a problem (see `itemProblem`). */

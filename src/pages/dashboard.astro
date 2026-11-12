@@ -14,12 +14,15 @@ const { user } = Astro.locals;
         Welcome, <span class="font-semibold text-white">{user?.email}</span>
       </p>
       <p class="mt-2 text-sm text-blue-100/50">This page is only for authenticated users.</p>
-      <div class="mt-4 flex justify-center gap-4">
+      <div class="mt-4 flex flex-wrap justify-center gap-4">
         <a href="/generate" class="text-sm text-purple-300 hover:underline">
           Nowa lekcja
         </a>
         <a href="/add" class="text-sm text-purple-300 hover:underline">
           Dodaj słowo
+        </a>
+        <a href="/collection" class="text-sm text-purple-300 hover:underline">
+          Kolekcja
         </a>
         <a href="/profile" class="text-sm text-purple-300 hover:underline">
           Profil
