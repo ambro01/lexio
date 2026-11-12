@@ -40,8 +40,8 @@ export function isUuid(value: string | undefined): value is string {
 }
 
 /**
- * Appends the next page to the loaded cards, dropping cards already shown: the next page is requested at
- * `offset = cards loaded`, and an edit that renames a card can move it within its `created_at` group.
+ * Appends the next page to the loaded cards, dropping cards already shown. The list order (`created_at`, `id`)
+ * cannot change through edits, so this is a safety net (e.g. a card added in another tab shifts the offset).
  */
 export function appendPage(cards: Flashcard[], page: FlashcardPage): Flashcard[] {
   const shown = new Set(cards.map((card) => card.id));

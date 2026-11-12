@@ -149,14 +149,14 @@ describe("listFlashcards", () => {
     expect(cards[0].cefr).toBeNull();
   });
 
-  it("orders by created_at desc then word_key and requests one extra row", async () => {
+  it("orders by created_at desc then id and requests one extra row", async () => {
     const { client, calls } = stubClient({ data: [], error: null });
 
     await listFlashcards(client, { offset: 100, limit: 50 });
 
     expect(calls.filter((call) => call.method === "order").map((call) => call.args)).toEqual([
       ["created_at", { ascending: false }],
-      ["word_key", { ascending: true }],
+      ["id", { ascending: true }],
     ]);
     expect(calls.find((call) => call.method === "range")?.args).toEqual([100, 150]);
   });

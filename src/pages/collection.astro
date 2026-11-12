@@ -12,7 +12,17 @@ let tagNames: string[] = [];
 const client = createClient(Astro.request.headers, Astro.cookies);
 if (client) {
   [page, tagNames] = await Promise.all([
-    listFlashcards(client, { offset: 0, limit: COLLECTION_PAGE_SIZE }).catch(() => null),
+    listFlashcards(client, { offset: 0, limit: COLLECTION_PAGE_SIZE }).catch((error: unknown) => {
+      // One structured line for Workers logs; store errors carry no user content.
+      // eslint-disable-next-line no-console -- intentional observability log
+      console.log(
+        JSON.stringify({
+          event: "collection_page_failed",
+          reason: error instanceof Error ? error.message : "unknown",
+        }),
+      );
+      return null;
+    }),
     listTags(client).then(
       (tags) => tags.map((tag) => tag.name),
       () => [],

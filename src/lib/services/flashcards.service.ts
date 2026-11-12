@@ -166,8 +166,8 @@ export async function findExistingWordKeys(client: FlashcardsClient, words: stri
 
 /**
  * One page of the user's cards with their tags, newest first; cards saved together (same `created_at`) are
- * ordered by `word_key`, which is unique per user, so the order is total and offset paging is stable.
- * One extra row is fetched to tell whether another page follows.
+ * ordered by `id`. The id never changes, so the order is total and an edit (even a rename) cannot move a card
+ * and make offset paging skip one. One extra row is fetched to tell whether another page follows.
  */
 export async function listFlashcards(
   client: FlashcardsClient,
@@ -177,7 +177,7 @@ export async function listFlashcards(
     .from("flashcards")
     .select(FLASHCARD_SELECT)
     .order("created_at", { ascending: false })
-    .order("word_key", { ascending: true })
+    .order("id", { ascending: true })
     .range(offset, offset + limit)
     .overrideTypes<FlashcardRow[], { merge: false }>();
   if (error) {

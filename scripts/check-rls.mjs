@@ -777,7 +777,7 @@ await step("A: renaming a card to another of A's words fails with 23505", async 
   ];
 });
 
-await step("A: cards from one accept_proposal_set call share created_at and page in word_key order", async () => {
+await step("A: cards from one accept_proposal_set call share created_at and page in id order, each once", async () => {
   const words = ["paging cherry", "paging apple", "paging banana"];
   const { error } = await acceptSet(
     a.client,
@@ -787,23 +787,25 @@ await step("A: cards from one accept_proposal_set call share created_at and page
   if (error) return [false, error.message];
   const { data, error: listError } = await a.client
     .from("flashcards")
-    .select("word_key, created_at")
+    .select("id, word_key, created_at")
     .in("word", words)
     .order("created_at", { ascending: false })
-    .order("word_key", { ascending: true })
+    .order("id", { ascending: true })
     .range(0, 1);
   if (listError) return [false, listError.message];
   const rest = await a.client
     .from("flashcards")
-    .select("word_key, created_at")
+    .select("id, word_key, created_at")
     .in("word", words)
     .order("created_at", { ascending: false })
-    .order("word_key", { ascending: true })
+    .order("id", { ascending: true })
     .range(2, 3);
   if (rest.error) return [false, rest.error.message];
   const all = [...data, ...rest.data];
+  const ids = all.map((r) => r.id);
   const ok =
-    all.map((r) => r.word_key).join("|") === "paging apple|paging banana|paging cherry" &&
+    [...all.map((r) => r.word_key)].sort().join("|") === "paging apple|paging banana|paging cherry" &&
+    ids.every((id, i) => i === 0 || ids[i - 1] < id) &&
     new Set(all.map((r) => r.created_at)).size === 1;
   return [ok, JSON.stringify(all)];
 });
