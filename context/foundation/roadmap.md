@@ -1,10 +1,10 @@
 ---
 project: Lexio
-version: 1
+version: 2
 status: draft
 created: 2026-11-03
 updated: 2026-11-12
-prd_version: 4
+prd_version: 5
 main_goal: speed
 top_blocker: time
 milestone_id: lesson-to-review-mvp
@@ -14,18 +14,19 @@ milestone_status: open
 
 # Roadmap: Lexio
 
-> Derived from `context/foundation/prd.md` (v4) + auto-researched codebase baseline.
+> Derived from `context/foundation/prd.md` (v5) + auto-researched codebase baseline.
 > Edit-in-place; the next milestone continues this file. Archive only when an independent roadmap replaces it.
 > Slices below are listed in dependency order. The "At a glance" table is the index.
+> v2 (2026-11-12): PRD v5 added FR-017 (scanned printed-page PDFs) → new slice S-10; previous version archived at `context/foundation/archive/2026-11-12-roadmap-lesson-to-review-mvp.md`.
 
 ## Milestone
 
 **M-1: Lesson-to-review MVP** — Status: open
 
 - **Intent:** A signed-in learner can turn lesson material (pasted text or PDF) into reviewed flashcards with AI help and practise them with spaced repetition — the full MVP loop from the PRD, shipped before the hard deadline.
-- **Source materials:** `context/foundation/prd.md` (v4)
+- **Source materials:** `context/foundation/prd.md` (v5)
 - **Done when:** every F-NN and S-NN below is `done`.
-- **Scope anchors:** US-01; must-have FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-010, FR-011, FR-013, FR-014, FR-015, FR-016.
+- **Scope anchors:** US-01; must-have FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-010, FR-011, FR-013, FR-014, FR-015, FR-016, FR-017.
 
 ## Vision recap
 
@@ -39,42 +40,43 @@ A Polish learner taking 1–2 English lessons a week copies new words from lesso
 
 ## At a glance
 
-| ID   | Change ID                   | Outcome (user can …)                                                               | Prerequisites | PRD refs                        | Status   |
-| ---- | --------------------------- | ---------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- |
-| F-01 | openrouter-generation-spike | (foundation) deployed app calls the AI model via OpenRouter within the 60 s budget | —             | NFR (< 60 s, progress)          | done     |
-| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | done     |
-| S-01 | paste-text-generation       | paste lesson text, review AI proposals, accept the set into the collection         | F-01, F-02    | US-01, FR-003, FR-004, FR-005   | done     |
-| S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | done     |
-| S-03 | cefr-too-easy-grouping      | set CEFR level and AI model in profile; bulk-reject "too easy" ones                | S-01          | US-01, FR-014, FR-016           | done     |
-| S-04 | manual-word-ai-fill         | enter a word with optional context and get an AI-filled flashcard to review        | F-01, F-02    | FR-006                          | done     |
-| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | done     |
-| S-06 | spaced-review-session       | run a review by tag or general, rate cards and mark them "Opanowane"               | F-02, S-01    | FR-010, FR-011                  | proposed |
-| S-07 | acceptance-rate-stats       | see the AI content-quality rate (unchanged / corrected / rejected as "Błędne")     | S-01          | FR-013                          | proposed |
-| S-08 | password-reset              | reset a forgotten password via email                                               | —             | FR-001                          | ready    |
-| S-09 | skip-known-words            | never see again words they rejected as known or too easy                           | S-01          | US-01, FR-015                   | proposed |
+| ID   | Change ID                   | Outcome (user can …)                                                               | Prerequisites | PRD refs                        | Status |
+| ---- | --------------------------- | ---------------------------------------------------------------------------------- | ------------- | ------------------------------- | ------ |
+| F-01 | openrouter-generation-spike | (foundation) deployed app calls the AI model via OpenRouter within the 60 s budget | —             | NFR (< 60 s, progress)          | done   |
+| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | done   |
+| S-01 | paste-text-generation       | paste lesson text, review AI proposals, accept the set into the collection         | F-01, F-02    | US-01, FR-003, FR-004, FR-005   | done   |
+| S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | done   |
+| S-03 | cefr-too-easy-grouping      | set CEFR level and AI model in profile; bulk-reject "too easy" ones                | S-01          | US-01, FR-014, FR-016           | done   |
+| S-04 | manual-word-ai-fill         | enter a word with optional context and get an AI-filled flashcard to review        | F-01, F-02    | FR-006                          | done   |
+| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | done   |
+| S-06 | spaced-review-session       | run a review by tag or general, rate cards and mark them "Opanowane"               | F-02, S-01    | FR-010, FR-011                  | ready  |
+| S-07 | acceptance-rate-stats       | see the AI content-quality rate (unchanged / corrected / rejected as "Błędne")     | S-01          | FR-013                          | ready  |
+| S-08 | password-reset              | reset a forgotten password via email                                               | —             | FR-001                          | ready  |
+| S-09 | skip-known-words            | never see again words they rejected as known or too easy                           | S-01          | US-01, FR-015                   | ready  |
+| S-10 | scanned-pdf-generation      | upload a scanned lesson PDF (no text layer) and get the same proposal review       | S-02          | US-01, FR-017                   | ready  |
 
 ## Streams
 
 Navigation aid — groups items that share a Prerequisites chain. Canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks.
 
-| Stream | Theme               | Chain                                               | Note                                                                                            |
-| ------ | ------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| A      | Lesson → proposals  | `F-01` → `S-01` → `S-02` → `S-03` → `S-09` → `S-07` | Critical path for the `speed` goal; joins Stream B at `S-01` (needs `F-02`).                    |
-| B      | Collection & review | `F-02` → `S-04` → `S-05` → `S-06`                   | `S-04` also needs `F-01`; `S-05` and `S-06` join Stream A at `S-01` (they need cards to exist). |
-| C      | Account             | `S-08`                                              | Standalone; can run in parallel with anything — useful filler given the `time` constraint.      |
+| Stream | Theme               | Chain                                                        | Note                                                                                            |
+| ------ | ------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| A      | Lesson → proposals  | `F-01` → `S-01` → `S-02` → `S-10` → `S-03` → `S-09` → `S-07` | Critical path for the `speed` goal; joins Stream B at `S-01` (needs `F-02`).                    |
+| B      | Collection & review | `F-02` → `S-04` → `S-05` → `S-06`                            | `S-04` also needs `F-01`; `S-05` and `S-06` join Stream A at `S-01` (they need cards to exist). |
+| C      | Account             | `S-08`                                                       | Standalone; can run in parallel with anything — useful filler given the `time` constraint.      |
 
 ## Baseline
 
-What's already in place in the codebase as of `2026-11-03` (auto-researched + user-confirmed).
+What's already in place in the codebase as of `2026-11-12` (auto-researched + user-confirmed).
 Foundations below assume these are present and do NOT re-scaffold them.
 
-- **Frontend:** present — Astro + React + Tailwind/shadcn UI (`src/components`, `src/pages`, `src/layouts/Layout.astro`).
-- **Backend / API:** partial — only auth routes (`src/pages/api/auth/signin.ts`, `signup.ts`, `signout.ts`); no domain API.
-- **Data:** partial — Supabase client wired (`src/lib/supabase.ts`), no migrations or flashcard schema.
-- **Auth:** partial — sign-up, sign-in, sign-out and route protection middleware (`src/middleware.ts`, protects `/dashboard`); no password reset (FR-001).
-- **Deploy / infra:** present — Cloudflare Workers with Workers Builds auto-deploy from `master` (`wrangler.jsonc`, `context/deployment/deploy-plan.md`); CI quality gate in `.github/workflows/ci.yml`.
-- **Observability:** partial — Workers runtime logs only (`observability.enabled` in `wrangler.jsonc`); no error tracking.
-- **AI integration:** absent — planned via OpenRouter for generating flashcard proposals (user-confirmed); no code yet.
+- **Frontend:** present — Astro + React + Tailwind/shadcn UI (`src/pages`, `src/components` incl. `lesson/`, `manual/`, `collection/`).
+- **Backend / API:** present — domain routes in `src/pages/api` (`ai/`, `flashcards/`, `profile.ts`, `proposal-sets.ts`) next to the auth routes.
+- **Data:** present — 7 migrations in `supabase/migrations` (flashcards, tags, proposal outcomes, profiles) with per-user row-level security.
+- **Auth:** partial — sign-up, sign-in, sign-out and route protection (`src/middleware.ts`); no password reset yet (S-08).
+- **Deploy / infra:** present — Cloudflare Workers with Workers Builds auto-deploy from `master` (`wrangler.jsonc`, `context/deployment/deploy-plan.md`); CI quality gate (lint, check, build, smoke) in `.github/workflows/ci.yml`.
+- **Observability:** partial — Workers runtime logs plus one structured event line per API call; no error tracking (parked).
+- **AI integration:** present — OpenRouter calls via `src/lib/ai/models.ts` and `src/lib/services/ai-generation.service.ts` (F-01).
 
 ## Foundations
 
@@ -136,7 +138,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Change ID:** cefr-too-easy-grouping
 - **PRD refs:** US-01, FR-014, FR-016
 - **Prerequisites:** S-01
-- **Parallel with:** S-02, S-04, S-05, S-06, S-07, S-08, S-09
+- **Parallel with:** S-02, S-04, S-05, S-06, S-07, S-08, S-09, S-10
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Built on top of the S-01 review screen; CEFR level is an AI estimate, so proposals are grouped, never hidden. Bulk rejection reuses the same rejection record as S-01, with the reason "Za łatwe" — one code path for every rejection.
@@ -148,7 +150,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Change ID:** manual-word-ai-fill
 - **PRD refs:** FR-006
 - **Prerequisites:** F-01, F-02
-- **Parallel with:** S-01, S-02, S-03, S-05, S-06, S-07, S-08, S-09
+- **Parallel with:** S-01, S-02, S-03, S-05, S-06, S-07, S-08, S-09, S-10
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Independent of the lesson flow, so it can be built alongside S-01; must reuse the same one-word-per-user rule as S-01.
@@ -160,7 +162,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Change ID:** collection-edit-and-tags
 - **PRD refs:** FR-007, FR-008
 - **Prerequisites:** F-02, S-01
-- **Parallel with:** S-02, S-03, S-04, S-06, S-07, S-08, S-09
+- **Parallel with:** S-02, S-03, S-04, S-06, S-07, S-08, S-09, S-10
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Needs cards from S-01 to be meaningful; search/filter by tag (FR-009) is parked, so keep the list simple.
@@ -172,12 +174,12 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Change ID:** spaced-review-session
 - **PRD refs:** FR-010, FR-011
 - **Prerequisites:** F-02, S-01
-- **Parallel with:** S-02, S-03, S-04, S-05, S-07, S-08, S-09
+- **Parallel with:** S-02, S-03, S-04, S-05, S-07, S-08, S-09, S-10
 - **Blockers:** —
 - **Unknowns:**
   - Which existing spaced-repetition method maps cleanly onto the three ratings? — Owner: user. Block: no (decided in `/10x-plan`).
 - **Risk:** The second half of the product loop; must be comfortable on recent mobile browsers (NFR).
-- **Status:** proposed
+- **Status:** ready
 
 ### S-07: AI content-quality rate
 
@@ -185,11 +187,11 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Change ID:** acceptance-rate-stats
 - **PRD refs:** FR-013
 - **Prerequisites:** S-01
-- **Parallel with:** S-02, S-03, S-04, S-05, S-06, S-08, S-09
+- **Parallel with:** S-02, S-03, S-04, S-05, S-06, S-08, S-09, S-10
 - **Blockers:** —
 - **Unknowns:** — (resolved 2026-11-03: proposals bulk-rejected from the "too easy" group are recorded with the reason "Za łatwe" and excluded from the content-quality rate.)
 - **Risk:** The metric definition decides what the primary success criterion measures; S-01 must record per-proposal outcomes from day one (unchanged / corrected / rejected as "Błędne", "Znam / nieprzydatne" or "Za łatwe") — they cannot be reconstructed later.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-08: Password reset
 
@@ -197,7 +199,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Change ID:** password-reset
 - **PRD refs:** FR-001
 - **Prerequisites:** —
-- **Parallel with:** F-01, F-02, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-09
+- **Parallel with:** F-01, F-02, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-09, S-10
 - **Blockers:** —
 - **Unknowns:**
   - Is the auth provider's default email sending (low hourly limit) enough, or is a custom email sender needed? — Owner: user. Block: no.
@@ -210,37 +212,56 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Change ID:** skip-known-words
 - **PRD refs:** US-01, FR-015
 - **Prerequisites:** S-01
-- **Parallel with:** S-02, S-03, S-04, S-05, S-06, S-07, S-08
+- **Parallel with:** S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-10
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Relies on the rejection records S-01 stores; no undo in the MVP, so a word rejected by mistake only comes back through manual entry (S-04).
-- **Status:** proposed
+- **Status:** ready
+
+### S-10: Generate proposals from a scanned lesson PDF
+
+- **Outcome:** user can upload a lesson PDF made of scanned printed pages (no text layer) and get the same proposal review as S-02; the PDF is not retained afterwards.
+- **Change ID:** scanned-pdf-generation
+- **PRD refs:** US-01, FR-017
+- **Prerequisites:** S-02
+- **Parallel with:** S-03, S-04, S-05, S-06, S-07, S-08, S-09
+- **Blockers:** —
+- **Unknowns:**
+  - How does the text of a scanned page get read, and does that fit the 60 s generation budget and the app's request-size limits for a typical lesson (up to ~10 pages)? — Owner: team. Block: no (researched in `/10x-plan`).
+  - Which of the three configured AI models can read scanned pages, and at what cost per page? — Owner: team. Block: no (researched in `/10x-plan`).
+  - Open Roadmap Questions 1 and 2 (time target for scans; unreadable pages) — Owner: user. Block: no.
+- **Risk:** Reuses the S-02 upload and review flow, so reading scanned pages is the only new risk; poor recognition would show up directly in the AI content-quality rate, and the "PDF is not retained" rule must still hold.
+- **Status:** ready
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                   | Suggested issue title                                    | Ready for `/10x-plan` | Notes                                       |
-| ---------- | --------------------------- | -------------------------------------------------------- | --------------------- | ------------------------------------------- |
-| F-01       | openrouter-generation-spike | Prove OpenRouter generation on the deployed app (< 60 s) | yes                   | Run `/10x-plan openrouter-generation-spike` |
-| F-02       | flashcard-data-contract     | Per-user flashcard and tag storage with isolation        | yes                   | Run `/10x-plan flashcard-data-contract`     |
-| S-01       | paste-text-generation       | Generate and review flashcards from pasted lesson text   | no                    | Waits for F-01, F-02                        |
-| S-02       | pdf-lesson-generation       | Generate flashcards from a lesson PDF                    | no                    | Waits for S-01                              |
-| S-03       | cefr-too-easy-grouping      | CEFR profile level and "too easy" proposal group         | no                    | Waits for S-01                              |
-| S-04       | manual-word-ai-fill         | Add a word manually with AI-filled translation           | no                    | Waits for F-01, F-02                        |
-| S-05       | collection-edit-and-tags    | Browse, edit, delete and tag flashcards                  | no                    | Waits for S-01                              |
-| S-06       | spaced-review-session       | Spaced-repetition review by tag or general               | no                    | Waits for S-01                              |
-| S-07       | acceptance-rate-stats       | Show the AI content-quality rate                         | no                    | Waits for S-01                              |
-| S-08       | password-reset              | Password reset via email                                 | yes                   | Run `/10x-plan password-reset`              |
-| S-09       | skip-known-words            | Never propose words rejected as known or too easy        | no                    | Waits for S-01                              |
+| Roadmap ID | Change ID                   | Suggested issue title                                    | Ready for `/10x-plan` | Notes                                  |
+| ---------- | --------------------------- | -------------------------------------------------------- | --------------------- | -------------------------------------- |
+| F-01       | openrouter-generation-spike | Prove OpenRouter generation on the deployed app (< 60 s) | no                    | Done (archived)                        |
+| F-02       | flashcard-data-contract     | Per-user flashcard and tag storage with isolation        | no                    | Done (archived)                        |
+| S-01       | paste-text-generation       | Generate and review flashcards from pasted lesson text   | no                    | Done (archived)                        |
+| S-02       | pdf-lesson-generation       | Generate flashcards from a lesson PDF                    | no                    | Done (archived)                        |
+| S-03       | cefr-too-easy-grouping      | CEFR profile level and "too easy" proposal group         | no                    | Done (archived)                        |
+| S-04       | manual-word-ai-fill         | Add a word manually with AI-filled translation           | no                    | Done (archived)                        |
+| S-05       | collection-edit-and-tags    | Browse, edit, delete and tag flashcards                  | no                    | Done (archived)                        |
+| S-06       | spaced-review-session       | Spaced-repetition review by tag or general               | yes                   | Run `/10x-plan spaced-review-session`  |
+| S-07       | acceptance-rate-stats       | Show the AI content-quality rate                         | yes                   | Run `/10x-plan acceptance-rate-stats`  |
+| S-08       | password-reset              | Password reset via email                                 | yes                   | Run `/10x-plan password-reset`         |
+| S-09       | skip-known-words            | Never propose words rejected as known or too easy        | yes                   | Run `/10x-plan skip-known-words`       |
+| S-10       | scanned-pdf-generation      | Generate flashcards from a scanned lesson PDF            | yes                   | Run `/10x-plan scanned-pdf-generation` |
 
 ## Open Roadmap Questions
 
-None — all resolved (2026-11-03: 3-week MVP estimate confirmed; input limit 2,000 words; "too easy" bulk rejections recorded as "Za łatwe").
+Resolved earlier: 2026-11-03: 3-week MVP estimate confirmed; input limit 2,000 words; "too easy" bulk rejections recorded as "Za łatwe".
+
+1. **Does the "< 60 s for a typical lesson PDF (up to ~10 pages)" target also apply to scanned PDFs, or do they get their own target (time and/or page limit)?** — Owner: user. Block: no (S-10; settle while planning).
+2. **What should the user see when a scanned page cannot be read well enough (blurred, skewed, very low contrast) — a clear message and no proposals, or proposals from whatever was read?** — Owner: user. Block: no (S-10; settle while planning).
 
 ## Parked
 
 - **Search and filter by tag (FR-009)** — Why parked: PRD nice-to-have, listed in Non-Goals for MVP.
 - **Learning statistics — total / mastered / difficult (FR-012)** — Why parked: PRD nice-to-have, dropped from MVP ("difficult" has no definition).
-- **OCR for PDFs without a text layer** — Why parked: PRD Non-Goals; pasting text is the workaround.
+- **PDFs made from phone photos of pages, and handwritten notes** — Why parked: PRD Non-Goals (FR-017 covers scanned printed pages only); pasting text is the workaround.
 - **Languages other than English → Polish** — Why parked: PRD Non-Goals; possible future extension.
 - **Shared decks, roles (teacher/admin)** — Why parked: PRD Non-Goals.
 - **Audio / pronunciation** — Why parked: PRD Non-Goals.

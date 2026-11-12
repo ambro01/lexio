@@ -1,9 +1,9 @@
 ---
 project: "Lexio"
-version: 4
+version: 5
 status: draft
 created: 2026-10-28
-updated: 2026-11-03
+updated: 2026-11-12
 context_type: greenfield
 product_type: web-app
 target_scale:
@@ -56,6 +56,7 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 
 #### Acceptance Criteria
 
+- A lesson PDF made of scanned printed pages (no text layer) goes through the same flow and ends in the same proposal review (FR-017).
 - Nothing is saved to the collection before the set is accepted.
 - A proposal is rejected with one of two buttons: "Znam / nieprzydatne" (word not worth learning — a selection miss) or "Błędne" (wrong translation, meaning or example — a quality miss). Rejected proposals do not enter the collection; the rejection reason is recorded for statistics.
 - Proposals below the user's CEFR level are shown in a separate collapsed "too easy" category that can be rejected as a whole in one action; bulk-rejected proposals are recorded automatically with the rejection reason "Za łatwe" (they do not enter the collection). Every rejected proposal is therefore stored the same way — with one of three reasons: "Błędne", "Znam / nieprzydatne" or "Za łatwe".
@@ -80,6 +81,8 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 
 - FR-002: User can upload a lesson PDF (with a text layer) so that AI generates flashcard proposals. Priority: must-have
   > Socrates: Counter-argument considered: "lesson PDFs are not only vocabulary (exercises, instructions, grammar) — AI may flood the review with words the user already knows and push acceptance below 75%." Resolution: kept; addressed by the user's CEFR level (FR-014).
+- FR-017: User can upload a lesson PDF without a text layer, made of scanned printed pages, so that AI generates flashcard proposals through the same review as FR-002. Priority: must-have
+  > Decision 2026-11-12: the author has many lesson PDFs made of scanned pages, and pasting their text by hand is not practical. Scope: scanned printed pages only; PDFs made from phone photos and handwritten notes stay out of scope (see Non-Goals).
 - FR-003: User can paste text so that AI generates flashcard proposals. Priority: must-have
   > Socrates: Counter-argument considered: "duplicates FR-002." Resolution: kept; same review flow, different input — cheap, and a workaround for PDFs without a text layer.
 - FR-004: User can review the proposals — edit, reject (as "Znam / nieprzydatne" or as "Błędne"), and accept the set. Priority: must-have
@@ -130,7 +133,7 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 
 The app selects from lesson material the words worth learning at the user's level, and then schedules their reviews so that less well remembered flashcards come back more often.
 
-Inputs: lesson material (PDF with a text layer, or pasted text) or a manually entered word with optional context; the user's CEFR level from their profile; the words already in the user's collection; the words the user has rejected as "Znam / nieprzydatne" or "Za łatwe"; and the user's ratings of each card ("Nie pamiętam", "Trudne", "Łatwe") plus the separate "Opanowane" mark.
+Inputs: lesson material (PDF with a text layer, PDF made of scanned printed pages, or pasted text) or a manually entered word with optional context; the user's CEFR level from their profile; the words already in the user's collection; the words the user has rejected as "Znam / nieprzydatne" or "Za łatwe"; and the user's ratings of each card ("Nie pamiętam", "Trudne", "Łatwe") plus the separate "Opanowane" mark.
 
 Outputs: (1) a reviewable list of flashcard proposals, with words below the user's level grouped as "too easy" and words already in the collection turned into an extra tag instead of a duplicate, and words previously rejected as known or too easy left out entirely; (2) for each review session, which cards to show and in what order — the scheduling follows an existing spaced-repetition method, not a self-invented one; "Opanowane" cards are excluded from general review.
 
@@ -148,7 +151,8 @@ The user meets the rule twice: when reviewing proposals after uploading a lesson
 ### Functional
 
 - No self-designed spaced-repetition algorithm — an existing method is used.
-- No PDFs without a text layer (no OCR for scans/photos) — pasting text is the workaround.
+- No PDFs made from phone photos of pages and no handwritten notes — only scanned printed pages are read (FR-017); pasting text is the workaround.
+  > Changed 2026-11-12: previously "No PDFs without a text layer"; scanned printed pages moved into scope as FR-017.
 - No languages other than English words with Polish translations — other languages are a possible future extension.
 - No shared decks and no roles (teacher/admin) — single-tenant, each user sees only their own data.
 - No audio / pronunciation (recordings or speech synthesis).
@@ -162,4 +166,7 @@ The user meets the rule twice: when reviewing proposals after uploading a lesson
 
 ## Open Questions
 
-None — all resolved. (2026-11-03: input limit set to 2,000 words; 2026-11-11: PDF text over the limit is truncated instead of rejected; "too easy" bulk rejections recorded as "Za łatwe"; 3-week MVP estimate confirmed.)
+Resolved earlier: 2026-11-03: input limit set to 2,000 words; 2026-11-11: PDF text over the limit is truncated instead of rejected; "too easy" bulk rejections recorded as "Za łatwe"; 3-week MVP estimate confirmed.
+
+1. Does the "< 60 s for a typical lesson PDF (up to ~10 pages)" target also apply to scanned PDFs, or do they get their own target (time and/or page limit)? — TBD by user. Block: no (can be settled while planning FR-017).
+2. What should the user see when a scanned page cannot be read well enough (blurred, skewed, very low contrast) — a clear message and no proposals, or proposals from whatever was read? — TBD by user. Block: no (can be settled while planning FR-017).
