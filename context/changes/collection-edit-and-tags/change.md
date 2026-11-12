@@ -1,7 +1,7 @@
 ---
 change_id: collection-edit-and-tags
 title: Collection edit and tags
-status: implemented
+status: impl_reviewed
 created: 2026-11-11
 updated: 2026-11-12
 archived_at: null
