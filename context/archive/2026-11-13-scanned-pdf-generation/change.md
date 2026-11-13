@@ -1,10 +1,10 @@
 ---
 change_id: scanned-pdf-generation
 title: Scanned PDF generation
-status: impl_reviewed
+status: archived
 created: 2026-11-13
 updated: 2026-11-13
-archived_at: null
+archived_at: 2026-11-13T19:38:53Z
 ---
 
 ## Notes
