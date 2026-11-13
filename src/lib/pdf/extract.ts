@@ -18,15 +18,30 @@ export const MIN_TEXT_WORDS = 20;
 /** pdf.js `VerbosityLevel.ERRORS`: no warnings in the console. */
 const VERBOSITY_ERRORS = 0;
 
+/** The part of a pdf.js page viewport the renderer reads (pdf.js gets its own `PageViewport` back in `render`). */
+export interface PdfViewport {
+  width: number;
+  height: number;
+}
+
+/** The part of a pdf.js page this driver and the scan path use. */
+export interface PdfPage {
+  getTextContent(): Promise<{ items: TextContentItem[] }>;
+  getViewport(params: { scale: number }): PdfViewport;
+  render(params: {
+    canvas: HTMLCanvasElement | null;
+    canvasContext?: CanvasRenderingContext2D;
+    viewport: PdfViewport;
+  }): { promise: Promise<void> };
+  cleanup(): unknown;
+}
+
 /** The part of the pdf.js module this driver uses; the caller passes the library so it can be lazy-loaded. */
 export interface PdfJsModule {
   getDocument(src: { data: Uint8Array; verbosity?: number }): {
     promise: Promise<{
       numPages: number;
-      getPage(pageNumber: number): Promise<{
-        getTextContent(): Promise<{ items: TextContentItem[] }>;
-        cleanup(): unknown;
-      }>;
+      getPage(pageNumber: number): Promise<PdfPage>;
     }>;
     destroy(): Promise<void>;
   };
@@ -44,7 +59,7 @@ export interface ExtractOptions {
 }
 
 /** pdf.js rebuilds errors across the worker boundary, so they are matched by name, not `instanceof`. */
-function failureReason(error: unknown): PdfFailure {
+export function failureReason(error: unknown): "password" | "invalid" | "failed" {
   const name = error instanceof Error ? error.name : undefined;
   if (name === "PasswordException") {
     return "password";

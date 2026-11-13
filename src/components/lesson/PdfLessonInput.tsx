@@ -2,14 +2,17 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { CircleAlert, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { countWords } from "@/lib/ai/proposals";
-import type { PdfFailure } from "@/lib/pdf/extract";
-import { cn } from "@/lib/utils";
+import type { PdfFailure, PdfJsModule } from "@/lib/pdf/extract";
+import type { PageTranscription, ScanFailure } from "@/lib/pdf/scan";
+import { cn, isRecord } from "@/lib/utils";
 
 export interface PdfText {
   text: string;
   totalWords: number;
   truncated: boolean;
   fileName: string;
+  /** Set when the text was read from a scan (image-only PDF) through the page transcription endpoint. */
+  scan?: { pagesRead: number; pages: number; unreadablePages: number[] };
 }
 
 interface Props {
@@ -19,7 +22,11 @@ interface Props {
   onText: (result: PdfText | null) => void;
 }
 
-type Status = { name: "idle" } | { name: "reading"; page: number; pages: number } | { name: "error"; message: string };
+type Status =
+  | { name: "idle" }
+  | { name: "reading"; page: number; pages: number }
+  | { name: "scanning"; page: number; pages: number }
+  | { name: "error"; message: string };
 
 // Browsers may cache a failed load of the pdf.js module, so a plain retry can keep failing until a reload.
 const FAILED = "Nie udało się odczytać PDF. Odśwież stronę i spróbuj ponownie.";
@@ -32,6 +39,42 @@ const FAILURE_MESSAGES: Record<PdfFailure, string> = {
   failed: FAILED,
 };
 
+const SCAN_REQUEST_FAILED = "Nie udało się odczytać skanu. Spróbuj ponownie.";
+
+const SCAN_FAILURE_MESSAGES: Record<Exclude<ScanFailure["reason"], "request">, string> = {
+  unreadable: "Nie udało się odczytać tekstu z tego skanu.",
+  password: FAILURE_MESSAGES.password,
+  invalid: FAILURE_MESSAGES.invalid,
+  failed: FAILED,
+};
+
+/** Sends one rendered page to the transcription endpoint; a non-2xx body maps to its `message`. */
+async function transcribePage(image: string): Promise<PageTranscription> {
+  let response: Response;
+  try {
+    response = await fetch("/api/ai/page-text", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image }),
+    });
+  } catch {
+    return { ok: false, message: SCAN_REQUEST_FAILED };
+  }
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    return { ok: false, message: SCAN_REQUEST_FAILED };
+  }
+  if (response.ok && isRecord(body) && typeof body.text === "string" && typeof body.unreadable === "boolean") {
+    return { ok: true, text: body.text, unreadable: body.unreadable };
+  }
+  if (isRecord(body) && typeof body.message === "string") {
+    return { ok: false, message: body.message };
+  }
+  return { ok: false, message: SCAN_REQUEST_FAILED };
+}
+
 const outlineClass = "border-white/20 bg-white/10 text-white hover:bg-white/20";
 
 /** The PDF tab: reads the picked file in memory only (nothing is uploaded) and hands its lesson text to the form. */
@@ -41,7 +84,7 @@ export default function PdfLessonInput({ disabled, result, onText }: Props) {
   // Only the latest pick may report its result.
   const pickId = useRef(0);
 
-  const reading = status.name === "reading";
+  const reading = status.name === "reading" || status.name === "scanning";
 
   async function read(file: File) {
     if (import.meta.env.SSR) {
@@ -80,6 +123,10 @@ export default function PdfLessonInput({ disabled, result, onText }: Props) {
       if (!current()) {
         return;
       }
+      if (!extraction.ok && extraction.reason === "no_text") {
+        await readScan(file, pdfjs, current, fail);
+        return;
+      }
       if (!extraction.ok) {
         fail(FAILURE_MESSAGES[extraction.reason]);
         return;
@@ -95,6 +142,41 @@ export default function PdfLessonInput({ disabled, result, onText }: Props) {
       // The library failed to load (e.g. offline) or the file could not be read.
       fail(FAILED);
     }
+  }
+
+  /** The scan path for an image-only PDF: each page is rendered and read by the page transcription endpoint. */
+  async function readScan(file: File, pdfjs: PdfJsModule, current: () => boolean, fail: (message: string) => void) {
+    setStatus({ name: "scanning", page: 0, pages: 0 });
+    const [{ readScannedLesson }, { renderPageJpeg }] = await Promise.all([
+      import("@/lib/pdf/scan"),
+      import("@/lib/pdf/render"),
+    ]);
+    // pdf.js detached the buffer of the text pass, so the bytes are read again.
+    const data = new Uint8Array(await file.arrayBuffer());
+    const scan = await readScannedLesson(pdfjs, data, {
+      renderPage: renderPageJpeg,
+      transcribe: transcribePage,
+      onProgress: (page, pages) => {
+        if (current()) {
+          setStatus({ name: "scanning", page, pages });
+        }
+      },
+    });
+    if (!current()) {
+      return;
+    }
+    if (!scan.ok) {
+      fail(scan.reason === "request" ? scan.message : SCAN_FAILURE_MESSAGES[scan.reason]);
+      return;
+    }
+    setStatus({ name: "idle" });
+    onText({
+      text: scan.text,
+      totalWords: scan.totalWords,
+      truncated: scan.truncated,
+      fileName: file.name,
+      scan: { pagesRead: scan.pagesRead, pages: scan.pages, unreadablePages: scan.unreadablePages },
+    });
   }
 
   function onChange(event: ChangeEvent<HTMLInputElement>) {
@@ -134,6 +216,16 @@ export default function PdfLessonInput({ disabled, result, onText }: Props) {
                 ? `Użyto pierwszych ${String(countWords(result.text))} z ${String(result.totalWords)} słów`
                 : `${String(result.totalWords)} słów`}
             </p>
+            {result.scan && (
+              <p className="text-blue-100/60">
+                {`Odczytano skan: ${String(result.scan.pagesRead)} z ${String(result.scan.pages)} stron`}
+              </p>
+            )}
+            {result.scan && result.scan.unreadablePages.length > 0 && (
+              <p className="text-amber-200">
+                {`Nie udało się odczytać stron: ${result.scan.unreadablePages.join(", ")}`}
+              </p>
+            )}
           </div>
           <Button
             type="button"
@@ -158,6 +250,15 @@ export default function PdfLessonInput({ disabled, result, onText }: Props) {
           <Upload className="size-4" />
           Wybierz plik PDF
         </Button>
+      )}
+
+      {status.name === "scanning" && (
+        <p className="flex items-center gap-2 text-sm text-blue-100/80" role="status">
+          <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          {status.pages > 0
+            ? `Odczytuję skan… strona ${String(status.page)} / ${String(status.pages)}`
+            : "Odczytuję skan…"}
+        </p>
       )}
 
       {status.name === "reading" && (

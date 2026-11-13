@@ -357,29 +357,29 @@ None: no database or API contract changes for existing routes.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test`
-- [x] 1.2 Lint passes: `npm run lint`
-- [x] 1.3 Type check passes: `npx astro check`
-- [x] 1.4 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only`
+- [x] 1.1 Unit tests pass: `npm test` — 1bf512b
+- [x] 1.2 Lint passes: `npm run lint` — 1bf512b
+- [x] 1.3 Type check passes: `npx astro check` — 1bf512b
+- [x] 1.4 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only` — 1bf512b
 
 #### Manual
 
-- [x] 1.5 Dev endpoint returns page text for a `lesson.pdf` page and `unreadable: true` for a blank page
+- [x] 1.5 Dev endpoint returns page text for a `lesson.pdf` page and `unreadable: true` for a blank page — 1bf512b
 
 ### Phase 2: Scanned-PDF path in the browser
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm test`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Type check passes: `npx astro check`
-- [ ] 2.4 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only`
+- [x] 2.1 Unit tests pass: `npm test`
+- [x] 2.2 Lint passes: `npm run lint`
+- [x] 2.3 Type check passes: `npx astro check`
+- [x] 2.4 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only`
 
 #### Manual
 
-- [ ] 2.5 Dev: `lesson.pdf` shows scan progress, 7 of 7 pages read, and proposals without boilerplate words
-- [ ] 2.6 Dev: a PDF with a text layer still uses the text path
-- [ ] 2.7 Dev: a server failure mid-scan shows a retryable error and keeps the previous file
+- [x] 2.5 Dev: `lesson.pdf` shows scan progress, 7 of 7 pages read, and proposals without boilerplate words
+- [x] 2.6 Dev: a PDF with a text layer still uses the text path
+- [x] 2.7 Dev: a server failure mid-scan shows a retryable error and keeps the previous file
 
 ### Phase 3: Docs and production check
 
