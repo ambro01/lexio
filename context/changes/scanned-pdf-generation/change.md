@@ -1,7 +1,7 @@
 ---
 change_id: scanned-pdf-generation
 title: Scanned PDF generation
-status: preparing
+status: implementing
 created: 2026-11-13
 updated: 2026-11-13
 archived_at: null

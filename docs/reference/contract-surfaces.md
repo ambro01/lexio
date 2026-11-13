@@ -34,6 +34,14 @@ Names that other parts of the system depend on. Renaming any of them breaks a ca
 | `TagLimitError`                                                                   | Thrown by `addFlashcardTag` when the card already has 20 tags.                                                                                                                                                                            | S-05         |
 | `Flashcard`, `Tag`, `FlashcardPage`, `SaveFlashcardInput`, `UpdateFlashcardInput` | Shared types in `src/types.ts`.                                                                                                                                                                                                           | all slices   |
 
+## API routes
+
+The browser and the Worker deploy together, but tests exercise each side separately, so these shapes are pinned here.
+
+| Name                     | Contract                                                                                                                                                                                                                                                                                                                                                                                                    | Relied on by                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `POST /api/ai/page-text` | Request: JSON `{ image }`, a `data:image/jpeg;base64,` URL of one page, at most 600,000 chars (`pageImageSchema` in `src/lib/ai/page-text.ts`). 200 → `{ text, unreadable, meta: { model, durationMs, usage } }`. Errors `{ error, message }`: 401 `unauthorized`, 415/400 `bad_request` (body over 640,000 bytes or invalid), 503 `not_configured`, 504 `timeout`, 502 `upstream`. Model from the profile. | `src/lib/pdf/scan.ts` (S-10) |
+
 ## Scripts
 
 | Name                | Contract                                                                                                                    |

@@ -5,7 +5,9 @@ import {
   UpstreamTimeoutError,
   fillWord,
   generateProposals,
+  transcribePage,
 } from "./ai-generation.service";
+import { PAGE_TEXT_JSON_SCHEMA, PAGE_TEXT_SYSTEM_PROMPT } from "@/lib/ai/page-text";
 import { InvalidModelOutputError } from "@/lib/ai/proposals";
 import { WORD_FILL_JSON_SCHEMA } from "@/lib/ai/word-fill";
 
@@ -67,6 +69,7 @@ describe("generateProposals", () => {
     expect(body.response_format.json_schema.strict).toBe(true);
     expect(body.usage.include).toBe(true);
     expect(body.messages.map((m) => m.role)).toEqual(["system", "user"]);
+    expect(typeof body.messages[1]?.content).toBe("string");
     expect(body.messages[1]?.content).toContain(baseOpts.text);
 
     expect(result.proposals).toEqual([proposal]);
@@ -185,5 +188,81 @@ describe("fillWord", () => {
   it("maps HTTP 500 to UpstreamError", async () => {
     const { fetchImpl } = stubFetch(() => Promise.resolve(new Response("boom", { status: 500 })));
     await expect(fillWord({ ...fillOpts, fetchImpl })).rejects.toBeInstanceOf(UpstreamError);
+  });
+});
+
+describe("transcribePage", () => {
+  const image = "data:image/jpeg;base64,/9j/4AAQ";
+  const pageOpts = { image, model: "anthropic/claude-haiku-5.5", apiKey: "test-key" } as const;
+
+  interface SentBody {
+    messages: { role: string; content: unknown }[];
+    response_format: { json_schema: { name: string; strict: boolean; schema: unknown } };
+    max_tokens: number;
+  }
+
+  it("sends the image part and the page_text schema and returns the trimmed text", async () => {
+    const { calls, fetchImpl } = stubFetch(() =>
+      Promise.resolve(
+        completion(JSON.stringify({ text: " Unit 3\nFood and drink ", unreadable: false }), {
+          usage: { prompt_tokens: 1500, completion_tokens: 480 },
+        }),
+      ),
+    );
+
+    const result = await transcribePage({ ...pageOpts, fetchImpl });
+
+    expect(calls).toHaveLength(1);
+    const body = JSON.parse(calls[0]?.init?.body as string) as SentBody;
+    expect(body.messages[0]).toEqual({ role: "system", content: PAGE_TEXT_SYSTEM_PROMPT });
+    expect(body.messages[1]).toEqual({
+      role: "user",
+      content: [
+        { type: "text", text: "Transcribe this lesson page." },
+        { type: "image_url", image_url: { url: image } },
+      ],
+    });
+    expect(body.response_format.json_schema.name).toBe("page_text");
+    expect(body.response_format.json_schema.strict).toBe(true);
+    expect(body.response_format.json_schema.schema).toEqual(PAGE_TEXT_JSON_SCHEMA);
+    expect(body.max_tokens).toBe(3000);
+
+    expect(result.text).toBe("Unit 3\nFood and drink");
+    expect(result.unreadable).toBe(false);
+    expect(result.model).toBe("anthropic/claude-haiku-5.5");
+    expect(result.usage).toEqual({ promptTokens: 1500, completionTokens: 480, costUsd: undefined });
+  });
+
+  it("passes unreadable through", async () => {
+    const { fetchImpl } = stubFetch(() =>
+      Promise.resolve(completion(JSON.stringify({ text: "Unit 3", unreadable: true }))),
+    );
+    const result = await transcribePage({ ...pageOpts, fetchImpl });
+    expect(result).toMatchObject({ text: "Unit 3", unreadable: true });
+  });
+
+  it("throws InvalidModelOutputError for an invalid transcription", async () => {
+    const { fetchImpl } = stubFetch(() => Promise.resolve(completion(JSON.stringify({ text: 42 }))));
+    await expect(transcribePage({ ...pageOpts, fetchImpl })).rejects.toBeInstanceOf(InvalidModelOutputError);
+  });
+
+  it("maps HTTP 500 to UpstreamError", async () => {
+    const { fetchImpl } = stubFetch(() => Promise.resolve(new Response("boom", { status: 500 })));
+    await expect(transcribePage({ ...pageOpts, fetchImpl })).rejects.toBeInstanceOf(UpstreamError);
+  });
+
+  it("maps a timeout abort to UpstreamTimeoutError", async () => {
+    const { fetchImpl } = stubFetch(
+      (init) =>
+        new Promise<Response>((_resolve, reject) => {
+          const signal = init?.signal;
+          signal?.addEventListener("abort", () => {
+            reject(signal.reason as Error);
+          });
+        }),
+    );
+    await expect(transcribePage({ ...pageOpts, fetchImpl, timeoutMs: 10 })).rejects.toBeInstanceOf(
+      UpstreamTimeoutError,
+    );
   });
 });

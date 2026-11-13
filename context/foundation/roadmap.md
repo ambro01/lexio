@@ -3,7 +3,7 @@ project: Lexio
 version: 2
 status: draft
 created: 2026-11-03
-updated: 2026-11-12
+updated: 2026-11-13
 prd_version: 5
 main_goal: speed
 top_blocker: time
@@ -40,20 +40,20 @@ A Polish learner taking 1–2 English lessons a week copies new words from lesso
 
 ## At a glance
 
-| ID   | Change ID                   | Outcome (user can …)                                                               | Prerequisites | PRD refs                        | Status |
-| ---- | --------------------------- | ---------------------------------------------------------------------------------- | ------------- | ------------------------------- | ------ |
-| F-01 | openrouter-generation-spike | (foundation) deployed app calls the AI model via OpenRouter within the 60 s budget | —             | NFR (< 60 s, progress)          | done   |
-| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | done   |
-| S-01 | paste-text-generation       | paste lesson text, review AI proposals, accept the set into the collection         | F-01, F-02    | US-01, FR-003, FR-004, FR-005   | done   |
-| S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | done   |
-| S-03 | cefr-too-easy-grouping      | set CEFR level and AI model in profile; bulk-reject "too easy" ones                | S-01          | US-01, FR-014, FR-016           | done   |
-| S-04 | manual-word-ai-fill         | enter a word with optional context and get an AI-filled flashcard to review        | F-01, F-02    | FR-006                          | done   |
-| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | done   |
-| S-06 | spaced-review-session       | run a review by tag or general, rate cards and mark them "Opanowane"               | F-02, S-01    | FR-010, FR-011                  | ready  |
-| S-07 | acceptance-rate-stats       | see the AI content-quality rate (unchanged / corrected / rejected as "Błędne")     | S-01          | FR-013                          | ready  |
-| S-08 | password-reset              | reset a forgotten password via email                                               | —             | FR-001                          | ready  |
-| S-09 | skip-known-words            | never see again words they rejected as known or too easy                           | S-01          | US-01, FR-015                   | ready  |
-| S-10 | scanned-pdf-generation      | upload a scanned lesson PDF (no text layer) and get the same proposal review       | S-02          | US-01, FR-017                   | ready  |
+| ID   | Change ID                   | Outcome (user can …)                                                               | Prerequisites | PRD refs                        | Status      |
+| ---- | --------------------------- | ---------------------------------------------------------------------------------- | ------------- | ------------------------------- | ----------- |
+| F-01 | openrouter-generation-spike | (foundation) deployed app calls the AI model via OpenRouter within the 60 s budget | —             | NFR (< 60 s, progress)          | done        |
+| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | done        |
+| S-01 | paste-text-generation       | paste lesson text, review AI proposals, accept the set into the collection         | F-01, F-02    | US-01, FR-003, FR-004, FR-005   | done        |
+| S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | done        |
+| S-03 | cefr-too-easy-grouping      | set CEFR level and AI model in profile; bulk-reject "too easy" ones                | S-01          | US-01, FR-014, FR-016           | done        |
+| S-04 | manual-word-ai-fill         | enter a word with optional context and get an AI-filled flashcard to review        | F-01, F-02    | FR-006                          | done        |
+| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | done        |
+| S-06 | spaced-review-session       | run a review by tag or general, rate cards and mark them "Opanowane"               | F-02, S-01    | FR-010, FR-011                  | ready       |
+| S-07 | acceptance-rate-stats       | see the AI content-quality rate (unchanged / corrected / rejected as "Błędne")     | S-01          | FR-013                          | ready       |
+| S-08 | password-reset              | reset a forgotten password via email                                               | —             | FR-001                          | ready       |
+| S-09 | skip-known-words            | never see again words they rejected as known or too easy                           | S-01          | US-01, FR-015                   | ready       |
+| S-10 | scanned-pdf-generation      | upload a scanned lesson PDF (no text layer) and get the same proposal review       | S-02          | US-01, FR-017                   | in-progress |
 
 ## Streams
 
@@ -231,7 +231,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Which of the three configured AI models can read scanned pages, and at what cost per page? — Owner: team. Block: no (researched in `/10x-plan`).
   - Open Roadmap Questions 1 and 2 (time target for scans; unreadable pages) — Owner: user. Block: no.
 - **Risk:** Reuses the S-02 upload and review flow, so reading scanned pages is the only new risk; poor recognition would show up directly in the AI content-quality rate, and the "PDF is not retained" rule must still hold.
-- **Status:** ready
+- **Status:** in-progress
 
 ## Backlog Handoff
 

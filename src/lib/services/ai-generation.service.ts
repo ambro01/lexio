@@ -1,4 +1,5 @@
 import type { AiModelId } from "@/lib/ai/models";
+import { PAGE_TEXT_JSON_SCHEMA, PAGE_TEXT_SYSTEM_PROMPT, parsePageText } from "@/lib/ai/page-text";
 import { PROPOSALS_JSON_SCHEMA, parseProposals, type Proposal } from "@/lib/ai/proposals";
 import { WORD_FILL_JSON_SCHEMA, WORD_FILL_SYSTEM_PROMPT, parseWordFill, wordFillUserMessage } from "@/lib/ai/word-fill";
 import { isRecord } from "@/lib/utils";
@@ -13,6 +14,8 @@ const MAX_TOKENS = 8000;
  * model's reasoning tokens toward max_tokens, so the cap leaves room for that instead of cutting the JSON off.
  */
 const WORD_FILL_MAX_TOKENS = 2000;
+/** A page is about 500 output tokens; the headroom covers reasoning-token counting, as in `WORD_FILL_MAX_TOKENS`. */
+const PAGE_TEXT_MAX_TOKENS = 3000;
 const TEMPERATURE = 0.2;
 
 export const SYSTEM_PROMPT = [
@@ -119,11 +122,15 @@ function describeUpstream(payload: unknown): string {
   return parts.length ? ` (${parts.join("; ")})` : "";
 }
 
+/** One part of a multimodal user message (OpenAI-compatible chat format). */
+export type ContentPart = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+
 interface StructuredJsonRequest {
   model: AiModelId;
   apiKey: string;
   system: string;
-  user: string;
+  /** Plain text, or text and image parts for a vision call. */
+  user: string | ContentPart[];
   schemaName: string;
   schema: Record<string, unknown>;
   maxTokens: number;
@@ -265,4 +272,41 @@ export async function fillWord(opts: FillWordOptions): Promise<FillWordResult> {
     durationMs: result.durationMs,
     usage: result.usage,
   };
+}
+
+export interface TranscribePageOptions {
+  /** One page as a base64 JPEG data URL, already validated by `pageImageSchema`. */
+  image: string;
+  model: AiModelId;
+  apiKey: string;
+  fetchImpl?: typeof fetch;
+  timeoutMs?: number;
+}
+
+export interface TranscribePageResult {
+  text: string;
+  unreadable: boolean;
+  model: string;
+  durationMs: number;
+  usage: GenerationUsage;
+}
+
+/** Transcribes the English lesson text of one scanned page image (S-10, FR-017). */
+export async function transcribePage(opts: TranscribePageOptions): Promise<TranscribePageResult> {
+  const result = await requestStructuredJson({
+    model: opts.model,
+    apiKey: opts.apiKey,
+    system: PAGE_TEXT_SYSTEM_PROMPT,
+    user: [
+      { type: "text", text: "Transcribe this lesson page." },
+      { type: "image_url", image_url: { url: opts.image } },
+    ],
+    schemaName: "page_text",
+    schema: PAGE_TEXT_JSON_SCHEMA,
+    maxTokens: PAGE_TEXT_MAX_TOKENS,
+    fetchImpl: opts.fetchImpl,
+    timeoutMs: opts.timeoutMs,
+  });
+  const { text, unreadable } = parsePageText(result.parsed);
+  return { text, unreadable, model: result.model, durationMs: result.durationMs, usage: result.usage };
 }
