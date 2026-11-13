@@ -172,6 +172,109 @@ export type Database = {
         }
         Relationships: []
       }
+      review_log: {
+        Row: {
+          difficulty: number
+          due: string
+          flashcard_id: string
+          id: number
+          rating: number
+          reviewed_at: string
+          scheduled_days: number
+          stability: number
+          state: number
+          user_id: string
+        }
+        Insert: {
+          difficulty: number
+          due: string
+          flashcard_id: string
+          id?: never
+          rating: number
+          reviewed_at?: string
+          scheduled_days: number
+          stability: number
+          state: number
+          user_id?: string
+        }
+        Update: {
+          difficulty?: number
+          due?: string
+          flashcard_id?: string
+          id?: never
+          rating?: number
+          reviewed_at?: string
+          scheduled_days?: number
+          stability?: number
+          state?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_log_flashcard_fk"
+            columns: ["flashcard_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "flashcards"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      review_states: {
+        Row: {
+          difficulty: number
+          due: string
+          flashcard_id: string
+          lapses: number
+          last_review: string | null
+          learning_steps: number
+          mastered_at: string | null
+          reps: number
+          scheduled_days: number
+          stability: number
+          state: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          difficulty: number
+          due: string
+          flashcard_id: string
+          lapses: number
+          last_review?: string | null
+          learning_steps: number
+          mastered_at?: string | null
+          reps: number
+          scheduled_days: number
+          stability: number
+          state: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          difficulty?: number
+          due?: string
+          flashcard_id?: string
+          lapses?: number
+          last_review?: string | null
+          learning_steps?: number
+          mastered_at?: string | null
+          reps?: number
+          scheduled_days?: number
+          stability?: number
+          state?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_states_flashcard_fk"
+            columns: ["flashcard_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "flashcards"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           created_at: string
@@ -222,6 +325,43 @@ export type Database = {
           tag_name: string
         }[]
       }
+      record_review: {
+        Args: {
+          p_expected_reps: number
+          p_flashcard_id: string
+          p_rating: number
+          p_state: Json
+        }
+        Returns: undefined
+      }
+      review_queue: {
+        Args: { p_limit: number; p_tag_id?: string }
+        Returns: {
+          additional_meanings: string[]
+          cefr: string
+          due: string
+          example_sentence: string
+          id: string
+          mastered: boolean
+          state: number
+          translation: string
+          word: string
+        }[]
+      }
+      review_state_from_json: {
+        Args: { p_state: Json }
+        Returns: {
+          difficulty: number
+          due: string
+          lapses: number
+          last_review: string
+          learning_steps: number
+          reps: number
+          scheduled_days: number
+          stability: number
+          state: number
+        }[]
+      }
       save_flashcard: {
         Args: {
           p_additional_meanings: string[]
@@ -235,6 +375,14 @@ export type Database = {
           created: boolean
           flashcard_id: string
         }[]
+      }
+      set_flashcard_mastered: {
+        Args: {
+          p_empty_state: Json
+          p_flashcard_id: string
+          p_mastered: boolean
+        }
+        Returns: undefined
       }
     }
     Enums: {

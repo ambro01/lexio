@@ -10,7 +10,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(2);
 }
 
-const TABLES = ["flashcards", "tags", "flashcard_tags"];
+const TABLES = ["flashcards", "tags", "flashcard_tags", "review_states", "review_log"];
 const password = "Rls-Check-Passw0rd!";
 const ts = Date.now();
 
@@ -808,6 +808,364 @@ await step("A: cards from one accept_proposal_set call share created_at and page
     ids.every((id, i) => i === 0 || ids[i - 1] < id) &&
     new Set(all.map((r) => r.created_at)).size === 1;
   return [ok, JSON.stringify(all)];
+});
+
+// ---------------------------------------------------------------------------
+// review session (S-06): review_states, review_log, review_queue, record_review and set_flashcard_mastered.
+// States are hand-made JSON (the FSRS scheduler is TypeScript); only their shape and the selection rules matter here.
+// ---------------------------------------------------------------------------
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const REVIEW_TAG = "Review S06";
+
+function reviewState({ dueInDays, reps, state = 2 }) {
+  const now = Date.now();
+  return {
+    due: new Date(now + dueInDays * DAY_MS).toISOString(),
+    stability: 3.5,
+    difficulty: 5,
+    scheduled_days: 3,
+    learning_steps: 0,
+    reps,
+    lapses: 0,
+    state,
+    last_review: new Date(now - 3 * DAY_MS).toISOString(),
+  };
+}
+
+function emptyState() {
+  return {
+    due: new Date().toISOString(),
+    stability: 0,
+    difficulty: 0,
+    scheduled_days: 0,
+    learning_steps: 0,
+    reps: 0,
+    lapses: 0,
+    state: 0,
+    last_review: null,
+  };
+}
+
+async function recordReview(client, cardId, expectedReps, rating, state) {
+  return client.rpc("record_review", {
+    p_flashcard_id: cardId,
+    p_expected_reps: expectedReps,
+    p_rating: rating,
+    p_state: state,
+  });
+}
+
+async function setMastered(client, cardId, mastered) {
+  return client.rpc("set_flashcard_mastered", {
+    p_flashcard_id: cardId,
+    p_mastered: mastered,
+    p_empty_state: emptyState(),
+  });
+}
+
+async function reviewQueue(client, limit, tagId) {
+  return client.rpc("review_queue", { p_limit: limit, ...(tagId === undefined ? {} : { p_tag_id: tagId }) });
+}
+
+async function stateRow(client, cardId) {
+  const { data, error } = await client.from("review_states").select("*").eq("flashcard_id", cardId).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+async function logCount(client, cardId) {
+  const { count, error } = await client
+    .from("review_log")
+    .select("*", { count: "exact", head: true })
+    .eq("flashcard_id", cardId);
+  if (error) throw new Error(error.message);
+  return count;
+}
+
+function errorText(error) {
+  return error ? `${error.code} ${error.message}` : "call succeeded";
+}
+
+let rvDueId;
+let rvNewId;
+let rvFutureId;
+let rvMasteredId;
+let rvTagId;
+
+await step("A: setup — save four tagged cards for the review checks (one call each)", async () => {
+  const ids = [];
+  for (const word of ["review due", "review new", "review future", "review mastered"]) {
+    const { data, error } = await save(a.client, word, `tłumaczenie ${word}`, [REVIEW_TAG]);
+    if (error) return [false, error.message];
+    ids.push(firstRow(data)?.flashcard_id);
+  }
+  [rvDueId, rvNewId, rvFutureId, rvMasteredId] = ids;
+  rvTagId = await tagIdByName(a.client, REVIEW_TAG);
+  return [ids.every(Boolean) && Boolean(rvTagId), ids.join(",")];
+});
+
+await step("A: record_review on a card without a state (expected reps null) stores it and 1 log row", async () => {
+  const { error } = await recordReview(a.client, rvDueId, null, 3, reviewState({ dueInDays: 3, reps: 1 }));
+  if (error) return [false, errorText(error)];
+  const row = await stateRow(a.client, rvDueId);
+  const logs = await logCount(a.client, rvDueId);
+  const ok = row?.reps === 1 && row.state === 2 && row.user_id === a.userId && row.mastered_at === null && logs === 1;
+  return [ok, `row=${JSON.stringify(row)} logs=${String(logs)}`];
+});
+
+await step("A: record_review with the stored reps updates the state and appends a log row", async () => {
+  const { error } = await recordReview(a.client, rvDueId, 1, 1, reviewState({ dueInDays: -1, reps: 2 }));
+  if (error) return [false, errorText(error)];
+  const row = await stateRow(a.client, rvDueId);
+  const logs = await logCount(a.client, rvDueId);
+  const log = await a.client.from("review_log").select("rating").eq("flashcard_id", rvDueId).order("id");
+  if (log.error) return [false, log.error.message];
+  const ok =
+    row?.reps === 2 && new Date(row.due) < new Date() && logs === 2 && log.data.map((l) => l.rating).join() === "3,1";
+  return [ok, `row=${JSON.stringify(row)} logs=${JSON.stringify(log.data)}`];
+});
+
+await step("A: record_review with a stale expected reps fails with 40001 and writes nothing", async () => {
+  const before = await writeCounts(a.client);
+  const rowBefore = await stateRow(a.client, rvDueId);
+  const stale = await recordReview(a.client, rvDueId, 1, 3, reviewState({ dueInDays: 10, reps: 2 }));
+  const missing = await recordReview(a.client, rvDueId, null, 3, reviewState({ dueInDays: 10, reps: 1 }));
+  const after = await writeCounts(a.client);
+  const rowAfter = await stateRow(a.client, rvDueId);
+  const ok =
+    stale.error?.code === "40001" &&
+    missing.error?.code === "40001" &&
+    JSON.stringify(before) === JSON.stringify(after) &&
+    JSON.stringify(rowBefore) === JSON.stringify(rowAfter);
+  return [ok, `stale=${errorText(stale.error)} missing=${errorText(missing.error)}`];
+});
+
+await step("A: an invalid rating or state fails with 22023 and writes nothing", async () => {
+  const valid = reviewState({ dueInDays: 1, reps: 3 });
+  const { due: _due, ...withoutDue } = valid;
+  const cases = [
+    ["rating 4", 4, valid],
+    ["rating 0", 0, valid],
+    ["state 4", 3, { ...valid, state: 4 }],
+    ["no due", 3, withoutDue],
+    ["bad due", 3, { ...valid, due: "not a date" }],
+    ["negative reps", 3, { ...valid, reps: -1 }],
+    ["fractional reps", 3, { ...valid, reps: 2.5 }],
+    ["string stability", 3, { ...valid, stability: "3.5" }],
+    ["difficulty 11", 3, { ...valid, difficulty: 11 }],
+    ["not an object", 3, [valid]],
+  ];
+  const before = await writeCounts(a.client);
+  const wrong = [];
+  for (const [name, rating, state] of cases) {
+    const { error } = await recordReview(a.client, rvDueId, 2, rating, state);
+    if (error?.code !== "22023") wrong.push(`${name}: ${errorText(error)}`);
+  }
+  const after = await writeCounts(a.client);
+  return [wrong.length === 0 && JSON.stringify(before) === JSON.stringify(after), wrong.join("; ")];
+});
+
+await step("A: rate the future and mastered cards; mastering keeps the FSRS state", async () => {
+  const future = await recordReview(a.client, rvFutureId, null, 3, reviewState({ dueInDays: 5, reps: 1 }));
+  if (future.error) return [false, errorText(future.error)];
+  const rated = await recordReview(a.client, rvMasteredId, null, 3, reviewState({ dueInDays: -2, reps: 1 }));
+  if (rated.error) return [false, errorText(rated.error)];
+  const before = await stateRow(a.client, rvMasteredId);
+  const { error } = await setMastered(a.client, rvMasteredId, true);
+  if (error) return [false, errorText(error)];
+  const after = await stateRow(a.client, rvMasteredId);
+  const ok =
+    after?.mastered_at !== null &&
+    after.reps === before.reps &&
+    after.due === before.due &&
+    after.state === 2 &&
+    (await logCount(a.client, rvMasteredId)) === 1;
+  return [ok, `after=${JSON.stringify(after)}`];
+});
+
+await step("A: master then un-master a never-reviewed card leaves a new (state 0) row", async () => {
+  const on = await setMastered(a.client, rvNewId, true);
+  if (on.error) return [false, errorText(on.error)];
+  const mastered = await stateRow(a.client, rvNewId);
+  const off = await setMastered(a.client, rvNewId, false);
+  if (off.error) return [false, errorText(off.error)];
+  const row = await stateRow(a.client, rvNewId);
+  const ok =
+    mastered?.mastered_at !== null &&
+    mastered.state === 0 &&
+    row?.mastered_at === null &&
+    row.state === 0 &&
+    row.reps === 0 &&
+    (await logCount(a.client, rvNewId)) === 0;
+  return [ok, `row=${JSON.stringify(row)}`];
+});
+
+await step(
+  "A: general queue — overdue card first, then new cards; mastered and not-yet-due absent; limit kept",
+  async () => {
+    const { data, error } = await reviewQueue(a.client, 3);
+    if (error) return [false, errorText(error)];
+    const all = await reviewQueue(a.client, 100);
+    if (all.error) return [false, errorText(all.error)];
+    const allIds = all.data.map((r) => r.id);
+    const ok =
+      data.length === 3 &&
+      data[0].id === rvDueId &&
+      data[0].state === 2 &&
+      data.slice(1).every((r) => r.state === null || r.state === 0) &&
+      !allIds.includes(rvMasteredId) &&
+      !allIds.includes(rvFutureId) &&
+      allIds.includes(rvNewId) &&
+      all.data.every((r) => r.mastered === false);
+    return [ok, `first3=${JSON.stringify(data.map((r) => [r.word, r.state]))} total=${all.data.length}`];
+  },
+);
+
+await step("A: tag queue — mastered included; due by due, then new, then not-yet-due", async () => {
+  const { data, error } = await reviewQueue(a.client, 10, rvTagId);
+  if (error) return [false, errorText(error)];
+  const order = data.map((r) => r.id);
+  const expected = [rvMasteredId, rvDueId, rvNewId, rvFutureId];
+  const mastered = data.find((r) => r.id === rvMasteredId);
+  const ok = JSON.stringify(order) === JSON.stringify(expected) && mastered?.mastered === true;
+  return [ok, JSON.stringify(data.map((r) => [r.word, r.state, r.mastered]))];
+});
+
+await step("A: review_queue rejects a limit of 0 or 101 (22023)", async () => {
+  const zero = await reviewQueue(a.client, 0);
+  const over = await reviewQueue(a.client, 101);
+  return [
+    zero.error?.code === "22023" && over.error?.code === "22023",
+    `0=${errorText(zero.error)} 101=${errorText(over.error)}`,
+  ];
+});
+
+await step("A: delete of own review_states and update/delete of own review_log affect 0 rows", async () => {
+  const delState = await a.client.from("review_states").delete().eq("flashcard_id", rvDueId).select();
+  if (delState.error) return [false, delState.error.message];
+  const updLog = await a.client.from("review_log").update({ rating: 2 }).eq("flashcard_id", rvDueId).select();
+  if (updLog.error) return [false, updLog.error.message];
+  const delLog = await a.client.from("review_log").delete().eq("flashcard_id", rvDueId).select();
+  if (delLog.error) return [false, delLog.error.message];
+  const ok =
+    delState.data.length === 0 &&
+    updLog.data.length === 0 &&
+    delLog.data.length === 0 &&
+    (await stateRow(a.client, rvDueId)) !== null &&
+    (await logCount(a.client, rvDueId)) === 2;
+  return [ok, `stateDeleted=${delState.data.length} logUpdated=${updLog.data.length} logDeleted=${delLog.data.length}`];
+});
+
+await step("B: select of A's review_states and review_log returns nothing", async () => {
+  const states = await b.client.from("review_states").select("flashcard_id, user_id");
+  if (states.error) return [false, states.error.message];
+  const logs = await b.client.from("review_log").select("id, user_id");
+  if (logs.error) return [false, logs.error.message];
+  const leaked = [...states.data, ...logs.data].filter((r) => r.user_id === a.userId).length;
+  return [leaked === 0, `${leaked} row(s) of A visible`];
+});
+
+await step("B: record_review and set_flashcard_mastered on A's card fail with P0002 and write nothing", async () => {
+  const beforeA = await writeCounts(a.client);
+  const beforeB = await writeCounts(b.client);
+  const rowBefore = await stateRow(a.client, rvDueId);
+  const newCard = await recordReview(b.client, rvNewId, null, 3, reviewState({ dueInDays: 1, reps: 1 }));
+  const rated = await recordReview(b.client, rvDueId, 2, 3, reviewState({ dueInDays: 30, reps: 3 }));
+  const master = await setMastered(b.client, rvDueId, true);
+  const afterA = await writeCounts(a.client);
+  const afterB = await writeCounts(b.client);
+  const rowAfter = await stateRow(a.client, rvDueId);
+  const ok =
+    newCard.error?.code === "P0002" &&
+    rated.error?.code === "P0002" &&
+    master.error?.code === "P0002" &&
+    JSON.stringify(beforeA) === JSON.stringify(afterA) &&
+    JSON.stringify(beforeB) === JSON.stringify(afterB) &&
+    JSON.stringify(rowBefore) === JSON.stringify(rowAfter);
+  return [ok, `new=${errorText(newCard.error)} rated=${errorText(rated.error)} master=${errorText(master.error)}`];
+});
+
+await step("B: review_queue never returns A's cards (general and with A's tag id)", async () => {
+  const general = await reviewQueue(b.client, 100);
+  if (general.error) return [false, errorText(general.error)];
+  const byTag = await reviewQueue(b.client, 100, rvTagId);
+  if (byTag.error) return [false, errorText(byTag.error)];
+  const aIds = [rvDueId, rvNewId, rvFutureId, rvMasteredId];
+  const leaked = general.data.filter((r) => aIds.includes(r.id)).length;
+  return [leaked === 0 && byTag.data.length === 0, `general leaked=${leaked} byTag=${byTag.data.length}`];
+});
+
+await step("B: direct insert and update of A's review_states are rejected or affect 0 rows", async () => {
+  const ins = await b.client
+    .from("review_states")
+    .insert({ flashcard_id: collCardId, ...reviewState({ dueInDays: 1, reps: 1 }) });
+  const insOwnUser = await b.client
+    .from("review_states")
+    .insert({ flashcard_id: collCardId, user_id: a.userId, ...reviewState({ dueInDays: 1, reps: 1 }) });
+  const upd = await b.client.from("review_states").update({ reps: 99 }).eq("flashcard_id", rvDueId).select();
+  if (upd.error) return [false, upd.error.message];
+  const logIns = await b.client.from("review_log").insert({
+    flashcard_id: rvDueId,
+    rating: 3,
+    state: 2,
+    due: new Date().toISOString(),
+    stability: 1,
+    difficulty: 1,
+    scheduled_days: 1,
+  });
+  const row = await stateRow(a.client, rvDueId);
+  const ok =
+    Boolean(ins.error) &&
+    Boolean(insOwnUser.error) &&
+    upd.data.length === 0 &&
+    Boolean(logIns.error) &&
+    row?.reps === 2;
+  return [
+    ok,
+    `insert=${errorText(ins.error)} insertAsA=${errorText(insOwnUser.error)} updated=${upd.data.length} log=${errorText(logIns.error)}`,
+  ];
+});
+
+await step("anon: review_queue, record_review and set_flashcard_mastered are rejected", async () => {
+  const queue = await reviewQueue(anon, 10);
+  const rated = await recordReview(anon, rvDueId, 2, 3, reviewState({ dueInDays: 1, reps: 3 }));
+  const master = await setMastered(anon, rvDueId, true);
+  return [
+    Boolean(queue.error) && Boolean(rated.error) && Boolean(master.error),
+    `queue=${errorText(queue.error)} rate=${errorText(rated.error)} master=${errorText(master.error)}`,
+  ];
+});
+
+await step("anon: select on review_states and review_log returns no rows", async () => {
+  const states = await anon.from("review_states").select("*");
+  const logs = await anon.from("review_log").select("*");
+  const seen = (states.data?.length ?? 0) + (logs.data?.length ?? 0);
+  return [seen === 0, `${seen} row(s)`];
+});
+
+await step("A: editing a card leaves its review_states row unchanged", async () => {
+  const before = await stateRow(a.client, rvDueId);
+  const { error } = await a.client
+    .from("flashcards")
+    .update({ translation: "nowe tłumaczenie", example_sentence: "Edited." })
+    .eq("id", rvDueId)
+    .select();
+  if (error) return [false, error.message];
+  const after = await stateRow(a.client, rvDueId);
+  return [before !== null && JSON.stringify(before) === JSON.stringify(after), JSON.stringify(after)];
+});
+
+await step("A: deleting a card removes its review_states and review_log rows", async () => {
+  const del = await a.client.from("flashcards").delete().eq("id", rvDueId).select("id");
+  if (del.error) return [false, del.error.message];
+  const row = await stateRow(a.client, rvDueId);
+  const logs = await logCount(a.client, rvDueId);
+  const other = await stateRow(a.client, rvFutureId);
+  return [
+    del.data.length === 1 && row === null && logs === 0 && other !== null,
+    `deleted=${del.data.length} state=${JSON.stringify(row)} logs=${String(logs)}`,
+  ];
 });
 
 finish();

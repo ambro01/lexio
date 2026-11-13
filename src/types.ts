@@ -81,3 +81,16 @@ export interface Profile {
   cefrLevel: CefrLevel | null;
   aiModel: AiModelId | null;
 }
+
+/** One card of a review session (S-06). New: never reviewed (no state, or state 0). `due`: ISO, null when new without a state row. */
+export interface ReviewCard {
+  id: string;
+  word: string;
+  translation: string;
+  additionalMeanings: string[];
+  exampleSentence: string;
+  cefr: CefrLevel | null;
+  isNew: boolean;
+  mastered: boolean;
+  due: string | null;
+}
