@@ -9,6 +9,7 @@ tags: [research, codebase, pdf, ocr, vision, openrouter, cloudflare-workers, sca
 status: complete
 last_updated: 2026-11-13
 last_updated_by: Claude (Opus 5.5)
+last_updated_note: "Follow-up: measured lesson.pdf (7 image-only pages) — render sizes and vision transcription on all 3 models; supersedes latency/cost estimates in Summary."
 ---
 
 # Research: Reading scanned lesson PDFs for AI flashcard proposals
@@ -33,7 +34,7 @@ Roadmap slice S-10 `scanned-pdf-generation` (FR-017): a learner uploads a lesson
 - **Today a scanned PDF is rejected in the browser** with `no_text` when the extracted text has fewer than 20 words (`src/lib/pdf/extract.ts:16`, `:84-86`); the user is told to paste text instead (`src/components/lesson/PdfLessonInput.tsx:30`). The S-02 manual check found that 3 of 4 real lesson PDFs are image-only jsPDF exports (one image per page), and their text cannot be copied either, so the paste workaround does not help (`context/archive/2026-11-11-pdf-lesson-generation/change.md:14`).
 - **All three configured models accept images and PDF files** on OpenRouter: `anthropic/claude-haiku-5.5`, `openai/gpt-6-luna` and `google/gemini-3.8-flash` each list `image` and `file` in `architecture.input_modalities` (OpenRouter `GET /api/v1/models`, fetched 2026-11-13; model list in `src/lib/ai/models.ts:6-8`). No model change is required to read page images.
 - **The generation call is text-only today.** Messages are `{role, content: string}` (`src/lib/services/ai-generation.service.ts:126`, `:161-164`), the user message is `Lesson text:\n\n${text}` (`:221`), and the route caps the body at 1.2 MB by `Content-Length` (`src/pages/api/ai/proposals.ts:18-20`, `:75`) with zod `text` max 300,000 chars (`:22-25`). Page images need either a new route/body shape or a changed one.
-- **Recommended direction (inference, not a decision):** render pages to grayscale JPEG in the browser with the pdf.js already loaded for S-02, send them as `image_url` data-URL parts to the user's configured vision model, and turn them into lesson text that then goes through the existing text pipeline (word limit, truncation, review). Estimated cost for a 10-page lesson is under ~$0.02 and latency roughly 5–20 s per vision call (estimates, see Detailed Findings). The PDF itself never leaves the device; only rendered page images are sent, in memory, and not stored by Lexio.
+- **Recommended direction (inference, not a decision):** render pages to grayscale JPEG in the browser with the pdf.js already loaded for S-02, send them as `image_url` data-URL parts to the user's configured vision model, and turn them into lesson text that then goes through the existing text pipeline (word limit, truncation, review). Measured on the author's 7-page lesson (see "Follow-up 2026-11-13"): ~6 s and $0.0035–0.0037 per vision call on Haiku 5.5 / GPT-6 Luna, $0.021 on Gemini 3.8 Flash, with accurate transcription on all three. The PDF itself never leaves the device; only rendered page images are sent, in memory, and not stored by Lexio.
 - **Main constraint to settle in the plan:** production runs on the Cloudflare Workers **Free** plan with 10 ms CPU per request (`context/foundation/infrastructure.md:17`, `:71`). A 1–3 MB JSON body with base64 images must be parsed and re-serialized in the Worker; whether that stays under 10 ms CPU is **not measured**. Options: pass the body through with minimal parsing, keep images small/few, or move to the $5 Paid plan (the documented fallback, `infrastructure.md:17`).
 - **Cheaper non-LLM fallback exists but is weaker on phones:** tesseract.js in the browser costs $0 and sends nothing but text, but needs ~3 MB model + wasm download and is estimated at 40–100 s for 10 pages on a mid-range phone (estimate), which breaks the 60 s target. OpenRouter's free `cloudflare-ai` PDF engine and Workers AI `toMarkdown` **do not OCR** scanned pages.
 
@@ -134,7 +135,52 @@ Other in-browser OCR: Scribe.js is AGPL-3.0 (licensing risk) and ~47 MB unpacked
 
 1. **Product (PRD Open Question 1):** does the < 60 s target apply to scanned PDFs? With option A the expected total is the vision call (~5–20 s, estimate) plus the measured 14–32 s generation; a separate target or a lower page limit for scans may be needed. — user decision.
 2. **Product (PRD Open Question 2):** what to show when a page can't be read — e.g. the vision step returns nothing or flags low confidence for a page. Option A makes the extracted text visible before generation, which could let the user see what was read. — user decision.
-3. **Measurement gap:** actual latency, token usage and transcription quality of the three models on the author's real scanned lessons (no sample PDFs are in the repo). Needed before choosing the default vision model.
-4. **Measurement gap:** Worker CPU time for receiving and forwarding a 1–3 MB image body on the Free plan (10 ms).
+3. ~~**Measurement gap:** actual latency, token usage and transcription quality on a real lesson.~~ Answered for one 7-page lesson in "Follow-up 2026-11-13" below; more samples would strengthen it.
+4. **Measurement gap:** Worker CPU time for receiving and forwarding a ~1.2 MB image body on the Free plan (10 ms) — not measured (needs a deployed or `wrangler dev` measurement).
 5. **Plan choice:** one combined call (B) vs vision-to-text then the existing generation (A); page image size/resolution; whether to try the text layer first and fall back to images only when `no_text`.
-6. **Unverified:** image token accounting for `openai/gpt-6-luna` and the exact Claude formula for Haiku 5.5.
+6. ~~**Unverified:** image token accounting for `openai/gpt-6-luna` and Haiku 5.5.~~ Measured for 7 pages at 1240 px below (prompt tokens incl. instructions).
+7. **Product/plan:** the sample lesson carries teacher highlights, underlines and typed notes ("I did it on autopilot / it's muscle memory", "used to do / would do"); should those be treated as a signal of important vocabulary? Bold phrases are the exercise targets. — user decision.
+8. **Plan:** `lesson.pdf` in the repo root is untracked and not git-ignored; it is licensed course material ("licensed for use in Kajetan's lessons") and should not be committed — add it to `.gitignore` or keep it outside the repo; use it only as a local manual-check sample.
+
+## Follow-up 2026-11-13: measurement on a real lesson (`lesson.pdf`)
+
+User-provided sample `lesson.pdf` (repo root, untracked, 3,680,468 bytes). The user noted the pictures in it are not of interest.
+
+### File structure (pdf.js 6.5.438 legacy build in Node)
+
+- 7 pages; each page has 0 words of text and exactly 1 image (`paintImageXObject`); embedded image 1296×1784 px (page 7: 1296×1754); no Producer/Creator metadata. Same image-only shape as the S-02 finding (`context/archive/2026-11-11-pdf-lesson-generation/change.md:14`).
+- Content is **not a paper scan**: crisp digital worksheet pages (Linguahouse, B1–B2, topic "Habits") with teacher annotations — highlighter marks, hand-drawn underlines, typed notes and answer letters (X/E/N). Non-lesson content per page: a photo (page 1), QR code and "Expemo code" block (page 1), header "lingua­house.com", footer (Expemo logo, "Learn without forgetting!", licence line, page number).
+
+### Rendered page sizes (pdf.js render → sharp JPEG quality 75), 7 pages total
+
+| Long side → width | Grayscale total | Base64   | Colour total |
+| ----------------- | --------------- | -------- | ------------ |
+| 1000 px           | 705 KB          | 939 KB   | 732 KB       |
+| 1240 px           | 925 KB          | 1,233 KB | 963 KB       |
+| 1600 px           | 1,279 KB        | 1,706 KB | 1,334 KB     |
+
+Per page at 1240 px grayscale: 109–148 KB. At 1240 px the 7-page base64 payload (~1.23 MB) is just above the current 1.2 MB route cap (`src/pages/api/ai/proposals.ts:20`); 10 pages would be ~1.8 MB.
+
+### Vision transcription, one call per model (7 images, 1240 px grayscale, `image_url` data URLs, temperature 0, prompt: transcribe page by page, skip photos/QR/logos/headers/footers/licence lines, keep teacher notes, do not correct)
+
+| Model                      | Provider routed        | Wall time | Prompt tokens | Completion tokens | Cost (OpenRouter `usage.cost`) | Output words |
+| -------------------------- | ---------------------- | --------- | ------------- | ----------------- | ------------------------------ | ------------ |
+| anthropic/claude-haiku-5.5 | Claude Platform on AWS | 6,271 ms  | 19,382        | 3,571             | $0.0037                        | 1,554        |
+| openai/gpt-6-luna          | OpenAI                 | 5,612 ms  | 17,771        | 2,616             | $0.0035                        | 1,498        |
+| google/gemini-3.8-flash    | Google                 | 6,287 ms  | 7,736         | 4,122             | $0.0213                        | 1,484        |
+
+Measured from a local machine (Poland) on 2026-11-13, single run per model — no variance data.
+
+Quality (manual comparison of pages 1 and 4 against the rendered images; other pages spot-checked by marker counts):
+
+- All three returned 7 of 7 page markers and 0 `[unreadable]` fragments; pages 1 and 4 matched the page text word-for-word in all three outputs.
+- All three kept the teacher's typed notes. Haiku 5.5 additionally kept **bold/italic markup** (bold = the target phrases of the exercise) and labelled notes as `[handwritten: …]`.
+- Boilerplate leakage: Haiku 5.5 and GPT-6 Luna had 0 lines matching `linguahouse|expemo`; Gemini 3.8 Flash had 1 and also transcribed the page-1 QR block ("Scan to review worksheet", "Expemo code"). Haiku kept the small page header "INTERMEDIATE (B1-B2) / HABITS" on page 4.
+- Output length 1,484–1,554 words for 7 pages — under the 2,000-word input limit (`src/lib/ai/proposals.ts:21`), so a 7-page lesson would not be truncated; ~10 such pages would likely exceed it (inference: ~220 words/page).
+
+### What this changes
+
+- **Supersedes** the Summary estimate "~5–20 s per vision call, < ~$0.02": measured ~6 s and $0.0035–0.0037 (Haiku, Luna) or $0.021 (Gemini) for 7 pages.
+- **Total time for option A (inference):** ~6 s vision + 13.9–31.9 s measured text generation (`measurements.md:3-17`) ≈ 20–38 s for this lesson, under the 60 s target, before upload time from a phone (~1.2 MB) and Worker overhead.
+- **Model choice:** the default Haiku 5.5 is suitable for the vision step on this sample (fast, cheapest tier, best structure retention); Gemini 3.8 Flash costs ~6× more and leaked QR text.
+- **Not answered by this sample:** real paper scans (skew, low contrast, noise) — this lesson is a clean digital page; behaviour on poor pages (PRD Open Question 2) remains untested.
