@@ -18,6 +18,8 @@ export interface Flashcard {
   exampleSentence: string;
   cefr: CefrLevel | null;
   tags: Tag[];
+  /** Marked "Opanowane": left out of the general review session. */
+  mastered: boolean;
   createdAt: string;
   updatedAt: string;
 }

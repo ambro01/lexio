@@ -74,6 +74,7 @@ const row = {
   created_at: "2026-11-10T10:00:00Z",
   updated_at: "2026-11-10T10:00:00Z",
   flashcard_tags: [{ tag: { id: "t2", name: "Lesson 2" } }, { tag: { id: "t1", name: "Lesson 1" } }, { tag: null }],
+  review_states: [] as { mastered_at: string | null }[],
 };
 
 describe("saveFlashcard", () => {
@@ -138,9 +139,33 @@ describe("listFlashcards", () => {
         { id: "t1", name: "Lesson 1" },
         { id: "t2", name: "Lesson 2" },
       ],
+      mastered: false,
       createdAt: "2026-11-10T10:00:00Z",
       updatedAt: "2026-11-10T10:00:00Z",
     });
+  });
+
+  it("embeds the review state's mastered_at in the select", async () => {
+    const { client, calls } = stubClient({ data: [], error: null });
+    await listFlashcards(client, { offset: 0, limit: 50 });
+    expect(calls.find((call) => call.method === "select")?.args[0]).toContain("review_states(mastered_at)");
+  });
+
+  it("marks a card mastered only when its state row has a mastered_at", async () => {
+    const rows = [
+      { ...row, id: "no-state", review_states: [] },
+      { ...row, id: "not-mastered", review_states: [{ mastered_at: null }] },
+      { ...row, id: "mastered", review_states: [{ mastered_at: "2026-11-13T10:00:00Z" }] },
+    ];
+    const { client } = stubClient({ data: rows, error: null });
+
+    const { cards } = await listFlashcards(client, { offset: 0, limit: 50 });
+
+    expect(cards.map((card) => [card.id, card.mastered])).toEqual([
+      ["no-state", false],
+      ["not-mastered", false],
+      ["mastered", true],
+    ]);
   });
 
   it("maps an unknown CEFR value to null", async () => {

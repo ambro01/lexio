@@ -44,9 +44,9 @@ export const COLLECTION_PAGE_SIZE = 50;
 export const TAG_LIST_LIMIT = 500;
 
 // Tags are reached through the link table: the composite foreign keys mean PostgREST
-// cannot embed `tags` directly from `flashcards`.
+// cannot embed `tags` directly from `flashcards`. The review state gives the "Opanowane" flag.
 const FLASHCARD_SELECT =
-  "id, word, translation, additional_meanings, example_sentence, cefr, created_at, updated_at, flashcard_tags(tag:tags(id, name))";
+  "id, word, translation, additional_meanings, example_sentence, cefr, created_at, updated_at, flashcard_tags(tag:tags(id, name)), review_states(mastered_at)";
 
 interface FlashcardRow {
   id: string;
@@ -58,6 +58,8 @@ interface FlashcardRow {
   created_at: string;
   updated_at: string;
   flashcard_tags: { tag: Tag | null }[];
+  // At most one row (flashcard_id is its key), but the composite foreign key makes PostgREST embed a list.
+  review_states: { mastered_at: string | null }[];
 }
 
 interface PostgrestErrorLike {
@@ -84,6 +86,8 @@ function toFlashcard(row: FlashcardRow): Flashcard {
       .map((link) => link.tag)
       .filter((tag): tag is Tag => tag !== null)
       .sort((a, b) => a.name.localeCompare(b.name)),
+    // No state row (never reviewed nor marked) or a null mastered_at: not mastered.
+    mastered: row.review_states.some((state) => state.mastered_at !== null),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

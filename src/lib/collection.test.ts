@@ -114,6 +114,7 @@ function flashcard(id: string, word: string, tags: Flashcard["tags"] = []): Flas
     exampleSentence: "",
     cefr: null,
     tags,
+    mastered: false,
     createdAt: "2026-11-12T10:00:00Z",
     updatedAt: "2026-11-12T10:00:00Z",
   };

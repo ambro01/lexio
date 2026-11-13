@@ -515,29 +515,29 @@ Docs reflect the review feature, the migration reaches production before the cod
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 Types regenerated with no diff after commit: `npm run db:types`
-- [x] 1.3 RLS and review checks pass, including the new S-06 section: `npm run check:rls`
-- [x] 1.4 Unit tests pass, including the scheduler timing test: `npm test`
-- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 1.6 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only`
+- [x] 1.1 Migration applies cleanly: `npx supabase db reset` — 8d7c8ef
+- [x] 1.2 Types regenerated with no diff after commit: `npm run db:types` — 8d7c8ef
+- [x] 1.3 RLS and review checks pass, including the new S-06 section: `npm run check:rls` — 8d7c8ef
+- [x] 1.4 Unit tests pass, including the scheduler timing test: `npm test` — 8d7c8ef
+- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check` — 8d7c8ef
+- [x] 1.6 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only` — 8d7c8ef
 
 #### Manual
 
-- [x] 1.7 Studio: review_states and review_log rows of the check users look sane
+- [x] 1.7 Studio: review_states and review_log rows of the check users look sane — 8d7c8ef
 
 ### Phase 2: Review API
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm test`
-- [ ] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 2.3 Build passes: `npm run build && npm run check:client-only`
-- [ ] 2.4 RLS checks still pass: `npm run check:rls`
+- [x] 2.1 Unit tests pass: `npm test`
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 2.3 Build passes: `npm run build && npm run check:client-only`
+- [x] 2.4 RLS checks still pass: `npm run check:rls`
 
 #### Manual
 
-- [ ] 2.5 Dev console: session, rate, repeat rate and mastered endpoints behave as specified
+- [x] 2.5 Dev console: session, rate, repeat rate and mastered endpoints behave as specified
 
 ### Phase 3: Review screen and Collection toggle
 

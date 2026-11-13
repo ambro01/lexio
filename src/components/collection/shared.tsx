@@ -72,7 +72,8 @@ export function isFlashcard(body: unknown): body is Flashcard {
     typeof body.exampleSentence === "string" &&
     (body.cefr === null || typeof body.cefr === "string") &&
     Array.isArray(body.tags) &&
-    body.tags.every(isTag)
+    body.tags.every(isTag) &&
+    typeof body.mastered === "boolean"
   );
 }
 
