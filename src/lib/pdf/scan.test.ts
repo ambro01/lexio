@@ -215,4 +215,34 @@ describe("readScannedLesson", () => {
     });
     expect(result).toEqual({ ok: false, reason: "password" });
   });
+
+  it("returns one failure when a page fails while others are still in flight, and ignores their late results", async () => {
+    const page1 = deferred<PageTranscription>();
+    let rejectPage3: (error: Error) => void = () => undefined;
+    const page3Rejected = new Promise<string>((_, reject) => {
+      rejectPage3 = reject;
+    });
+    const transcribed: number[] = [];
+    const result = await scan(5, {
+      renderPage: (page) => {
+        const pageNumber = (page as FakePage).pageNumber;
+        if (pageNumber === 2) {
+          return Promise.reject(new Error("canvas lost"));
+        }
+        // Page 3 is still rendering when the scan gives up; it fails only after the document is destroyed.
+        return pageNumber === 3 ? page3Rejected : renderPage(page);
+      },
+      transcribe: (image) => {
+        transcribed.push(pageOf(image));
+        return pageOf(image) === 1 ? page1.promise : Promise.resolve({ ok: true, text: "x", unreadable: false });
+      },
+    });
+    expect(result).toEqual({ ok: false, reason: "failed" });
+
+    // The late results must not change anything or surface as unhandled rejections (Vitest fails the run on those).
+    rejectPage3(new Error("document destroyed"));
+    page1.resolve({ ok: true, text: words(0, 50), unreadable: false });
+    await settle();
+    expect(transcribed).toEqual([1]);
+  });
 });

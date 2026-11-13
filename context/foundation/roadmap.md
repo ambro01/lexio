@@ -226,10 +226,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Prerequisites:** S-02
 - **Parallel with:** S-03, S-04, S-05, S-06, S-07, S-08, S-09
 - **Blockers:** —
-- **Unknowns:**
-  - How does the text of a scanned page get read, and does that fit the 60 s generation budget and the app's request-size limits for a typical lesson (up to ~10 pages)? — Owner: team. Block: no (researched in `/10x-plan`).
-  - Which of the three configured AI models can read scanned pages, and at what cost per page? — Owner: team. Block: no (researched in `/10x-plan`).
-  - Open Roadmap Questions 1 and 2 (time target for scans; unreadable pages) — Owner: user. Block: no.
+- **Unknowns:** — (resolved 2026-11-13: vision transcription per page, measured in `context/changes/scanned-pdf-generation/research.md`; time target and unreadable pages in the PRD NFRs)
 - **Risk:** Reuses the S-02 upload and review flow, so reading scanned pages is the only new risk; poor recognition would show up directly in the AI content-quality rate, and the "PDF is not retained" rule must still hold.
 - **Status:** in-progress
 
@@ -252,10 +249,9 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ## Open Roadmap Questions
 
-Resolved earlier: 2026-11-03: 3-week MVP estimate confirmed; input limit 2,000 words; "too easy" bulk rejections recorded as "Za łatwe".
+Resolved earlier: 2026-11-03: 3-week MVP estimate confirmed; input limit 2,000 words; "too easy" bulk rejections recorded as "Za łatwe"; 2026-11-13: the < 60 s target also covers scanned PDFs, and unreadable scanned pages are skipped and named (PRD NFRs).
 
-1. **Does the "< 60 s for a typical lesson PDF (up to ~10 pages)" target also apply to scanned PDFs, or do they get their own target (time and/or page limit)?** — Owner: user. Block: no (S-10; settle while planning).
-2. **What should the user see when a scanned page cannot be read well enough (blurred, skewed, very low contrast) — a clear message and no proposals, or proposals from whatever was read?** — Owner: user. Block: no (S-10; settle while planning).
+No open questions.
 
 ## Parked
 

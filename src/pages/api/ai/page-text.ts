@@ -82,7 +82,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     const durationMs = Date.now() - started;
     if (error instanceof UpstreamTimeoutError) {
       logPageText({ status: 504, model, modelSource, profileLookup, durationMs, imageChars: image.length });
-      return json(504, { error: "timeout", message: "Generowanie trwało zbyt długo. Spróbuj ponownie." });
+      return json(504, { error: "timeout", message: "Odczyt strony trwał zbyt długo. Spróbuj ponownie." });
     }
     if (error instanceof UpstreamError || error instanceof InvalidModelOutputError) {
       logPageText({
