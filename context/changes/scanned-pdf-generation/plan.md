@@ -385,11 +385,11 @@ None: no database or API contract changes for existing routes.
 
 #### Automated
 
-- [x] 3.1 Lint, tests and build pass: `npm run lint && npm test && npm run build`
-- [ ] 3.2 CI passes on `master` after push
+- [x] 3.1 Lint, tests and build pass: `npm run lint && npm test && npm run build` — da4973e
+- [x] 3.2 CI passes on `master` after push — da4973e
 
 #### Manual
 
-- [ ] 3.3 Phone, production: `lesson.pdf` → proposals within 60 s with visible progress
-- [ ] 3.4 Workers logs: 7 `page_text` lines with status 200 and no CPU-limit errors
-- [ ] 3.5 Workers logs contain no page image or transcribed text
+- [x] 3.3 Phone, production: `lesson.pdf` → proposals within 60 s with visible progress — da4973e
+- [x] 3.4 Workers logs: 7 `page_text` lines with status 200 and no CPU-limit errors — da4973e
+- [x] 3.5 Workers logs contain no page image or transcribed text — da4973e
