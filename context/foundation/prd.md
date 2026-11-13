@@ -3,7 +3,7 @@ project: "Lexio"
 version: 5
 status: draft
 created: 2026-10-28
-updated: 2026-11-12
+updated: 2026-11-13
 context_type: greenfield
 product_type: web-app
 target_scale:
@@ -122,10 +122,13 @@ Insight: general-purpose flashcard apps are too universal for this case. This pr
 
 ## Non-Functional Requirements
 
-- Flashcard proposals from a typical lesson PDF (up to ~10 pages) are ready in < 60 s, with continuous visible progress during generation.
+- Flashcard proposals from a typical lesson PDF (up to ~10 pages) are ready in < 60 s, with continuous visible progress during generation. This also applies to PDFs made of scanned pages (FR-017).
+  > Decision 2026-11-13 (while planning scanned PDF generation): scans get the same target; measured ~6 s to read a 7-page lesson plus the usual generation time.
 - Generation accepts input up to 2,000 words. Pasted text over 2,000 words is rejected with a clear message; text extracted from a PDF is cut to its first 2,000 words with a visible notice.
   > Decision 2026-11-11 (while planning PDF lesson generation): PDF text is truncated, not rejected, so that long lesson PDFs stay usable without manual editing.
 - An uploaded PDF is not retained after the proposals are generated; only the flashcards remain.
+- A scanned page that cannot be read is skipped and named to the user; when no page of a scan can be read, no proposals are generated and the user sees a clear message.
+  > Decision 2026-11-13 (while planning scanned PDF generation): one unreadable page should not block the whole lesson.
 - Review is comfortable in the latest two major versions of the mainstream mobile browsers.
 - A user never sees another user's flashcards, tags or statistics.
 
@@ -166,7 +169,6 @@ The user meets the rule twice: when reviewing proposals after uploading a lesson
 
 ## Open Questions
 
-Resolved earlier: 2026-11-03: input limit set to 2,000 words; 2026-11-11: PDF text over the limit is truncated instead of rejected; "too easy" bulk rejections recorded as "Za łatwe"; 3-week MVP estimate confirmed.
+Resolved earlier: 2026-11-03: input limit set to 2,000 words; 2026-11-11: PDF text over the limit is truncated instead of rejected; "too easy" bulk rejections recorded as "Za łatwe"; 3-week MVP estimate confirmed; 2026-11-13: the < 60 s target also covers scanned PDFs, and unreadable scanned pages are skipped and named (see Non-Functional Requirements).
 
-1. Does the "< 60 s for a typical lesson PDF (up to ~10 pages)" target also apply to scanned PDFs, or do they get their own target (time and/or page limit)? — TBD by user. Block: no (can be settled while planning FR-017).
-2. What should the user see when a scanned page cannot be read well enough (blurred, skewed, very low contrast) — a clear message and no proposals, or proposals from whatever was read? — TBD by user. Block: no (can be settled while planning FR-017).
+No open questions.

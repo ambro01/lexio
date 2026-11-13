@@ -370,22 +370,22 @@ None: no database or API contract changes for existing routes.
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm test`
-- [x] 2.2 Lint passes: `npm run lint`
-- [x] 2.3 Type check passes: `npx astro check`
-- [x] 2.4 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only`
+- [x] 2.1 Unit tests pass: `npm test` — 07d5f5a
+- [x] 2.2 Lint passes: `npm run lint` — 07d5f5a
+- [x] 2.3 Type check passes: `npx astro check` — 07d5f5a
+- [x] 2.4 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only` — 07d5f5a
 
 #### Manual
 
-- [x] 2.5 Dev: `lesson.pdf` shows scan progress, 7 of 7 pages read, and proposals without boilerplate words
-- [x] 2.6 Dev: a PDF with a text layer still uses the text path
-- [x] 2.7 Dev: a server failure mid-scan shows a retryable error and keeps the previous file
+- [x] 2.5 Dev: `lesson.pdf` shows scan progress, 7 of 7 pages read, and proposals without boilerplate words — 07d5f5a
+- [x] 2.6 Dev: a PDF with a text layer still uses the text path — 07d5f5a
+- [x] 2.7 Dev: a server failure mid-scan shows a retryable error and keeps the previous file — 07d5f5a
 
 ### Phase 3: Docs and production check
 
 #### Automated
 
-- [ ] 3.1 Lint, tests and build pass: `npm run lint && npm test && npm run build`
+- [x] 3.1 Lint, tests and build pass: `npm run lint && npm test && npm run build`
 - [ ] 3.2 CI passes on `master` after push
 
 #### Manual
