@@ -229,24 +229,24 @@ None. The table, column and index exist since S-01.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test`
-- [x] 1.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 1.3 RLS and outcome checks pass, including the new S-09 section: `npm run check:rls`
-- [x] 1.4 Build passes: `npm run build && npm run check:client-only`
+- [x] 1.1 Unit tests pass: `npm test` — fe756bc
+- [x] 1.2 Lint and type check pass: `npm run lint` and `npx astro check` — fe756bc
+- [x] 1.3 RLS and outcome checks pass, including the new S-09 section: `npm run check:rls` — fe756bc
+- [x] 1.4 Build passes: `npm run build && npm run check:client-only` — fe756bc
 
 #### Manual
 
-- [x] 1.5 Dev: a word rejected as "Znam" is skipped on regeneration (meta.skippedKnown ≥ 1); a "Błędne" word still appears
+- [x] 1.5 Dev: a word rejected as "Znam" is skipped on regeneration (meta.skippedKnown ≥ 1); a "Błędne" word still appears — fe756bc
 
 ### Phase 2: Notice in the review and production
 
 #### Automated
 
-- [ ] 2.1 Unit tests, lint and type check pass: `npm test`, `npm run lint`, `npx astro check`
-- [ ] 2.2 Build passes: `npm run build && npm run check:client-only`
+- [x] 2.1 Unit tests, lint and type check pass: `npm test`, `npm run lint`, `npx astro check`
+- [x] 2.2 Build passes: `npm run build && npm run check:client-only`
 - [ ] 2.3 CI passes on `master` after push
 
 #### Manual
 
-- [ ] 2.4 Dev: the notice shows the skipped count and clears after discarding the draft
+- [x] 2.4 Dev: the notice shows the skipped count and clears after discarding the draft
 - [ ] 2.5 Production: a previously known word is not proposed and the notice shows the count

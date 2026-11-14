@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dropKnownWords } from "./known-words";
+import { dropKnownWords, skippedNotice } from "./known-words";
 
 const proposals = [{ word: "Give  Up" }, { word: "look after" }, { word: "\tRun Out\n" }, { word: "carry on" }];
 
@@ -29,5 +29,20 @@ describe("dropKnownWords", () => {
   it("counts the skipped proposals", () => {
     const { skipped } = dropKnownWords(proposals, new Set(["give up", "run out", "carry on", "not proposed"]));
     expect(skipped).toBe(3);
+  });
+});
+
+describe("skippedNotice", () => {
+  it("returns null when nothing was skipped", () => {
+    expect(skippedNotice(0, 5)).toBeNull();
+    expect(skippedNotice(0, 0)).toBeNull();
+  });
+
+  it("reports the count when proposals remain", () => {
+    expect(skippedNotice(3, 2)).toBe("Pominięto 3 znanych słów");
+  });
+
+  it("explains an empty result caused by skipped words", () => {
+    expect(skippedNotice(4, 0)).toBe("AI nie znalazło nowych słów — pominięto 4 znanych.");
   });
 });

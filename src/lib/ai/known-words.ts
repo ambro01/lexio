@@ -11,3 +11,17 @@ export function dropKnownWords<T extends { word: string }>(
   const kept = proposals.filter((proposal) => !knownKeys.has(toKey(proposal.word)));
   return { kept, skipped: proposals.length - kept.length };
 }
+
+/**
+ * The review notice for proposals skipped as known, or null when none were skipped.
+ * `remaining` is the number of proposals left after the filter; with none left the text replaces the empty-state notice.
+ */
+export function skippedNotice(skipped: number, remaining: number): string | null {
+  if (skipped <= 0) {
+    return null;
+  }
+  const count = String(skipped);
+  return remaining > 0
+    ? `Pominięto ${count} znanych słów`
+    : `AI nie znalazło nowych słów — pominięto ${count} znanych.`;
+}

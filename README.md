@@ -162,6 +162,8 @@ Users can then sign in immediately after sign-up without clicking a confirmation
 | `/collection`         | Kolekcja: browse, edit, delete and tag flashcards (protected)                |
 | `/review`             | Powtórka: review by tag or general, rate cards (protected)                   |
 
+On `/generate`, words you rejected earlier as known or too easy are not proposed again; the review shows how many were skipped.
+
 Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication.
 
 ## Deployment

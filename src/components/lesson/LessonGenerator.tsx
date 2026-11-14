@@ -5,6 +5,7 @@ import { useReviewDraft } from "@/components/hooks/useReviewDraft";
 import PdfLessonInput, { type PdfText } from "@/components/lesson/PdfLessonInput";
 import ProposalReviewItem from "@/components/lesson/ProposalReviewItem";
 import TooEasyGroup from "@/components/lesson/TooEasyGroup";
+import { skippedNotice as knownWordsNotice } from "@/lib/ai/known-words";
 import { MAX_TAG_CHARS } from "@/lib/ai/outcomes";
 import { countWords } from "@/lib/ai/proposals";
 import { tagFromFileName } from "@/lib/pdf/lesson-text";
@@ -89,11 +90,18 @@ async function postJson<T>(
 
 interface GenerationResponse {
   proposals: ReviewProposal[];
-  meta: { model: string };
+  /** `skippedKnown`: proposals dropped as known words; absent means 0. */
+  meta: { model: string; skippedKnown?: number };
 }
 
 function isGenerationResponse(body: unknown): body is GenerationResponse {
-  return isRecord(body) && Array.isArray(body.proposals) && isRecord(body.meta) && typeof body.meta.model === "string";
+  return (
+    isRecord(body) &&
+    Array.isArray(body.proposals) &&
+    isRecord(body.meta) &&
+    typeof body.meta.model === "string" &&
+    (body.meta.skippedKnown === undefined || typeof body.meta.skippedKnown === "number")
+  );
 }
 
 function isAcceptSetResult(body: unknown): body is AcceptSetResult {
@@ -165,6 +173,8 @@ export default function LessonGenerator({ userId, tagNames, maxWords, level }: P
   const [stage, setStage] = useState<Stage>({ name: "idle" });
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Transient: shown above the draft review, not stored with the draft and not restored on reload.
+  const [skippedNotice, setSkippedNotice] = useState<string | null>(null);
   const [acceptError, setAcceptError] = useState<string | null>(null);
   const mounted = useRef(true);
 
@@ -196,6 +206,7 @@ export default function LessonGenerator({ userId, tagNames, maxWords, level }: P
     const lessonText = source === "text" ? text : (pdf?.text ?? "");
     setGenerateError(null);
     setNotice(null);
+    setSkippedNotice(null);
     setStage({ name: "generating" });
     // No model is sent: the server uses the profile model (or the default) and reports it in meta.
     const result = await postJson("/api/ai/proposals", { text: lessonText }, isGenerationResponse);
@@ -207,10 +218,13 @@ export default function LessonGenerator({ userId, tagNames, maxWords, level }: P
       setGenerateError(result.message);
       return;
     }
-    if (result.data.proposals.length === 0) {
-      setNotice(NO_PROPOSALS);
+    const skipped = result.data.meta.skippedKnown ?? 0;
+    const remaining = result.data.proposals.length;
+    if (remaining === 0) {
+      setNotice(knownWordsNotice(skipped, remaining) ?? NO_PROPOSALS);
       return;
     }
+    setSkippedNotice(knownWordsNotice(skipped, remaining));
     setAcceptError(null);
     setDraft(createDraft(lessonTag, result.data.meta.model, level, result.data.proposals));
   }
@@ -228,12 +242,14 @@ export default function LessonGenerator({ userId, tagNames, maxWords, level }: P
       return;
     }
     clearDraft();
+    setSkippedNotice(null);
     setStage({ name: "done", result: result.data, tagName: current.tagName });
   }
 
   function discard() {
     if (window.confirm("Odrzucić szkic? Propozycje z tej lekcji zostaną utracone i nic nie zostanie zapisane.")) {
       setAcceptError(null);
+      setSkippedNotice(null);
       clearDraft();
     }
   }
@@ -244,6 +260,7 @@ export default function LessonGenerator({ userId, tagNames, maxWords, level }: P
     setPdf(null);
     setGenerateError(null);
     setNotice(null);
+    setSkippedNotice(null);
     setStage({ name: "idle" });
   }
 
@@ -344,6 +361,13 @@ export default function LessonGenerator({ userId, tagNames, maxWords, level }: P
               void accept(draft);
             }}
           />
+        )}
+
+        {skippedNotice && (
+          <p className="flex items-center gap-2 text-sm text-blue-100/70" role="status">
+            <Info className="size-4 shrink-0" />
+            {skippedNotice}
+          </p>
         )}
 
         {draft.level === null && (
