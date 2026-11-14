@@ -40,20 +40,20 @@ A Polish learner taking 1–2 English lessons a week copies new words from lesso
 
 ## At a glance
 
-| ID   | Change ID                   | Outcome (user can …)                                                               | Prerequisites | PRD refs                        | Status      |
-| ---- | --------------------------- | ---------------------------------------------------------------------------------- | ------------- | ------------------------------- | ----------- |
-| F-01 | openrouter-generation-spike | (foundation) deployed app calls the AI model via OpenRouter within the 60 s budget | —             | NFR (< 60 s, progress)          | done        |
-| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | done        |
-| S-01 | paste-text-generation       | paste lesson text, review AI proposals, accept the set into the collection         | F-01, F-02    | US-01, FR-003, FR-004, FR-005   | done        |
-| S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | done        |
-| S-03 | cefr-too-easy-grouping      | set CEFR level and AI model in profile; bulk-reject "too easy" ones                | S-01          | US-01, FR-014, FR-016           | done        |
-| S-04 | manual-word-ai-fill         | enter a word with optional context and get an AI-filled flashcard to review        | F-01, F-02    | FR-006                          | done        |
-| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | done        |
-| S-06 | spaced-review-session       | run a review by tag or general, rate cards and mark them "Opanowane"               | F-02, S-01    | FR-010, FR-011                  | done        |
-| S-07 | acceptance-rate-stats       | see the AI content-quality rate (unchanged / corrected / rejected as "Błędne")     | S-01          | FR-013                          | in-progress |
-| S-08 | password-reset              | reset a forgotten password via email                                               | —             | FR-001                          | ready       |
-| S-09 | skip-known-words            | never see again words they rejected as known or too easy                           | S-01          | US-01, FR-015                   | done        |
-| S-10 | scanned-pdf-generation      | upload a scanned lesson PDF (no text layer) and get the same proposal review       | S-02          | US-01, FR-017                   | done        |
+| ID   | Change ID                   | Outcome (user can …)                                                               | Prerequisites | PRD refs                        | Status |
+| ---- | --------------------------- | ---------------------------------------------------------------------------------- | ------------- | ------------------------------- | ------ |
+| F-01 | openrouter-generation-spike | (foundation) deployed app calls the AI model via OpenRouter within the 60 s budget | —             | NFR (< 60 s, progress)          | done   |
+| F-02 | flashcard-data-contract     | (foundation) per-user flashcard + tag storage with isolation and one-word-per-user | —             | NFR (isolation), Access Control | done   |
+| S-01 | paste-text-generation       | paste lesson text, review AI proposals, accept the set into the collection         | F-01, F-02    | US-01, FR-003, FR-004, FR-005   | done   |
+| S-02 | pdf-lesson-generation       | upload a lesson PDF and get the same proposal review                               | S-01          | US-01, FR-002                   | done   |
+| S-03 | cefr-too-easy-grouping      | set CEFR level and AI model in profile; bulk-reject "too easy" ones                | S-01          | US-01, FR-014, FR-016           | done   |
+| S-04 | manual-word-ai-fill         | enter a word with optional context and get an AI-filled flashcard to review        | F-01, F-02    | FR-006                          | done   |
+| S-05 | collection-edit-and-tags    | browse the collection, edit, delete and tag flashcards with tag suggestions        | F-02, S-01    | FR-007, FR-008                  | done   |
+| S-06 | spaced-review-session       | run a review by tag or general, rate cards and mark them "Opanowane"               | F-02, S-01    | FR-010, FR-011                  | done   |
+| S-07 | acceptance-rate-stats       | see the AI content-quality rate (unchanged / corrected / rejected as "Błędne")     | S-01          | FR-013                          | done   |
+| S-08 | password-reset              | reset a forgotten password via email                                               | —             | FR-001                          | ready  |
+| S-09 | skip-known-words            | never see again words they rejected as known or too easy                           | S-01          | US-01, FR-015                   | done   |
+| S-10 | scanned-pdf-generation      | upload a scanned lesson PDF (no text layer) and get the same proposal review       | S-02          | US-01, FR-017                   | done   |
 
 ## Streams
 
@@ -191,7 +191,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** — (resolved 2026-11-03: proposals bulk-rejected from the "too easy" group are recorded with the reason "Za łatwe" and excluded from the content-quality rate.)
 - **Risk:** The metric definition decides what the primary success criterion measures; S-01 must record per-proposal outcomes from day one (unchanged / corrected / rejected as "Błędne", "Znam / nieprzydatne" or "Za łatwe") — they cannot be reconstructed later.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-08: Password reset
 
@@ -280,3 +280,4 @@ No open questions.
 - **S-10: user can upload a lesson PDF made of scanned printed pages (no text layer) and get the same proposal review as S-02; the PDF is not retained afterwards.** — Archived 2026-11-13 → `context/archive/2026-11-13-scanned-pdf-generation/`. Lesson: —.
 - **S-06: user can start a review by tag or a general review with a card limit, rate each card "Nie pamiętam", "Trudne" or "Łatwe", and mark a card "Opanowane" (excluded from general review, reversible); card selection and order follow an existing spaced-repetition method.** — Archived 2026-11-14 → `context/archive/2026-11-13-spaced-review-session/`. Lesson: —.
 - **S-09: user can generate proposals from a new lesson and never see words they previously rejected as "Znam / nieprzydatne" or "Za łatwe"; words rejected as "Błędne" may come back, and manual entry of a known word is still allowed.** — Archived 2026-11-14 → `context/archive/2026-11-14-skip-known-words/`. Lesson: —.
+- **S-07: user can see the AI content-quality rate — accepted unchanged, accepted after correction, and rejected as "Błędne"; rejections as "Znam / nieprzydatne" are excluded from this rate and kept as a separate word-selection signal.** — Archived 2026-11-14 → `context/archive/2026-11-14-acceptance-rate-stats/`. Lesson: —.
