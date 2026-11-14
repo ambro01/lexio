@@ -65,6 +65,22 @@ const steps = [
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  [
+    "update-password rejects anonymous user",
+    () => request("/api/auth/update-password", { method: "POST", form: { password: "New-Smoke-Passw0rd!" } }),
+    { status: 302, location: "/auth/forgot-password?error=" },
+  ],
+  ["update-password page renders for anonymous user", () => request("/auth/update-password"), { status: 200 }],
+  [
+    "confirm rejects bad token",
+    () => request("/auth/confirm?token_hash=bogus&type=recovery"),
+    { status: 302, location: "/auth/forgot-password?error=" },
+  ],
+  [
+    "confirm rejects non-recovery type",
+    () => request("/auth/confirm?token_hash=bogus&type=signup"),
+    { status: 302, location: "/auth/forgot-password?error=" },
+  ],
   ["forgot-password page renders", () => request("/auth/forgot-password"), { status: 200 }],
   [
     "forgot-password accepts unknown email",

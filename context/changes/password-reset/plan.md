@@ -294,34 +294,34 @@ No data migration. Local developers must restart Supabase (`npx supabase stop &&
 
 #### Automated
 
-- [x] 1.1 Lint passes: `npm run lint`
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Unit tests pass: `npm test`
-- [x] 1.4 Build succeeds: `npm run build`
-- [x] 1.5 Smoke passes, including the new forgot-password steps: `BASE_URL=http://localhost:4321 npm run smoke`
+- [x] 1.1 Lint passes: `npm run lint` — 66480ab
+- [x] 1.2 Type check passes: `npx astro check` — 66480ab
+- [x] 1.3 Unit tests pass: `npm test` — 66480ab
+- [x] 1.4 Build succeeds: `npm run build` — 66480ab
+- [x] 1.5 Smoke passes, including the new forgot-password steps: `BASE_URL=http://localhost:4321 npm run smoke` — 66480ab
 
 #### Manual
 
-- [x] 1.6 "Forgot password?" on `/auth/signin` opens the forgot-password page, and submitting a registered email shows the "check your email" state
-- [x] 1.7 The recovery email in local Mailpit (`http://localhost:54324`) contains a link of the form `http://localhost:4321/auth/confirm?token_hash=…&type=recovery`
+- [x] 1.6 "Forgot password?" on `/auth/signin` opens the forgot-password page, and submitting a registered email shows the "check your email" state — 66480ab
+- [x] 1.7 The recovery email in local Mailpit (`http://localhost:54324`) contains a link of the form `http://localhost:4321/auth/confirm?token_hash=…&type=recovery` — 66480ab
 
 ### Phase 2: Confirm and set the new password
 
 #### Automated
 
-- [ ] 2.1 Lint passes: `npm run lint`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Unit tests pass: `npm test`
-- [ ] 2.4 Build succeeds: `npm run build`
-- [ ] 2.5 Smoke passes, including the new confirm and update-password steps: `BASE_URL=http://localhost:4321 npm run smoke`
+- [x] 2.1 Lint passes: `npm run lint`
+- [x] 2.2 Type check passes: `npx astro check`
+- [x] 2.3 Unit tests pass: `npm test`
+- [x] 2.4 Build succeeds: `npm run build`
+- [x] 2.5 Smoke passes, including the new confirm and update-password steps: `BASE_URL=http://localhost:4321 npm run smoke`
 
 #### Manual
 
-- [ ] 2.6 Clicking the Mailpit link opens `/auth/update-password`. Setting a new password lands on `/dashboard` with the success notice, still signed in
-- [ ] 2.7 After signing out, the old password is rejected and the new one works on `/auth/signin`
-- [ ] 2.8 Reusing the same link a second time shows the invalid/expired message on `/auth/forgot-password`
-- [ ] 2.9 Opening `/auth/update-password` in a private window shows the expired-link message with a link to request a new one
-- [ ] 2.10 Sign-up still enforces the 6-character minimum (shared constant refactor)
+- [x] 2.6 Clicking the Mailpit link opens `/auth/update-password`. Setting a new password lands on `/dashboard` with the success notice, still signed in
+- [x] 2.7 After signing out, the old password is rejected and the new one works on `/auth/signin`
+- [x] 2.8 Reusing the same link a second time shows the invalid/expired message on `/auth/forgot-password`
+- [x] 2.9 Opening `/auth/update-password` in a private window shows the expired-link message with a link to request a new one
+- [x] 2.10 Sign-up still enforces the 6-character minimum (shared constant refactor)
 
 ### Phase 3: Production rollout and docs
 
