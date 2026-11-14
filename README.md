@@ -150,18 +150,23 @@ Users can then sign in immediately after sign-up without clicking a confirmation
 
 ### Auth routes
 
-| Route                 | Description                                                                  |
-| --------------------- | ---------------------------------------------------------------------------- |
-| `/auth/signin`        | Email/password sign-in form                                                  |
-| `/auth/signup`        | Email/password sign-up form                                                  |
-| `/auth/confirm-email` | Post-signup "check your inbox" page                                          |
-| `/dashboard`          | Example protected page (redirects to `/auth/signin` if unauthenticated)      |
-| `/generate`           | Nowa lekcja: paste text or PDF (incl. scanned) → review → accept (protected) |
-| `/profile`            | Profil: CEFR level and AI model (protected)                                  |
-| `/add`                | Dodaj słowo: one word with AI fill (protected)                               |
-| `/collection`         | Kolekcja: browse, edit, delete and tag flashcards (protected)                |
-| `/review`             | Powtórka: review by tag or general, rate cards (protected)                   |
-| `/stats`              | Statystyki: AI proposal quality rate, overall and last 30 days (protected)   |
+| Route                   | Description                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `/auth/signin`          | Email/password sign-in form                                                  |
+| `/auth/signup`          | Email/password sign-up form                                                  |
+| `/auth/confirm-email`   | Post-signup "check your inbox" page                                          |
+| `/auth/forgot-password` | Request a password reset email                                               |
+| `/auth/confirm`         | Verifies the emailed reset link, then redirects to `/auth/update-password`   |
+| `/auth/update-password` | Set a new password after following the reset link                            |
+| `/dashboard`            | Example protected page (redirects to `/auth/signin` if unauthenticated)      |
+| `/generate`             | Nowa lekcja: paste text or PDF (incl. scanned) → review → accept (protected) |
+| `/profile`              | Profil: CEFR level and AI model (protected)                                  |
+| `/add`                  | Dodaj słowo: one word with AI fill (protected)                               |
+| `/collection`           | Kolekcja: browse, edit, delete and tag flashcards (protected)                |
+| `/review`               | Powtórka: review by tag or general, rate cards (protected)                   |
+| `/stats`                | Statystyki: AI proposal quality rate, overall and last 30 days (protected)   |
+
+Password reset emails sent by the local stack show up in Mailpit at `http://localhost:54324` (template: `supabase/templates/recovery.html`). Production needs custom SMTP and the same email template in the Supabase dashboard — see `context/deployment/deploy-plan.md`.
 
 On `/generate`, words you rejected earlier as known or too easy are not proposed again; the review shows how many were skipped.
 

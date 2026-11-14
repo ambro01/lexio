@@ -309,28 +309,28 @@ No data migration. Local developers must restart Supabase (`npx supabase stop &&
 
 #### Automated
 
-- [x] 2.1 Lint passes: `npm run lint`
-- [x] 2.2 Type check passes: `npx astro check`
-- [x] 2.3 Unit tests pass: `npm test`
-- [x] 2.4 Build succeeds: `npm run build`
-- [x] 2.5 Smoke passes, including the new confirm and update-password steps: `BASE_URL=http://localhost:4321 npm run smoke`
+- [x] 2.1 Lint passes: `npm run lint` — ac29056
+- [x] 2.2 Type check passes: `npx astro check` — ac29056
+- [x] 2.3 Unit tests pass: `npm test` — ac29056
+- [x] 2.4 Build succeeds: `npm run build` — ac29056
+- [x] 2.5 Smoke passes, including the new confirm and update-password steps: `BASE_URL=http://localhost:4321 npm run smoke` — ac29056
 
 #### Manual
 
-- [x] 2.6 Clicking the Mailpit link opens `/auth/update-password`. Setting a new password lands on `/dashboard` with the success notice, still signed in
-- [x] 2.7 After signing out, the old password is rejected and the new one works on `/auth/signin`
-- [x] 2.8 Reusing the same link a second time shows the invalid/expired message on `/auth/forgot-password`
-- [x] 2.9 Opening `/auth/update-password` in a private window shows the expired-link message with a link to request a new one
-- [x] 2.10 Sign-up still enforces the 6-character minimum (shared constant refactor)
+- [x] 2.6 Clicking the Mailpit link opens `/auth/update-password`. Setting a new password lands on `/dashboard` with the success notice, still signed in — ac29056
+- [x] 2.7 After signing out, the old password is rejected and the new one works on `/auth/signin` — ac29056
+- [x] 2.8 Reusing the same link a second time shows the invalid/expired message on `/auth/forgot-password` — ac29056
+- [x] 2.9 Opening `/auth/update-password` in a private window shows the expired-link message with a link to request a new one — ac29056
+- [x] 2.10 Sign-up still enforces the 6-character minimum (shared constant refactor) — ac29056
 
 ### Phase 3: Production rollout and docs
 
 #### Automated
 
-- [ ] 3.1 Format/lint passes: `npm run lint`
-- [ ] 3.2 Build succeeds: `npm run build`
+- [x] 3.1 Format/lint passes: `npm run lint`
+- [x] 3.2 Build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 3.3 Full local end-to-end flow done once more on a fresh `npx supabase db reset` stack: request → Mailpit email → confirm → new password → sign in with it
+- [x] 3.3 Full local end-to-end flow done once more on a fresh `npx supabase db reset` stack: request → Mailpit email → confirm → new password → sign in with it
 - [ ] 3.4 Production: custom SMTP and recovery template configured in the Supabase dashboard, and a reset email reaches a real non-team inbox and completes the flow on `https://lexio.rafalambro.workers.dev`

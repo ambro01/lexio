@@ -60,6 +60,16 @@ Source of truth for "what is already deployed and which secrets are wired". Page
 - [x] 2026-11-10: first migration `20261110210825_flashcard_data_contract.sql` (F-02 `flashcard-data-contract`: `flashcards`, `tags`, `flashcard_tags`, `save_flashcard`, RLS on every table) applied with `npx supabase db push`; `npx supabase migration list` shows it in Local and Remote.
 - [x] Gotcha: the project's direct database host is IPv6-only — on an IPv4-only network `link` / `db push` fail with "IPv6 is not supported on your current network". Use the **session pooler** string from Dashboard → Connect (port 5432, not the 6543 transaction pooler): `npx supabase db push --db-url "<session pooler string>"`. Run it in a separate terminal — the string contains the database password.
 
+### G. Password reset (human, dashboard)
+
+Needed by `password-reset` (`/auth/forgot-password` → email → `/auth/confirm` → `/auth/update-password`). Until custom SMTP is set, Supabase's built-in sender only delivers to members of the organization's team and is heavily rate-limited, so real users get no reset email. `Site URL` is already `https://lexio.rafalambro.workers.dev` (step B) and `resetPasswordForEmail` passes no `redirectTo`, so no Redirect URLs entry is needed.
+
+- [ ] Pick an SMTP provider (e.g. Resend or Brevo free tier) and verify the sender domain at the provider (DNS records).
+- [ ] Authentication → Emails → SMTP Settings: enable custom SMTP with the provider's host, port, user, password and sender address. The SMTP password stays in the dashboard — never in the repo.
+- [ ] Authentication → Emails → Templates → "Reset password": set the body to the same link as `supabase/templates/recovery.html` — `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`.
+- [ ] Authentication → Rate Limits: raise the email rate limit to fit expected traffic.
+- [ ] After deploy: request a reset for a real (non-team) inbox → email arrives → link opens `/auth/update-password` → set a new password → sign in with it.
+
 ## Verification (production)
 
 - [x] `GET /` → 200; `GET /auth/signin`, `/auth/signup` → 200.
