@@ -290,12 +290,12 @@ Additive: one read-only function. The user applies it in production before the c
 
 #### Automated
 
-- [x] 2.1 Unit tests, lint and type check pass: `npm test`, `npm run lint`, `npx astro check`
-- [x] 2.2 Build passes: `npm run build && npm run check:client-only`
-- [ ] 2.3 CI passes on `master` after push
+- [x] 2.1 Unit tests, lint and type check pass: `npm test`, `npm run lint`, `npx astro check` — f6bb512
+- [x] 2.2 Build passes: `npm run build && npm run check:client-only` — f6bb512
+- [x] 2.3 CI passes on `master` after push — f6bb512
 
 #### Manual
 
-- [x] 2.4 Dev: `/stats` shows plausible numbers; an empty account shows the empty state
-- [x] 2.5 Production migration applied before the code push
-- [ ] 2.6 Production: `/stats` loads on a phone with plausible numbers
+- [x] 2.4 Dev: `/stats` shows plausible numbers; an empty account shows the empty state — f6bb512
+- [x] 2.5 Production migration applied before the code push — f6bb512
+- [x] 2.6 Production: `/stats` loads on a phone with plausible numbers — f6bb512
