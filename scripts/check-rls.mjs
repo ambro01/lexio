@@ -1190,4 +1190,44 @@ await step("A: two concurrent record_review calls from the same reps — exactly
   ];
 });
 
+// ---------------------------------------------------------------------------
+// known words (S-09): the lookup findKnownWordKeys runs before showing proposals, inlined here.
+// Only "Znam / nieprzydatne" (rejected_known) and "Za łatwe" (rejected_too_easy) count; "Błędne" does not.
+// ---------------------------------------------------------------------------
+
+const KNOWN_KEYS = ["known word", "known too easy"];
+const S09_KEYS = [...KNOWN_KEYS, "known wrong", "known accepted"];
+
+async function knownWordKeys(client, keys) {
+  const { data, error } = await client
+    .from("proposal_outcomes")
+    .select("word_key")
+    .in("outcome", ["rejected_known", "rejected_too_easy"])
+    .in("word_key", keys);
+  if (error) throw new Error(error.message);
+  return [...new Set(data.map((r) => r.word_key))].sort();
+}
+
+await step("A: setup — record known, too-easy, wrong and accepted outcomes in one set", async () => {
+  const { data, error } = await acceptSet(a.client, "Known lesson", [
+    acceptItem("Known  Word", "rejected_known"),
+    acceptItem("known too easy", "rejected_too_easy"),
+    acceptItem("known wrong", "rejected_wrong"),
+    acceptItem("known accepted", "accepted_unchanged"),
+  ]);
+  if (error) return [false, error.message];
+  const row = firstRow(data);
+  return [row?.created_count === 1 && row.rejected_count === 3, JSON.stringify(row)];
+});
+
+await step("A: the known-words lookup returns exactly the known and too-easy keys", async () => {
+  const keys = await knownWordKeys(a.client, S09_KEYS);
+  return [keys.join("|") === [...KNOWN_KEYS].sort().join("|"), keys.join(",")];
+});
+
+await step("B: the same known-words lookup returns none of A's keys", async () => {
+  const keys = await knownWordKeys(b.client, S09_KEYS);
+  return [keys.length === 0, keys.join(",")];
+});
+
 finish();

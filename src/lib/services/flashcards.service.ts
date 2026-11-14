@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/db/database.types";
 import { CEFR_LEVELS, type CefrLevel } from "@/lib/ai/proposals";
+import { toKey } from "@/lib/ai/word-key";
 import type {
   AcceptProposalSetInput,
   AcceptSetResult,
@@ -93,10 +94,8 @@ function toFlashcard(row: FlashcardRow): Flashcard {
   };
 }
 
-/** Same folding as the database's word_key / name_key: lowercase, trimmed, inner whitespace collapsed. */
-export function toKey(value: string): string {
-  return value.trim().replace(/\s+/g, " ").toLowerCase();
-}
+// The folding rule lives in a pure module (no Supabase import) so client-safe code can share it.
+export { toKey };
 
 function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
@@ -163,6 +162,30 @@ export async function findExistingWordKeys(client: FlashcardsClient, words: stri
   const { data, error } = await client.from("flashcards").select("word_key").in("word_key", keys);
   if (error) {
     throw storeError("word lookup", error);
+  }
+  // word_key is a generated column, so the generated types mark it nullable; it is never null in practice.
+  return new Set(data.map((row) => row.word_key).filter((key): key is string => key !== null));
+}
+
+/** Outcomes that mark a word as known: never propose it again from a lesson (FR-015). */
+const KNOWN_WORD_OUTCOMES = ["rejected_known", "rejected_too_easy"];
+
+/**
+ * The word keys (see `toKey`) of the given words that the user has ever rejected as known or too easy.
+ * Any one such outcome counts, even if the word was later accepted or added manually.
+ */
+export async function findKnownWordKeys(client: FlashcardsClient, words: string[]): Promise<Set<string>> {
+  const keys = [...new Set(words.map(toKey))].filter((key) => key !== "");
+  if (keys.length === 0) {
+    return new Set();
+  }
+  const { data, error } = await client
+    .from("proposal_outcomes")
+    .select("word_key")
+    .in("outcome", KNOWN_WORD_OUTCOMES)
+    .in("word_key", keys);
+  if (error) {
+    throw storeError("known word lookup", error);
   }
   // word_key is a generated column, so the generated types mark it nullable; it is never null in practice.
   return new Set(data.map((row) => row.word_key).filter((key): key is string => key !== null));

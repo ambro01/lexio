@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { OPENROUTER_API_KEY } from "astro:env/server";
 import { z } from "zod";
+import { dropKnownWords } from "@/lib/ai/known-words";
 import { isAiModelId } from "@/lib/ai/models";
 import {
   InvalidModelOutputError,
@@ -10,7 +11,7 @@ import {
   type Proposal,
 } from "@/lib/ai/proposals";
 import { UpstreamError, UpstreamTimeoutError, generateProposals } from "@/lib/services/ai-generation.service";
-import { findExistingWordKeys, toKey } from "@/lib/services/flashcards.service";
+import { findExistingWordKeys, findKnownWordKeys, toKey } from "@/lib/services/flashcards.service";
 import { resolveProfileModel, type Lookup } from "@/lib/services/model-resolution";
 import { createClient } from "@/lib/supabase";
 import type { ReviewProposal } from "@/types";
@@ -35,6 +36,29 @@ function logGeneration(fields: Record<string, unknown>): void {
   // One structured line per call for Workers logs; never log the lesson text.
   // eslint-disable-next-line no-console -- intentional observability log
   console.log(JSON.stringify({ event: "ai_generation", ...fields }));
+}
+
+/**
+ * Drops proposals for words the user rejected earlier as known or too easy (FR-015).
+ * Never throws: when the lookup is unavailable or fails, every proposal is kept.
+ */
+async function skipKnownWords(
+  proposals: Proposal[],
+  client: ReturnType<typeof createClient>,
+): Promise<{ proposals: Proposal[]; skipped: number; lookup: Lookup }> {
+  if (!client) {
+    return { proposals, skipped: 0, lookup: "unavailable" };
+  }
+  try {
+    const known = await findKnownWordKeys(
+      client,
+      proposals.map((proposal) => proposal.word),
+    );
+    const { kept, skipped } = dropKnownWords(proposals, known);
+    return { proposals: kept, skipped, lookup: "ok" };
+  } catch {
+    return { proposals, skipped: 0, lookup: "failed" };
+  }
 }
 
 /** Marks proposals whose word the user already has. Never throws: a paid generation must not fail here. */
@@ -108,7 +132,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     return json(503, { error: "not_configured", message: "Generowanie AI nie jest skonfigurowane." });
   }
 
-  // One client for the profile read and the collection lookup.
+  // One client for the profile read, the known-words lookup and the collection lookup.
   const client = createClient(request.headers, cookies);
   const { model, modelSource, profileLookup } = isAiModelId(requestedModel)
     ? { model: requestedModel, modelSource: "request" as const, profileLookup: undefined }
@@ -117,7 +141,8 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   const started = Date.now();
   try {
     const result = await generateProposals({ text: input.text, model, apiKey: OPENROUTER_API_KEY });
-    const marked = await markInCollection(result.proposals, client);
+    const filtered = await skipKnownWords(result.proposals, client);
+    const marked = await markInCollection(filtered.proposals, client);
     logGeneration({
       status: 200,
       model: result.model,
@@ -125,12 +150,14 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       profileLookup,
       durationMs: result.durationMs,
       inputWords: input.words,
-      proposalCount: result.proposals.length,
+      proposalCount: marked.proposals.length,
       droppedCount: result.dropped,
       promptTokens: result.usage.promptTokens,
       completionTokens: result.usage.completionTokens,
       inCollectionCount: marked.proposals.filter((proposal) => proposal.inCollection).length,
       inCollectionLookup: marked.lookup,
+      skippedKnownCount: filtered.skipped,
+      knownLookup: filtered.lookup,
     });
     return json(200, {
       proposals: marked.proposals,
@@ -139,6 +166,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
         durationMs: result.durationMs,
         inputWords: input.words,
         dropped: result.dropped,
+        skippedKnown: filtered.skipped,
         usage: result.usage,
       },
     });

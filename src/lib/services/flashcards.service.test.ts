@@ -8,6 +8,7 @@ import {
   addFlashcardTag,
   deleteFlashcard,
   findExistingWordKeys,
+  findKnownWordKeys,
   listFlashcards,
   listTags,
   removeFlashcardTag,
@@ -432,5 +433,36 @@ describe("findExistingWordKeys", () => {
   it("maps a database error to FlashcardStoreError", async () => {
     const { client } = stubClient({ data: null, error: { code: "42501" } });
     await expect(findExistingWordKeys(client, ["give up"])).rejects.toBeInstanceOf(FlashcardStoreError);
+  });
+});
+
+describe("findKnownWordKeys", () => {
+  it("queries proposal_outcomes for known and too-easy rejections of folded, unique keys", async () => {
+    const { client, calls } = stubClient({ data: [{ word_key: "give up" }, { word_key: "give up" }], error: null });
+
+    const keys = await findKnownWordKeys(client, ["Give  Up", " give up", "Look\tAfter", "  "]);
+
+    expect(keys).toEqual(new Set(["give up"]));
+    expect(calls.find((call) => call.method === "from")?.args).toEqual(["proposal_outcomes"]);
+    expect(calls.find((call) => call.method === "select")?.args).toEqual(["word_key"]);
+    expect(calls.filter((call) => call.method === "in").map((call) => call.args)).toEqual([
+      ["outcome", ["rejected_known", "rejected_too_easy"]],
+      ["word_key", ["give up", "look after"]],
+    ]);
+  });
+
+  it("skips the query when no word has a key", async () => {
+    const { client, calls } = stubClient({ data: [], error: null });
+    expect(await findKnownWordKeys(client, [])).toEqual(new Set());
+    expect(await findKnownWordKeys(client, [" \t "])).toEqual(new Set());
+    expect(calls).toEqual([]);
+  });
+
+  it("maps a database error to FlashcardStoreError without user content", async () => {
+    const { client } = stubClient({ data: null, error: { code: "42501", message: "give up" } });
+    const promise = findKnownWordKeys(client, ["give up"]);
+    await expect(promise).rejects.toBeInstanceOf(FlashcardStoreError);
+    await expect(promise).rejects.toThrow("known word lookup");
+    await expect(promise).rejects.not.toThrow("give up");
   });
 });
