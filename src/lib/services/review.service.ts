@@ -92,6 +92,8 @@ export async function loadReviewQueue(
  * Rates a card: reads its state (none for a new card), computes the next one with FSRS and stores it with a log
  * row. `ReviewConflictError` when another rating was stored in between; `FlashcardNotFoundError` when the card
  * is missing or another user's.
+ * The `reps` check is read in this request, so it stops overlapping requests only: a retry after a lost response
+ * stores a second rating (accepted risk, impl-review F1 — one extra FSRS step on one card).
  */
 export async function rateCard(
   client: ReviewClient,

@@ -76,7 +76,6 @@ export default function ReviewSession({ tags }: Props) {
   const [startError, setStartError] = useState<string | null>(null);
   const [busy, setBusy] = useState<Action["kind"] | null>(null);
   const [failed, setFailed] = useState<{ message: string; action: Action } | null>(null);
-  const [conflict, setConflict] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const mounted = useRef(true);
   // Guards a double tap before the disabled buttons re-render (the API also rejects a second rating with 409).
@@ -97,7 +96,6 @@ export default function ReviewSession({ tags }: Props) {
   function backToStart() {
     setScreen({ kind: "start" });
     setFailed(null);
-    setConflict(null);
     setNotice(null);
   }
 
@@ -158,7 +156,9 @@ export default function ReviewSession({ tags }: Props) {
       return;
     }
     if (result.status === 409 && action.kind === "rate") {
-      setConflict(result.message);
+      // Rated in another tab or by an overlapping request: skip it and carry on, as for a deleted card.
+      setNotice("Ta karta została już oceniona — pomijam ją.");
+      setScreen({ kind: "session", session: dropCurrent(session) });
       return;
     }
     // Any other failure keeps the card on screen and lets the user try again.
@@ -336,7 +336,7 @@ export default function ReviewSession({ tags }: Props) {
   }
   const { current, total } = progress(session);
   const meanings = card.additionalMeanings.filter((meaning) => meaning.trim() !== "");
-  const locked = busy !== null || conflict !== null;
+  const locked = busy !== null;
 
   return (
     <div className="space-y-5">
@@ -406,18 +406,26 @@ export default function ReviewSession({ tags }: Props) {
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={locked}
-          onClick={() => {
-            void run(session, { kind: "mastered" });
-          }}
-          className={wideActionClass}
-        >
-          {busy === "mastered" ? <Spinner /> : <Check className="size-4" />}
-          Opanowane
-        </Button>
+        {card.mastered ? (
+          // Tag sessions include mastered cards; marking one again would only inflate the summary.
+          <span className="flex items-center gap-2 text-sm text-emerald-200/80">
+            <Check className="size-4" />
+            Opanowana
+          </span>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={locked}
+            onClick={() => {
+              void run(session, { kind: "mastered" });
+            }}
+            className={wideActionClass}
+          >
+            {busy === "mastered" ? <Spinner /> : <Check className="size-4" />}
+            Opanowane
+          </Button>
+        )}
         {busy === "rate" && (
           <span className="flex items-center gap-2 text-sm text-blue-100/70">
             <Spinner />
@@ -434,16 +442,6 @@ export default function ReviewSession({ tags }: Props) {
             void run(session, failed.action);
           }}
         />
-      )}
-
-      {conflict && (
-        <div className="space-y-2">
-          <ErrorBox message={conflict} />
-          <Button type="button" onClick={backToStart} className={primaryClass}>
-            <RotateCcw className="size-4" />
-            Zacznij od nowa
-          </Button>
-        </div>
       )}
     </div>
   );

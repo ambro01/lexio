@@ -61,7 +61,10 @@ export function progress(state: SessionState): { current: number; total: number 
   return { current: state.shown + 1, total: state.shown + state.queue.length };
 }
 
-/** The current card got a rating: "again" moves it to the end of the queue, "hard" and "good" remove it. */
+/**
+ * The current card got a rating: "again" moves it to the end of the queue, "hard" and "good" remove it.
+ * A re-queued card is no longer new: it now has a review state.
+ */
 export function applyRating(state: SessionState, rating: SessionRating): SessionState {
   const card = currentCard(state);
   if (card === null) {
@@ -69,7 +72,7 @@ export function applyRating(state: SessionState, rating: SessionRating): Session
   }
   const rest = state.queue.slice(1);
   return {
-    queue: rating === "again" ? [...rest, card] : rest,
+    queue: rating === "again" ? [...rest, { ...card, isNew: false }] : rest,
     revealed: false,
     shown: state.shown + 1,
     ratedIds: state.ratedIds.includes(card.id) ? state.ratedIds : [...state.ratedIds, card.id],

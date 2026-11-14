@@ -1168,4 +1168,26 @@ await step("A: deleting a card removes its review_states and review_log rows", a
   ];
 });
 
+await step("A: two concurrent record_review calls from the same reps — exactly one is stored", async () => {
+  // A fresh card, so no earlier step depends on its state.
+  const { data, error } = await save(a.client, "concurrent rating", "równoczesna ocena", []);
+  if (error) return [false, error.message];
+  const id = firstRow(data)?.flashcard_id;
+  if (!id) return [false, "no card id"];
+  const first = await recordReview(a.client, id, null, 3, reviewState({ dueInDays: 1, reps: 1 }));
+  if (first.error) return [false, `setup: ${errorText(first.error)}`];
+  const results = await Promise.all([
+    recordReview(a.client, id, 1, 3, reviewState({ dueInDays: 5, reps: 2 })),
+    recordReview(a.client, id, 1, 2, reviewState({ dueInDays: 3, reps: 2 })),
+  ]);
+  const okCount = results.filter((r) => !r.error).length;
+  const conflicts = results.filter((r) => r.error?.code === "40001").length;
+  const row = await stateRow(a.client, id);
+  const logs = await logCount(a.client, id);
+  return [
+    okCount === 1 && conflicts === 1 && row?.reps === 2 && logs === 2,
+    `ok=${String(okCount)} conflicts=${String(conflicts)} reps=${String(row?.reps)} logs=${String(logs)}`,
+  ];
+});
+
 finish();

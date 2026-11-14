@@ -61,6 +61,8 @@ describe("session queue", () => {
     const state = applyRating(startSession([card("a"), card("b"), card("c")]), "again");
     expect(ids(state.queue)).toEqual(["b", "c", "a"]);
     expect(progress(state)).toEqual({ current: 2, total: 4 });
+    // The re-queued card has a review state now, so it is no longer shown as new.
+    expect(state.queue.at(-1)?.isNew).toBe(false);
   });
 
   it('"hard" and "good" remove the card', () => {
