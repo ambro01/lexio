@@ -325,6 +325,16 @@ export type Database = {
           tag_name: string
         }[]
       }
+      proposal_outcome_stats: {
+        Args: never
+        Returns: {
+          model: string
+          n: number
+          outcome: string
+          recent: boolean
+          source: string
+        }[]
+      }
       record_review: {
         Args: {
           p_expected_reps: number

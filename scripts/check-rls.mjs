@@ -1230,4 +1230,57 @@ await step("B: the same known-words lookup returns none of A's keys", async () =
   return [keys.length === 0, keys.join(",")];
 });
 
+// ---------------------------------------------------------------------------
+// quality stats (S-07): proposal_outcome_stats aggregates the caller's own proposal_outcomes only.
+// ---------------------------------------------------------------------------
+
+async function outcomeStats(client) {
+  return client.rpc("proposal_outcome_stats");
+}
+
+function statsTotal(rows) {
+  return rows.reduce((total, row) => total + Number(row.n), 0);
+}
+
+async function ownOutcomeCount(client) {
+  const { count, error } = await client.from("proposal_outcomes").select("*", { count: "exact", head: true });
+  if (error) throw new Error(error.message);
+  return count;
+}
+
+await step("B: setup — record one lesson set of its own", async () => {
+  const { error } = await acceptSet(b.client, "Stats lesson", [
+    acceptItem("stats accepted", "accepted_corrected"),
+    acceptItem("stats wrong", "rejected_wrong"),
+  ]);
+  return [!error, errorText(error)];
+});
+
+await step("A: proposal_outcome_stats totals equal A's own proposal_outcomes count, every row recent", async () => {
+  const { data, error } = await outcomeStats(a.client);
+  if (error) return [false, errorText(error)];
+  const own = await ownOutcomeCount(a.client);
+  const total = statsTotal(data);
+  const keys = data.map((r) => `${r.source}|${r.model}|${r.outcome}|${r.recent}`);
+  const grouped = new Set(keys).size === keys.length;
+  const recent = data.every((r) => r.recent === true);
+  return [
+    own > 0 && total === own && grouped && recent,
+    `total=${String(total)} own=${String(own)} rows=${String(data.length)}`,
+  ];
+});
+
+await step("B: proposal_outcome_stats contains none of A's rows (totals equal B's own count)", async () => {
+  const { data, error } = await outcomeStats(b.client);
+  if (error) return [false, errorText(error)];
+  const own = await ownOutcomeCount(b.client);
+  const total = statsTotal(data);
+  return [own > 0 && total === own, `total=${String(total)} own=${String(own)}`];
+});
+
+await step("anon: proposal_outcome_stats is rejected", async () => {
+  const { data, error } = await outcomeStats(anon);
+  return [Boolean(error), error ? errorText(error) : `${String(data?.length)} row(s)`];
+});
+
 finish();
