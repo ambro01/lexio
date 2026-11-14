@@ -530,29 +530,29 @@ Docs reflect the review feature, the migration reaches production before the cod
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm test`
-- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 2.3 Build passes: `npm run build && npm run check:client-only`
-- [x] 2.4 RLS checks still pass: `npm run check:rls`
+- [x] 2.1 Unit tests pass: `npm test` — a435ba7
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check` — a435ba7
+- [x] 2.3 Build passes: `npm run build && npm run check:client-only` — a435ba7
+- [x] 2.4 RLS checks still pass: `npm run check:rls` — a435ba7
 
 #### Manual
 
-- [x] 2.5 Dev console: session, rate, repeat rate and mastered endpoints behave as specified
+- [x] 2.5 Dev console: session, rate, repeat rate and mastered endpoints behave as specified — a435ba7
 
 ### Phase 3: Review screen and Collection toggle
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass, including the session queue tests: `npm test`
-- [ ] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 3.3 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only`
+- [x] 3.1 Unit tests pass, including the session queue tests: `npm test`
+- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 3.3 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only`
 
 #### Manual
 
-- [ ] 3.4 Dev desktop: general session with re-show and matching summary
-- [ ] 3.5 Dev: tag session shows a mastered card; general session does not
-- [ ] 3.6 Dev: Collection toggle reflected in the next general session; edit keeps the due date
-- [ ] 3.7 Dev mobile viewport: buttons reachable, no overflow
+- [x] 3.4 Dev desktop: general session with re-show and matching summary
+- [x] 3.5 Dev: tag session shows a mastered card; general session does not
+- [x] 3.6 Dev: Collection toggle reflected in the next general session; edit keeps the due date
+- [x] 3.7 Dev mobile viewport: buttons reachable, no overflow
 
 ### Phase 4: Docs and production rollout
 

@@ -19,7 +19,7 @@ export const actionClass = "border-white/20 bg-white/10 text-white hover:bg-whit
  */
 export async function requestJson<T>(
   url: string,
-  method: "GET" | "POST" | "PATCH" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   payload: unknown,
   isValid: (body: unknown) => body is T,
 ): Promise<ApiResult<T>> {

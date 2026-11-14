@@ -1,0 +1,41 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import ReviewSession from "@/components/review/ReviewSession";
+import { listTags } from "@/lib/services/flashcards.service";
+import { createClient } from "@/lib/supabase";
+import type { Tag } from "@/types";
+
+// The middleware redirects anonymous users. The tags only feed the "Według tagu" select: without them (no client
+// or a failed read) the page still works, with the general session only.
+let tags: Tag[] = [];
+const client = createClient(Astro.request.headers, Astro.cookies);
+if (client) {
+  tags = await listTags(client).catch((error: unknown) => {
+    // One structured line for Workers logs; store errors carry no user content.
+    // eslint-disable-next-line no-console -- intentional observability log
+    console.log(
+      JSON.stringify({
+        event: "review_page_failed",
+        reason: error instanceof Error ? error.message : "unknown",
+      }),
+    );
+    return [];
+  });
+}
+---
+
+<Layout title="Powtórka">
+  <div class="bg-cosmic min-h-screen p-4">
+    <div class="mx-auto my-8 w-full max-w-xl rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-8">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+          Powtórka
+        </h1>
+        <a href="/dashboard" class="text-sm text-purple-300 hover:underline">
+          ← Dashboard
+        </a>
+      </div>
+      <ReviewSession tags={tags} client:load />
+    </div>
+  </div>
+</Layout>

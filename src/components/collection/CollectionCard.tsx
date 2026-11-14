@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Pencil, Save, Trash2, X } from "lucide-react";
+import { CircleCheck, Pencil, Save, Trash2, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MAX_TEXT_CHARS, MAX_WORD_CHARS } from "@/lib/ai/limits";
 import { CEFR_LEVELS } from "@/lib/ai/proposals";
 import type { EditRequestBody } from "@/lib/collection";
+import { isMasteredResponse } from "@/lib/review/session";
 import { contentProblem } from "@/lib/review-draft";
 import { cn } from "@/lib/utils";
 import type { Flashcard } from "@/types";
@@ -29,7 +30,7 @@ interface Props {
   onTagCreated: (name: string) => void;
 }
 
-type Busy = "saving" | "deleting" | "tags" | null;
+type Busy = "saving" | "deleting" | "tags" | "mastered" | null;
 
 function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
   return (
@@ -112,6 +113,27 @@ export default function CollectionCard({ card, tagListId, onUpdate, onRemove, on
     setError(result.message);
   }
 
+  async function toggleMastered() {
+    const mastered = !card.mastered;
+    setError(null);
+    setBusy("mastered");
+    const result = await requestJson(`${url}/mastered`, "PUT", { mastered }, isMasteredResponse);
+    if (!mounted.current) {
+      return;
+    }
+    setBusy(null);
+    if (!result.ok) {
+      if (result.status === 404) {
+        onRemove(result.message);
+        return;
+      }
+      setError(result.message);
+      return;
+    }
+    const saved = result.data.mastered;
+    onUpdate((current) => ({ ...current, mastered: saved }));
+  }
+
   const meanings = card.additionalMeanings.filter((meaning) => meaning.trim() !== "");
 
   return (
@@ -122,6 +144,9 @@ export default function CollectionCard({ card, tagListId, onUpdate, onRemove, on
           <span className="rounded-full bg-purple-500/30 px-2 py-0.5 text-xs font-medium text-purple-100">
             {card.cefr}
           </span>
+        )}
+        {card.mastered && (
+          <span className="rounded-full bg-green-500/30 px-2 py-0.5 text-xs font-medium text-green-100">Opanowane</span>
         )}
       </div>
 
@@ -283,6 +308,19 @@ export default function CollectionCard({ card, tagListId, onUpdate, onRemove, on
           >
             {busy === "deleting" ? <Spinner /> : <Trash2 />}
             Usuń
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            onClick={() => {
+              void toggleMastered();
+            }}
+            className={actionClass}
+          >
+            {busy === "mastered" ? <Spinner /> : card.mastered ? <Undo2 /> : <CircleCheck />}
+            {card.mastered ? "Cofnij „Opanowane”" : "Opanowane"}
           </Button>
         </div>
       )}
