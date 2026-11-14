@@ -242,11 +242,11 @@ None. The table, column and index exist since S-01.
 
 #### Automated
 
-- [x] 2.1 Unit tests, lint and type check pass: `npm test`, `npm run lint`, `npx astro check`
-- [x] 2.2 Build passes: `npm run build && npm run check:client-only`
-- [ ] 2.3 CI passes on `master` after push
+- [x] 2.1 Unit tests, lint and type check pass: `npm test`, `npm run lint`, `npx astro check` — 711761f
+- [x] 2.2 Build passes: `npm run build && npm run check:client-only` — 711761f
+- [x] 2.3 CI passes on `master` after push — 711761f
 
 #### Manual
 
-- [x] 2.4 Dev: the notice shows the skipped count and clears after discarding the draft
-- [ ] 2.5 Production: a previously known word is not proposed and the notice shows the count
+- [x] 2.4 Dev: the notice shows the skipped count and clears after discarding the draft — 711761f
+- [x] 2.5 Production: a previously known word is not proposed and the notice shows the count — 711761f

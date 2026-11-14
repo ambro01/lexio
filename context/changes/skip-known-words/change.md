@@ -1,7 +1,7 @@
 ---
 change_id: skip-known-words
 title: Skip known words
-status: implementing
+status: implemented
 created: 2026-11-14
 updated: 2026-11-14
 archived_at: null
