@@ -276,26 +276,26 @@ Additive: one read-only function. The user applies it in production before the c
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 Types regenerated with no diff after commit: `npm run db:types`
-- [x] 1.3 RLS checks pass, including the new S-07 section: `npm run check:rls`
-- [x] 1.4 Unit tests pass: `npm test`
-- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 1.1 Migration applies cleanly: `npx supabase db reset` — 361387f
+- [x] 1.2 Types regenerated with no diff after commit: `npm run db:types` — 361387f
+- [x] 1.3 RLS checks pass, including the new S-07 section: `npm run check:rls` — 361387f
+- [x] 1.4 Unit tests pass: `npm test` — 361387f
+- [x] 1.5 Lint and type check pass: `npm run lint` and `npx astro check` — 361387f
 
 #### Manual
 
-- [x] 1.6 RPC grouped counts match a manual count of the test user's outcomes
+- [x] 1.6 RPC grouped counts match a manual count of the test user's outcomes — 361387f
 
 ### Phase 2: Stats page and production
 
 #### Automated
 
-- [ ] 2.1 Unit tests, lint and type check pass: `npm test`, `npm run lint`, `npx astro check`
-- [ ] 2.2 Build passes: `npm run build && npm run check:client-only`
+- [x] 2.1 Unit tests, lint and type check pass: `npm test`, `npm run lint`, `npx astro check`
+- [x] 2.2 Build passes: `npm run build && npm run check:client-only`
 - [ ] 2.3 CI passes on `master` after push
 
 #### Manual
 
-- [ ] 2.4 Dev: `/stats` shows plausible numbers; an empty account shows the empty state
-- [ ] 2.5 Production migration applied before the code push
+- [x] 2.4 Dev: `/stats` shows plausible numbers; an empty account shows the empty state
+- [x] 2.5 Production migration applied before the code push
 - [ ] 2.6 Production: `/stats` loads on a phone with plausible numbers

@@ -114,7 +114,7 @@ The local Studio UI is available at `http://localhost:54323`.
 
 ### Database schema
 
-Migrations live in `supabase/migrations/` and are applied automatically by `npx supabase start` on a fresh database. The schema stores flashcards per user (`flashcards`, `tags`, `flashcard_tags`, plus the `save_flashcard` function) and their spaced-review progress (`review_states`, one row per reviewed card, and the append-only `review_log`, plus the `review_queue`, `record_review` and `set_flashcard_mastered` functions), with row-level security on every table — see `docs/reference/contract-surfaces.md`.
+Migrations live in `supabase/migrations/` and are applied automatically by `npx supabase start` on a fresh database. The schema stores flashcards per user (`flashcards`, `tags`, `flashcard_tags`, plus the `save_flashcard` function) and their spaced-review progress (`review_states`, one row per reviewed card, and the append-only `review_log`, plus the `review_queue`, `record_review` and `set_flashcard_mastered` functions), plus the read-only `proposal_outcome_stats` function that aggregates the caller's proposal outcomes for `/stats`, with row-level security on every table — see `docs/reference/contract-surfaces.md`.
 
 ```bash
 npx supabase db reset   # re-create the local database and apply all migrations
@@ -161,6 +161,7 @@ Users can then sign in immediately after sign-up without clicking a confirmation
 | `/add`                | Dodaj słowo: one word with AI fill (protected)                               |
 | `/collection`         | Kolekcja: browse, edit, delete and tag flashcards (protected)                |
 | `/review`             | Powtórka: review by tag or general, rate cards (protected)                   |
+| `/stats`              | Statystyki: AI proposal quality rate, overall and last 30 days (protected)   |
 
 On `/generate`, words you rejected earlier as known or too easy are not proposed again; the review shows how many were skipped.
 

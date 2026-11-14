@@ -1,0 +1,172 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import type { PeriodRates, QualityRate, QualityStats } from "@/lib/ai/quality-stats";
+import { getQualityStats } from "@/lib/services/stats.service";
+import { createClient } from "@/lib/supabase";
+
+// The middleware redirects anonymous users. Without stats (no client or a failed read) the page shows an error
+// with a reload link. The metric itself is defined only in src/lib/ai/quality-stats.ts.
+const TARGET_RATE = 0.75;
+
+const client = createClient(Astro.request.headers, Astro.cookies);
+const stats: QualityStats | null = client
+  ? await getQualityStats(client).catch((error: unknown) => {
+      // One structured line for Workers logs; store errors carry no user content.
+      // eslint-disable-next-line no-console -- intentional observability log
+      console.log(
+        JSON.stringify({
+          event: "stats_page_failed",
+          reason: error instanceof Error ? error.message : "unknown",
+        }),
+      );
+      return null;
+    })
+  : null;
+
+function percent(value: number): string {
+  return `${Math.round(value * 100)}%`;
+}
+
+function rateText(quality: QualityRate): string {
+  return quality.rate === null ? "—" : `${percent(quality.rate)} (${quality.rated} ocenionych)`;
+}
+
+function shareText(quality: QualityRate): string {
+  return quality.unchangedShare === null ? "—" : percent(quality.unchangedShare);
+}
+
+interface StatsRow {
+  label: string;
+  rates: PeriodRates;
+  /** The overall lesson row carries the target marker. */
+  target?: boolean;
+  /** Per-model rows sit under the overall lesson row. */
+  nested?: boolean;
+}
+
+const rows: StatsRow[] = stats
+  ? [
+      { label: "Lekcje — łącznie", rates: stats.lesson, target: true },
+      ...stats.lessonByModel.map((entry) => ({
+        label: entry.model ?? "nieznany model",
+        rates: entry,
+        nested: true,
+      })),
+      { label: "Dodaj słowo", rates: stats.manual },
+    ]
+  : [];
+
+const periods = [
+  { key: "all", label: "Od początku" },
+  { key: "recent", label: "Ostatnie 30 dni" },
+] as const;
+---
+
+<Layout title="Statystyki">
+  <div class="bg-cosmic min-h-screen p-4">
+    <div class="mx-auto my-8 w-full max-w-3xl rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-8">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+          Statystyki
+        </h1>
+        <a href="/dashboard" class="text-sm text-purple-300 hover:underline">
+          ← Dashboard
+        </a>
+      </div>
+      {!stats ? (
+        <div
+          class="space-y-2 rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300"
+          role="alert"
+        >
+          <p>Nie udało się wczytać statystyk.</p>
+          <a href="/stats" class="text-purple-300 hover:underline">
+            Odśwież stronę
+          </a>
+        </div>
+      ) : !stats.hasData ? (
+        <p class="text-sm text-blue-100/80">
+          Brak danych —{" "}
+          <a href="/generate" class="text-purple-300 hover:underline">
+            wygeneruj i przejrzyj pierwszą lekcję
+          </a>
+          .
+        </p>
+      ) : (
+        <div class="space-y-6">
+          <section>
+            <h2 class="mb-2 text-sm font-semibold text-blue-100">Jakość propozycji AI</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[28rem] text-left text-sm">
+                <thead class="text-blue-100/70">
+                  <tr class="border-b border-white/10">
+                    <th scope="col" class="py-2 pr-4 font-medium">
+                      Źródło
+                    </th>
+                    {periods.map((period) => (
+                      <th scope="col" class="py-2 pr-4 font-medium">
+                        {period.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr class="border-b border-white/5 align-top">
+                      <th
+                        scope="row"
+                        class:list={["py-2 pr-4", row.nested ? "pl-4 font-normal text-blue-100/70" : "font-semibold"]}
+                      >
+                        {row.label}
+                      </th>
+                      {periods.map((period) => {
+                        const quality = row.rates[period.key];
+                        const reached = quality.rate === null ? null : quality.rate >= TARGET_RATE;
+                        return (
+                          <td class="py-2 pr-4">
+                            <span class="whitespace-nowrap">{rateText(quality)}</span>
+                            {row.target && (
+                              <span class="block text-xs text-blue-100/60">
+                                Cel: {percent(TARGET_RATE)}
+                                {reached !== null && (
+                                  <span
+                                    class:list={["ml-1 font-medium", reached ? "text-green-300" : "text-amber-300"]}
+                                  >
+                                    {reached ? "✓ osiągnięty" : "✗ poniżej celu"}
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="space-y-1 text-sm">
+            <h2 class="text-sm font-semibold text-blue-100">Przyjęte bez poprawek (lekcje)</h2>
+            {periods.map((period) => (
+              <p class="text-blue-100/80">
+                {period.label}: <span class="text-white">{shareText(stats.lesson[period.key])}</span>
+              </p>
+            ))}
+          </section>
+
+          <section class="space-y-1 text-sm">
+            <h2 class="text-sm font-semibold text-blue-100">Dobór słów (lekcje)</h2>
+            {periods.map((period) => (
+              <p class="text-blue-100/80">
+                {period.label}: Znam / nieprzydatne:{" "}
+                <span class="text-white">{stats.wordSelection[period.key].known}</span>, Za łatwe:{" "}
+                <span class="text-white">{stats.wordSelection[period.key].tooEasy}</span>
+              </p>
+            ))}
+          </section>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>
