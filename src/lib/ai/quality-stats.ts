@@ -5,6 +5,9 @@
 // content, so they are left out of the rate and counted separately. Merged accepts arrive as accepted_* and count.
 import type { ProposalOutcome, ProposalSource } from "@/types";
 
+/** The PRD target for the overall lesson rate. */
+export const QUALITY_TARGET = 0.75;
+
 /** Every recorded outcome value (`proposal_outcomes.outcome`). */
 export const PROPOSAL_OUTCOMES = [
   "accepted_unchanged",

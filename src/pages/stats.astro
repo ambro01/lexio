@@ -1,12 +1,11 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import type { PeriodRates, QualityRate, QualityStats } from "@/lib/ai/quality-stats";
+import { QUALITY_TARGET, type PeriodRates, type QualityRate, type QualityStats } from "@/lib/ai/quality-stats";
 import { getQualityStats } from "@/lib/services/stats.service";
 import { createClient } from "@/lib/supabase";
 
 // The middleware redirects anonymous users. Without stats (no client or a failed read) the page shows an error
 // with a reload link. The metric itself is defined only in src/lib/ai/quality-stats.ts.
-const TARGET_RATE = 0.75;
 
 const client = createClient(Astro.request.headers, Astro.cookies);
 const stats: QualityStats | null = client
@@ -23,12 +22,19 @@ const stats: QualityStats | null = client
     })
   : null;
 
-function percent(value: number): string {
-  return `${Math.round(value * 100)}%`;
+// Whole numbers, except the target row: one decimal there, so "75%" never sits next to "poniżej celu".
+function percent(value: number, decimals = 0): string {
+  const factor = 10 ** decimals;
+  return `${(Math.round(value * 100 * factor) / factor).toLocaleString("pl-PL")}%`;
 }
 
-function rateText(quality: QualityRate): string {
-  return quality.rate === null ? "—" : `${percent(quality.rate)} (${quality.rated} ocenionych)`;
+// Judged on the shown one-decimal value, so the verdict always agrees with the number.
+function reachesTarget(rate: number): boolean {
+  return Math.round(rate * 1000) >= Math.round(QUALITY_TARGET * 1000);
+}
+
+function rateText(quality: QualityRate, decimals = 0): string {
+  return quality.rate === null ? "—" : `${percent(quality.rate, decimals)} (${quality.rated} ocenionych)`;
 }
 
 function shareText(quality: QualityRate): string {
@@ -89,7 +95,7 @@ const periods = [
           <a href="/generate" class="text-purple-300 hover:underline">
             wygeneruj i przejrzyj pierwszą lekcję
           </a>
-          .
+          {"."}
         </p>
       ) : (
         <div class="space-y-6">
@@ -120,13 +126,13 @@ const periods = [
                       </th>
                       {periods.map((period) => {
                         const quality = row.rates[period.key];
-                        const reached = quality.rate === null ? null : quality.rate >= TARGET_RATE;
+                        const reached = quality.rate === null ? null : reachesTarget(quality.rate);
                         return (
                           <td class="py-2 pr-4">
-                            <span class="whitespace-nowrap">{rateText(quality)}</span>
+                            <span class="whitespace-nowrap">{rateText(quality, row.target ? 1 : 0)}</span>
                             {row.target && (
                               <span class="block text-xs text-blue-100/60">
-                                Cel: {percent(TARGET_RATE)}
+                                Cel: {percent(QUALITY_TARGET)}
                                 {reached !== null && (
                                   <span
                                     class:list={["ml-1 font-medium", reached ? "text-green-300" : "text-amber-300"]}
