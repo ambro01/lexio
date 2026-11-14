@@ -114,7 +114,7 @@ The local Studio UI is available at `http://localhost:54323`.
 
 ### Database schema
 
-Migrations live in `supabase/migrations/` and are applied automatically by `npx supabase start` on a fresh database. The schema stores flashcards per user (`flashcards`, `tags`, `flashcard_tags`, plus the `save_flashcard` function), with row-level security on every table — see `docs/reference/contract-surfaces.md`.
+Migrations live in `supabase/migrations/` and are applied automatically by `npx supabase start` on a fresh database. The schema stores flashcards per user (`flashcards`, `tags`, `flashcard_tags`, plus the `save_flashcard` function) and their spaced-review progress (`review_states`, one row per reviewed card, and the append-only `review_log`, plus the `review_queue`, `record_review` and `set_flashcard_mastered` functions), with row-level security on every table — see `docs/reference/contract-surfaces.md`.
 
 ```bash
 npx supabase db reset   # re-create the local database and apply all migrations
@@ -160,6 +160,7 @@ Users can then sign in immediately after sign-up without clicking a confirmation
 | `/profile`            | Profil: CEFR level and AI model (protected)                                  |
 | `/add`                | Dodaj słowo: one word with AI fill (protected)                               |
 | `/collection`         | Kolekcja: browse, edit, delete and tag flashcards (protected)                |
+| `/review`             | Powtórka: review by tag or general, rate cards (protected)                   |
 
 Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication.
 

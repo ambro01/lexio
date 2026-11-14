@@ -543,26 +543,26 @@ Docs reflect the review feature, the migration reaches production before the cod
 
 #### Automated
 
-- [x] 3.1 Unit tests pass, including the session queue tests: `npm test`
-- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 3.3 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only`
+- [x] 3.1 Unit tests pass, including the session queue tests: `npm test` — 6fe2a50
+- [x] 3.2 Lint and type check pass: `npm run lint` and `npx astro check` — 6fe2a50
+- [x] 3.3 Build passes and pdf.js stays out of the Worker bundle: `npm run build && npm run check:client-only` — 6fe2a50
 
 #### Manual
 
-- [x] 3.4 Dev desktop: general session with re-show and matching summary
-- [x] 3.5 Dev: tag session shows a mastered card; general session does not
-- [x] 3.6 Dev: Collection toggle reflected in the next general session; edit keeps the due date
-- [x] 3.7 Dev mobile viewport: buttons reachable, no overflow
+- [x] 3.4 Dev desktop: general session with re-show and matching summary — 6fe2a50
+- [x] 3.5 Dev: tag session shows a mastered card; general session does not — 6fe2a50
+- [x] 3.6 Dev: Collection toggle reflected in the next general session; edit keeps the due date — 6fe2a50
+- [x] 3.7 Dev mobile viewport: buttons reachable, no overflow — 6fe2a50
 
 ### Phase 4: Docs and production rollout
 
 #### Automated
 
-- [ ] 4.1 Lint, tests and build pass: `npm run lint && npm test && npm run build`
+- [x] 4.1 Lint, tests and build pass: `npm run lint && npm test && npm run build`
 - [ ] 4.2 CI passes on `master` after push
 
 #### Manual
 
-- [ ] 4.3 Production migration applied before the code push
+- [x] 4.3 Production migration applied before the code push
 - [ ] 4.4 Phone, production: real general session and a second same-day session behave as expected
 - [ ] 4.5 Workers logs: review_rate lines with status 200 and no CPU-limit errors
