@@ -65,6 +65,16 @@ const steps = [
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["forgot-password page renders", () => request("/auth/forgot-password"), { status: 200 }],
+  [
+    "forgot-password accepts unknown email",
+    () =>
+      request("/api/auth/forgot-password", {
+        method: "POST",
+        form: { email: `smoke-unknown-${Date.now()}@example.com` },
+      }),
+    { status: 302, location: "/auth/forgot-password?sent=1" },
+  ],
 ];
 
 let failed = 0;
