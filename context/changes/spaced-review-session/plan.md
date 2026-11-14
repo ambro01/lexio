@@ -558,11 +558,11 @@ Docs reflect the review feature, the migration reaches production before the cod
 
 #### Automated
 
-- [x] 4.1 Lint, tests and build pass: `npm run lint && npm test && npm run build`
-- [ ] 4.2 CI passes on `master` after push
+- [x] 4.1 Lint, tests and build pass: `npm run lint && npm test && npm run build` — c00f24a
+- [x] 4.2 CI passes on `master` after push — c00f24a
 
 #### Manual
 
-- [x] 4.3 Production migration applied before the code push
-- [ ] 4.4 Phone, production: real general session and a second same-day session behave as expected
-- [ ] 4.5 Workers logs: review_rate lines with status 200 and no CPU-limit errors
+- [x] 4.3 Production migration applied before the code push — c00f24a
+- [x] 4.4 Phone, production: real general session and a second same-day session behave as expected — c00f24a
+- [x] 4.5 Workers logs: review_rate lines with status 200 and no CPU-limit errors — c00f24a
