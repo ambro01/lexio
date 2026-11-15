@@ -327,10 +327,10 @@ No data migration. Local developers must restart Supabase (`npx supabase stop &&
 
 #### Automated
 
-- [x] 3.1 Format/lint passes: `npm run lint`
-- [x] 3.2 Build succeeds: `npm run build`
+- [x] 3.1 Format/lint passes: `npm run lint` — 2a12595
+- [x] 3.2 Build succeeds: `npm run build` — 2a12595
 
 #### Manual
 
-- [x] 3.3 Full local end-to-end flow done once more on a fresh `npx supabase db reset` stack: request → Mailpit email → confirm → new password → sign in with it
-- [ ] 3.4 Production: custom SMTP and recovery template configured in the Supabase dashboard, and a reset email reaches a real non-team inbox and completes the flow on `https://lexio.rafalambro.workers.dev`
+- [x] 3.3 Full local end-to-end flow done once more on a fresh `npx supabase db reset` stack: request → Mailpit email → confirm → new password → sign in with it — 2a12595
+- [x] 3.4 Production: custom SMTP and recovery template configured in the Supabase dashboard, and a reset email reaches a real non-team inbox and completes the flow on `https://lexio.rafalambro.workers.dev`
