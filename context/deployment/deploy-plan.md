@@ -68,7 +68,10 @@ Needed by `password-reset` (`/auth/forgot-password` → email → `/auth/confirm
 - [ ] Authentication → Emails → SMTP Settings: enable custom SMTP with the provider's host, port, user, password and sender address. The SMTP password stays in the dashboard — never in the repo.
 - [ ] Authentication → Emails → Templates → "Reset password": set the body to the same link as `supabase/templates/recovery.html` — `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`.
 - [ ] Authentication → Rate Limits: raise the email rate limit to fit expected traffic.
+- [ ] Authentication → Providers → Email: enable "Secure password change" (accepted risk, impl-review F1: `/api/auth/update-password` accepts any session, so GoTrue reauthentication guards sessions older than 24 h).
 - [ ] After deploy: request a reset for a real (non-team) inbox → email arrives → link opens `/auth/update-password` → set a new password → sign in with it.
+
+Troubleshooting: a user who sees "This reset link is invalid or has expired" on the first click may have a mail scanner that prefetches links (Outlook Safe Links, corporate gateways) and used up the one-time token. Accepted for the MVP (impl-review F2); the fix is a confirm page that verifies on POST.
 
 ## Verification (production)
 

@@ -25,5 +25,8 @@ export const POST: APIRoute = async (context) => {
     return context.redirect(`/auth/update-password?error=${encodeURIComponent(error.message)}`);
   }
 
+  // A reset usually follows a compromise: end every other session, keep this one.
+  await supabase.auth.signOut({ scope: "others" });
+
   return context.redirect("/dashboard?password_updated=1");
 };
